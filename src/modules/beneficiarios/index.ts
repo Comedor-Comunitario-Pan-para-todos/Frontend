@@ -1,0 +1,4 @@
+export { calcularEdad, esMenorDeEdad } from './domain/edad.ts'
+export { validarArchivoAutorizacion } from './domain/archivoAutorizacion.ts'
+export { puedeTomarFoto } from './domain/permisoFoto.ts'
+export type { DatosPermisoFoto } from './domain/permisoFoto.ts'
