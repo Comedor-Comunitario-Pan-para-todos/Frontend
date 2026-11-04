@@ -18,14 +18,14 @@ El proyecto implementa una **Arquitectura Hexagonal (Puertos y Adaptadores)** en
 * **Core:** [React](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/) (tipado estricto sin `any` para máxima robustez).
 * **Herramienta de Construcción:** [Vite](https://vitejs.dev/) (empaquetado ultrarrápido, bajo consumo de recursos en desarrollo y producción).
 * **Estilos y Diseño:** [Tailwind CSS](https://tailwindcss.com/) (diseño utilitario optimizado, sin sobrecarga de estilos para dispositivos de gama baja).
-* **Patrón de Diseño:** **Arquitectura Hexagonal en Frontend**:
-  * **Dominio (`domain`):** Entidades del comedor (Beneficiario, Turno, Donación, Merma, Insumo) y reglas de negocio puras.
-  * **Aplicación (`application`):** Casos de uso e interacción del usuario (gestión de turnos, validación de caducidad FEFO).
-  * **Infraestructura y Adaptadores (`infrastructure`):** 
-    * *Adaptador HTTP:* Cliente de comunicación con la API del Backend (TypeORM / MySQL).
-    * *Adaptador de Sesión:* Manejo del token de sesión del usuario autenticado.
-    * *Adaptadores de Dispositivo:* Compresión de imágenes y cámara web/móvil.
-  * **Presentación / UI (`ui` / `components`):** Vistas, páginas y componentes React maquetados con Tailwind CSS.
+* **Pruebas:** [Vitest](https://vitest.dev/) + [Testing Library](https://testing-library.com/) (`pnpm test`).
+* **Patrón de Diseño:** **Arquitectura Hexagonal (Puertos y Adaptadores) organizada por módulo**. Cada área de negocio (`beneficiarios`, `turnos`, `inventario`…) vive en `src/modules/<modulo>/` con sus propias capas:
+  * **Dominio (`domain`):** Entidades del comedor y reglas de negocio puras, sin React ni API.
+  * **Aplicación (`application`):** Casos de uso y puertos (interfaces) hacia el exterior.
+  * **Infraestructura (`infrastructure`):** Adaptadores que implementan los puertos: HTTP hacia la API del Backend, dispositivo (cámara, compresión de imágenes) y en memoria para pruebas.
+  * **Interfaz (`ui`):** Componentes, hooks y páginas React maquetados con Tailwind CSS.
+  * Lo común a varios módulos va en `src/shared/` y la composición de la aplicación en `src/app/`.
+  * Estructura completa y reglas entre capas: [`docs/ARQUITECTURA.md`](./docs/ARQUITECTURA.md).
 
 ### 2.2 Integración con Backend y Persistencia
 * **Backend Target:** API REST conectada a base de datos relacional **MySQL** a través del ORM **TypeORM**.
@@ -33,7 +33,6 @@ El proyecto implementa una **Arquitectura Hexagonal (Puertos y Adaptadores)** en
 
 ### 2.3 Sistema de Diseño
 * Tokens centralizados en `src/index.css` (Tailwind CSS v4, bloque `@theme`): colores, tipografías, escala de texto, breakpoints, medidas táctiles, radios y sombras.
-* Reglas de uso y decisiones documentadas en [`DESIGN.md`](./DESIGN.md).
 
 ---
 
