@@ -45,9 +45,13 @@ src/
 │   ├── infrastructure/
 │   └── ui/
 │
-├── test/                         Configuración global de pruebas
 ├── index.css                     Tokens del sistema de diseño
 └── main.tsx                      Punto de entrada
+
+tests/                            Pruebas, con la misma estructura que src/
+├── modules/<modulo>/...
+├── shared/...
+└── setup.ts                      Configuración global de pruebas
 ```
 
 ---
@@ -127,9 +131,15 @@ más módulos**.
 
 | Elemento | Contenido |
 | :--- | :--- |
-| `test/` | Configuración global de Vitest y Testing Library. |
 | `index.css` | Tokens del sistema de diseño (`@theme` de Tailwind CSS). |
 | `main.tsx` | Monta la aplicación en el navegador. |
+
+### `tests/` — Pruebas
+
+Fuera de `src/`, con la misma estructura de carpetas: la prueba de
+`src/modules/beneficiarios/domain/edad.ts` está en
+`tests/modules/beneficiarios/domain/edad.test.ts`. `setup.ts` contiene la
+configuración global de Vitest y Testing Library.
 
 ---
 
@@ -153,6 +163,12 @@ app/ conecta infrastructure con application y lo entrega a ui
 
 Entre módulos, solo se importa a través del `index.ts` de cada uno.
 
+### Imports
+
+* Dentro de la misma carpeta: ruta relativa (`./edad.ts`).
+* Hacia cualquier otra carpeta de `src/`: alias `@/`
+  (`@/shared/domain/FechaCalendario.ts`).
+
 ---
 
 ## 5. Nombres de archivos
@@ -163,7 +179,7 @@ Entre módulos, solo se importa a través del `index.ts` de cada uno.
 | Funciones, tipos y casos de uso | `camelCase.ts` | `registrarBeneficiario.ts` |
 | Puertos | `NombrePort.ts` / `NombreRepository.ts` | `CamaraPort.ts`, `BeneficiarioRepository.ts` |
 | Hooks | `useNombre.ts` | `useBeneficiario.ts` |
-| Pruebas | junto al archivo probado, `nombre.test.ts(x)` | `registrarBeneficiario.test.ts` |
+| Pruebas | `nombre.test.ts(x)` en la ruta espejo dentro de `tests/` | `tests/modules/beneficiarios/application/registrarBeneficiario.test.ts` |
 
 Los nombres del negocio van en español; los términos del patrón (`Repository`,
 `Port`, `Adapter`, `Provider`) se dejan en inglés.
