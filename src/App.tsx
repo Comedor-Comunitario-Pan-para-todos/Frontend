@@ -1,3 +1,5 @@
+import { Boton } from '@/shared/ui/Boton.tsx'
+
 function App() {
   return (
     <main className="mx-auto flex min-h-svh w-full max-w-content flex-col justify-center gap-6 px-gutter py-8 md:px-8">
@@ -20,12 +22,10 @@ function App() {
         </span>
       </section>
 
-      <button
-        type="button"
-        className="h-cta rounded-md bg-primary px-6 text-body-lg font-semibold text-on-primary shadow-primary transition duration-150 ease-press hover:bg-primary-hover active:translate-y-px active:scale-99 active:bg-primary-active"
-      >
-        Confirmar y emitir turno
-      </button>
+      <Boton>Confirmar y emitir turno</Boton>
+      <Boton variante="secundario">Cancelar</Boton>
+      <Boton cargando>Guardando</Boton>
+      <Boton disabled>No disponible</Boton>
     </main>
   )
 }
