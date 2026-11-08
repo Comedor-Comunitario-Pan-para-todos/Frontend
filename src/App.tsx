@@ -1,3 +1,4 @@
+import { Alerta } from '@/shared/ui/Alerta.tsx'
 import { Boton } from '@/shared/ui/Boton.tsx'
 import { CampoTexto } from '@/shared/ui/CampoTexto.tsx'
 
@@ -22,6 +23,15 @@ function App() {
           Comensal habilitado
         </span>
       </section>
+
+      <Alerta tipo="exito">Turno confirmado.</Alerta>
+      <Alerta tipo="aviso" titulo="Próximo a caducar">
+        Arroz, lote 12: vence en 3 días.
+      </Alerta>
+      <Alerta tipo="peligro" titulo="No se pudo guardar">
+        Revise su internet e intente de nuevo.
+      </Alerta>
+      <Alerta tipo="privacidad">Este registro está protegido por Habeas Data.</Alerta>
 
       <CampoTexto etiqueta="Correo" placeholder="nombre@correo.com" ayuda="El que registraste" />
       <CampoTexto etiqueta="Contraseña" type="password" error="La contraseña es requerida" />
