@@ -5,12 +5,10 @@ function App() {
         <span className="w-fit rounded-pill bg-primary-soft px-3 py-1 font-mono text-label font-semibold text-primary">
           SIG-CCPT
         </span>
-        <h1 className="text-heading font-semibold text-ink">
-          Comedor Comunitario Pan para Todos
-        </h1>
+        <h1 className="text-heading font-semibold text-ink">Comedor Comunitario Pan para Todos</h1>
         <p className="text-body text-ink-secondary">
-          Base del sistema de diseño: colores, tipografía, tamaños y breakpoints
-          centralizados en <code className="font-mono text-label">src/index.css</code>.
+          Base del sistema de diseño: colores, tipografía, tamaños y breakpoints centralizados en{' '}
+          <code className="font-mono text-label">src/index.css</code>.
         </p>
       </header>
 
