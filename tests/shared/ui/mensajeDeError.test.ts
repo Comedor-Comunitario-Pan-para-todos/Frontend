@@ -48,7 +48,7 @@ describe('mensajeDeError', () => {
 
   it('responde con el mensaje genérico ante algo que no es ErrorApi', () => {
     expect(mensajeDeError(new TypeError('x'))).toBe(
-      'Ocurrió un error inesperado. Intenta de nuevo.',
+      'Ocurrió un error inesperado. Intente de nuevo.',
     )
   })
 })

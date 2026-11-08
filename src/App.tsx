@@ -33,7 +33,7 @@ function App() {
       </Alerta>
       <Alerta tipo="privacidad">Este registro está protegido por Habeas Data.</Alerta>
 
-      <CampoTexto etiqueta="Correo" placeholder="nombre@correo.com" ayuda="El que registraste" />
+      <CampoTexto etiqueta="Correo" placeholder="nombre@correo.com" ayuda="El que registró" />
       <CampoTexto etiqueta="Contraseña" type="password" error="La contraseña es requerida" />
       <CampoTexto etiqueta="Documento" defaultValue="1088123456" disabled className="font-mono" />
 

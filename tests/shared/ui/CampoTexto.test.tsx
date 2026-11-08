@@ -32,20 +32,20 @@ describe('CampoTexto', () => {
   })
 
   it('describe el campo con la ayuda', () => {
-    render(<CampoTexto etiqueta="Correo" ayuda="El que registraste" />)
+    render(<CampoTexto etiqueta="Correo" ayuda="El que registró" />)
     const campo = screen.getByLabelText('Correo')
 
-    expect(campo).toHaveAccessibleDescription('El que registraste')
+    expect(campo).toHaveAccessibleDescription('El que registró')
     expect(campo).not.toHaveAttribute('aria-invalid')
   })
 
   it('marca el error y lo usa como descripción en lugar de la ayuda', () => {
-    render(<CampoTexto etiqueta="Correo" ayuda="El que registraste" error="Correo no válido" />)
+    render(<CampoTexto etiqueta="Correo" ayuda="El que registró" error="Correo no válido" />)
     const campo = screen.getByLabelText('Correo')
 
     expect(campo).toHaveAttribute('aria-invalid', 'true')
     expect(campo).toHaveAccessibleDescription('Correo no válido')
-    expect(screen.queryByText('El que registraste')).not.toBeInTheDocument()
+    expect(screen.queryByText('El que registró')).not.toBeInTheDocument()
   })
 
   it('sin ayuda ni error no tiene descripción', () => {
