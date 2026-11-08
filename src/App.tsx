@@ -1,4 +1,5 @@
 import { Boton } from '@/shared/ui/Boton.tsx'
+import { CampoTexto } from '@/shared/ui/CampoTexto.tsx'
 
 function App() {
   return (
@@ -21,6 +22,10 @@ function App() {
           Comensal habilitado
         </span>
       </section>
+
+      <CampoTexto etiqueta="Correo" placeholder="nombre@correo.com" ayuda="El que registraste" />
+      <CampoTexto etiqueta="Contraseña" type="password" error="La contraseña es requerida" />
+      <CampoTexto etiqueta="Documento" defaultValue="1088123456" disabled className="font-mono" />
 
       <Boton>Confirmar y emitir turno</Boton>
       <Boton variante="secundario">Cancelar</Boton>
