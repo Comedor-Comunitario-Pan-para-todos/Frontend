@@ -3,7 +3,12 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { CLAVE_MOCK, handlers } from '@/mocks/handlers.ts'
-import { iniciarSesionDePrueba, renderizarApp } from '../../../app/renderizarApp.tsx'
+import { SesionLocalStorage } from '@/modules/auth/infrastructure/dispositivo/SesionLocalStorage.ts'
+import {
+  crearClienteDePrueba,
+  iniciarSesionDePrueba,
+  renderizarApp,
+} from '../../../app/renderizarApp.tsx'
 import { servidor } from '../../../mocks/servidor.ts'
 
 async function ingresar(email: string, clave: string) {
@@ -73,6 +78,41 @@ describe('autenticación', () => {
     const enrutador = renderizarApp('/login')
 
     await waitFor(() => expect(enrutador.state.location.pathname).toBe('/'))
+  })
+
+  it('muestra quién tiene la sesión y su rol', async () => {
+    iniciarSesionDePrueba()
+
+    renderizarApp('/')
+
+    expect(await screen.findByText('Coordinación de Prueba')).toBeInTheDocument()
+    expect(screen.getByText('Coordinadora')).toBeInTheDocument()
+  })
+
+  it('al salir borra el token y el siguiente ingreso no vuelve a la pantalla anterior', async () => {
+    iniciarSesionDePrueba()
+    renderizarApp('/turnos')
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Salir' }))
+
+    expect(await screen.findByRole('heading', { name: 'Iniciar sesión' })).toBeInTheDocument()
+    expect(new SesionLocalStorage().obtenerToken()).toBeNull()
+
+    await ingresar('voluntario@comedor.test', CLAVE_MOCK)
+
+    expect(await screen.findByRole('heading', { name: 'Inicio' })).toBeInTheDocument()
+  })
+
+  it('al salir no deja datos del usuario en memoria', async () => {
+    iniciarSesionDePrueba()
+    const cliente = crearClienteDePrueba()
+    cliente.setQueryData(['beneficiarios', 'lista'], ['Comensal de prueba'])
+    renderizarApp('/', cliente)
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Salir' }))
+
+    await screen.findByRole('heading', { name: 'Iniciar sesión' })
+    expect(cliente.getQueryData(['beneficiarios', 'lista'])).toBeUndefined()
   })
 
   it('si no se puede verificar la sesión permite reintentar sin perderla', async () => {

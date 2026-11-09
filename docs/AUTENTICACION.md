@@ -67,7 +67,18 @@ escribir su clave.
 
 ---
 
-## 5. Probar sin backend
+## 5. Cerrar sesión
+
+El backend no tiene endpoint de cierre: salir ocurre solo en el navegador.
+
+* Borra el token y deja el usuario en `null`, lo que lleva al login.
+* Vacía las consultas y mutaciones en memoria: quien use después ese teléfono
+  no ve datos del anterior.
+* No recuerda la pantalla en la que estaba: el siguiente ingreso va al inicio.
+
+---
+
+## 6. Probar sin backend
 
 ```bash
 pnpm dev:mock

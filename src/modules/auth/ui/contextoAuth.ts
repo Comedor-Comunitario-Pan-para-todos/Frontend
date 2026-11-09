@@ -9,8 +9,10 @@ export interface Auth {
   readonly usuario: Usuario | null
   readonly error: unknown
   readonly verificando: boolean
+  readonly cerroSesion: boolean
   reintentar(): void
   iniciarSesion(credenciales: Credenciales): Promise<void>
+  cerrarSesion(): void
 }
 
 export const ContextoAuth = createContext<Auth | null>(null)

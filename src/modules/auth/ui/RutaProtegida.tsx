@@ -7,13 +7,14 @@ import { PantallaCarga } from '@/shared/ui/PantallaCarga.tsx'
 import { useAuth } from './contextoAuth.ts'
 
 export function RutaProtegida({ children }: { readonly children: ReactNode }) {
-  const { estado, error, verificando, reintentar } = useAuth()
+  const { estado, error, verificando, cerroSesion, reintentar } = useAuth()
   const { pathname, search } = useLocation()
 
   if (estado === 'cargando') return <PantallaCarga mensaje="Verificando su sesión" />
 
   if (estado === 'anonimo') {
-    return <Navigate to="/login" replace state={{ desde: `${pathname}${search}` }} />
+    const estadoLogin = cerroSesion ? undefined : { desde: `${pathname}${search}` }
+    return <Navigate to="/login" replace state={estadoLogin} />
   }
 
   if (estado === 'error') {

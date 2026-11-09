@@ -14,13 +14,16 @@ export function iniciarSesionDePrueba(): void {
   new SesionLocalStorage().guardarToken(TOKEN_COORDINADORA)
 }
 
-export function renderizarApp(ruta: string) {
-  const cliente = new QueryClient({
+export function crearClienteDePrueba(): QueryClient {
+  return new QueryClient({
     defaultOptions: {
       queries: { retry: false, networkMode: 'always' },
       mutations: { networkMode: 'always' },
     },
   })
+}
+
+export function renderizarApp(ruta: string, cliente = crearClienteDePrueba()) {
   const enrutador = createMemoryRouter(rutas, { initialEntries: [ruta] })
 
   render(
