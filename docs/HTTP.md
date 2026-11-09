@@ -73,6 +73,7 @@ API_PROXY_TARGET=https://staging.comedor.org
 | Comando | Archivos que carga | Comportamiento |
 | :--- | :--- | :--- |
 | `pnpm dev` | `.env`, `.env.development`, `.env.development.local` | Proxy hacia `API_PROXY_TARGET` (por defecto el backend local en el puerto 3000). |
+| `pnpm dev:mock` | `.env`, `.env.mock`, `.env.mock.local` | Sin backend: MSW responde en el navegador. Ver [AUTENTICACION.md](./AUTENTICACION.md). |
 | `pnpm build` | `.env`, `.env.production`, `.env.production.local` | Sin proxy ni mocks: el proxy de Vite solo existe en desarrollo. En producción, o el servidor web reenvía `/api` al backend (mismo dominio), o se construye con `VITE_API_BASE_URL` apuntando a la URL del backend (dominios distintos, con CORS en el backend). |
 
 Los archivos `*.local` tienen prioridad y no se versionan.

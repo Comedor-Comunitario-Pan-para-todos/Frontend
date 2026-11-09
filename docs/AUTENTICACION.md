@@ -1,0 +1,89 @@
+# Autenticación — SIG-CCPT
+
+Cómo el frontend inicia, conserva y cierra la sesión. El cliente HTTP y sus
+errores están en [HTTP.md](./HTTP.md).
+
+---
+
+## 1. Contrato con el backend
+
+| Petición | Cuerpo o encabezado | Respuesta |
+| :--- | :--- | :--- |
+| `POST /auth/login` | `{ email, password }` | `{ accessToken, usuario: { id, email, nombreCompleto, rol } }` |
+| `GET /auth/me` | `Authorization: Bearer <token>` | `{ id, email, nombreCompleto, rol, activo }` |
+
+* **Roles:** `COORDINADORA`, `PRESIDENTE_JAC`, `VOLUNTARIO`, `DONANTE`. Un rol
+  que el frontend no conozca se trata como respuesta inválida.
+* **El rol no viaja en el token.** Solo se conoce por la respuesta del login o
+  de `/auth/me`.
+* **El backend no tiene** renovación de token ni endpoint de cierre de sesión.
+  Cerrar sesión es borrar el token en el navegador.
+
+---
+
+## 2. Piezas
+
+| Archivo | Papel |
+| :--- | :--- |
+| `modules/auth/domain/Usuario.ts` | Roles y datos del usuario. |
+| `modules/auth/application/iniciarSesion.ts` | Autentica y guarda el token. |
+| `modules/auth/application/restaurarSesion.ts` | Decide si hay sesión al abrir la app. |
+| `modules/auth/application/cerrarSesion.ts` | Borra el token. |
+| `modules/auth/infrastructure/http/AuthHttpRepository.ts` | Llama a la API y valida con Zod. |
+| `modules/auth/infrastructure/dispositivo/SesionLocalStorage.ts` | Guarda el token. |
+| `app/dependencias.ts` | Conecta los adaptadores con los casos de uso. |
+
+---
+
+## 3. Restaurar la sesión
+
+Al abrir o recargar la app solo sobrevive el token. `restaurarSesion` pregunta
+al servidor quién es el usuario:
+
+| Situación | Resultado | La app muestra |
+| :--- | :--- | :--- |
+| No hay token | `null`, sin llamar al servidor | Login |
+| `/auth/me` responde bien | El `Usuario` | La aplicación |
+| `/auth/me` responde 401 | Borra el token y devuelve `null` | Login |
+| Falla la red o el servidor | Conserva el token y lanza el error | Opción de reintentar |
+
+Un fallo de red no invalida la sesión: nadie dijo que el token sea malo, solo
+que no se pudo preguntar. Así un voluntario sin señal no tiene que volver a
+escribir su clave.
+
+---
+
+## 4. El token
+
+* **Se guarda en `localStorage`**, solo el token. Una cookie `httpOnly` depende
+  de que el backend la emita, y hoy responde el token en el cuerpo.
+* **Si el navegador bloquea `localStorage`**, el token queda en memoria hasta
+  recargar.
+* **El frontend no revisa el vencimiento (`exp`).** Compararlo con el reloj del
+  teléfono sacaría de la app a quien tenga la fecha adelantada, aunque su token
+  siga vigente. El servidor decide y responde 401.
+* **Un 401 durante el uso** borra el token, y solo si la petición usó el token
+  vigente (ver "Interceptores de sesión" en [HTTP.md](./HTTP.md)).
+
+---
+
+## 5. Probar sin backend
+
+```bash
+pnpm dev:mock
+```
+
+MSW responde en el navegador con el mismo formato de NestJS. La clave de todos
+los usuarios es `Comedor123*`.
+
+| Correo | Resultado |
+| :--- | :--- |
+| `coordinadora@comedor.test` | Rol `COORDINADORA` |
+| `presidente@comedor.test` | Rol `PRESIDENTE_JAC` |
+| `voluntario@comedor.test` | Rol `VOLUNTARIO` |
+| `donante@comedor.test` | Rol `DONANTE` |
+| `inactivo@comedor.test` | 401: usuario inactivo |
+| `caida@comedor.test` | 500: servidor caído |
+
+Los handlers están en `src/mocks/handlers.ts`. Ni ellos ni
+`mockServiceWorker.js` llegan al build de producción.

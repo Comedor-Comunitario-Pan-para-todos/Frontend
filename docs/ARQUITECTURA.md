@@ -23,7 +23,14 @@ organizada por módulo**:
 ```
 src/
 ├── app/                          Arranque y composición de la aplicación
+│   ├── layout/
+│   ├── paginas/
+│   ├── entorno.ts
+│   ├── modulos.ts
+│   ├── rutas.tsx
+│   ├── queryClient.ts
 │   ├── dependencias.ts
+│   ├── contextoDependencias.ts
 │   ├── DependenciasProvider.tsx
 │   └── App.tsx
 │
@@ -34,10 +41,9 @@ src/
 │       │   └── ports/
 │       ├── infrastructure/
 │       │   ├── http/
-│       │   ├── memoria/
 │       │   └── dispositivo/
 │       ├── ui/
-│       └── index.ts
+│       └── index.ts              Solo si otro módulo lo necesita
 │
 ├── shared/                       Piezas comunes a varios módulos
 │   ├── domain/
@@ -45,6 +51,7 @@ src/
 │   ├── infrastructure/
 │   └── ui/
 │
+├── mocks/                        Respuestas simuladas con MSW (`pnpm dev:mock`)
 ├── index.css                     Tokens del sistema de diseño
 └── main.tsx                      Punto de entrada
 
@@ -65,8 +72,13 @@ Es el único lugar que conoce las implementaciones concretas y las conecta entre
 | Archivo | Contenido |
 | :--- | :--- |
 | `dependencias.ts` | Crea los adaptadores y, con ellos, los casos de uso de cada módulo. |
-| `DependenciasProvider.tsx` | Context de React que entrega esos casos de uso a la interfaz. |
-| `App.tsx` | Rutas y layout general de la aplicación. |
+| `contextoDependencias.ts` | Context de React y hook `useDependencias`, con el que la interfaz recibe los casos de uso. |
+| `DependenciasProvider.tsx` | Proveedor de ese context. |
+| `rutas.tsx`, `modulos.ts` | Rutas de la aplicación y lista de módulos del menú. |
+| `layout/`, `paginas/` | Layout con navegación y páginas generales (error, no encontrada). |
+| `entorno.ts` | Lee y valida las variables de entorno. |
+| `queryClient.ts` | Configuración de TanStack Query. |
+| `App.tsx` | Reúne los proveedores y el enrutador. |
 
 ### `modules/<modulo>/` — Módulos de negocio
 
@@ -99,7 +111,6 @@ Los adaptadores: implementaciones concretas de los puertos.
 | Carpeta | Contenido |
 | :--- | :--- |
 | `http/` | Adaptadores que llaman a la API REST del backend y traducen sus respuestas (DTO) a tipos del dominio. |
-| `memoria/` | Adaptadores con datos en memoria, para pruebas y demostraciones mientras el backend no está disponible. |
 | `dispositivo/` | Adaptadores de capacidades del navegador o del teléfono (cámara, archivos, compresión de imágenes). |
 
 #### `ui/` — Interfaz
@@ -112,8 +123,9 @@ Todo lo que es React.
 
 #### `index.ts` — API pública del módulo
 
-Exporta lo que otros módulos o `app/` pueden usar. Lo que no se exporta aquí es
-interno del módulo.
+Exporta lo que otros módulos pueden usar. Lo que no se exporta aquí es interno
+del módulo. Se crea cuando otro módulo necesita algo de este, y expone solo eso.
+`app/` no lo requiere: es el único lugar que importa adaptadores directamente.
 
 ### `shared/` — Compartido
 
@@ -158,10 +170,14 @@ app/ conecta infrastructure con application y lo entrega a ui
 | `domain` | `shared/domain` | Ninguna otra capa, React, API, navegador |
 | `application` | `domain`, `shared/domain`, `shared/application` | React, `infrastructure`, `ui` |
 | `infrastructure` | `application/ports`, `domain`, `shared` (excepto `shared/ui`) | `ui` |
-| `ui` | `application`, `domain`, `shared/ui` | `infrastructure` |
+| `ui` | `application`, `domain`, `shared/ui`, `app/contextoDependencias.ts` | `infrastructure`, el resto de `app/` |
 | `app` | Todo | — |
 
 Entre módulos, solo se importa a través del `index.ts` de cada uno.
+
+`contextoDependencias.ts` es la única parte de `app/` que puede importar la
+interfaz. Solo conoce el tipo de los casos de uso, así que `ui` sigue sin
+depender de Axios ni de ningún otro adaptador.
 
 ### Imports
 
