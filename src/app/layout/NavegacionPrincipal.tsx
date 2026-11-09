@@ -15,7 +15,7 @@ export function NavegacionPrincipal() {
   return (
     <nav
       aria-label="Principal"
-      className="fixed inset-x-0 bottom-0 z-10 border-t border-hairline bg-surface px-1 pt-2 pb-safe lg:top-0 lg:right-auto lg:w-64 lg:border-t-0 lg:border-r lg:px-4 lg:py-6"
+      className="fixed inset-x-0 bottom-0 z-10 border-t border-hairline bg-surface px-1 pt-2 pb-safe lg:top-0 lg:right-auto lg:w-64 lg:border-t-0 lg:border-r lg:px-4 lg:pt-12 lg:pb-6"
     >
       <p className="hidden px-4 pb-6 text-title font-semibold text-ink lg:block">Pan para Todos</p>
       <ul className="flex gap-2 lg:flex-col">
