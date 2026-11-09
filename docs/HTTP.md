@@ -187,7 +187,21 @@ un error de dominio. Por ejemplo, un `conflicto` al registrar se convierte en
 
 ---
 
-## 7. Pruebas
+## 7. Consultas con TanStack Query
+
+El cliente se configura en `src/app/queryClient.ts`. La caché vive solo en
+memoria: al recargar la página los datos se piden de nuevo (RNF-01).
+
+| Ajuste | Valor | Motivo |
+| :--- | :--- | :--- |
+| Reintentos de lecturas | 2, solo `red` y `servidor` | Son fallos pasajeros. Un 403 o un 404 no cambia al repetirlo, y un `tiempo-agotado` ya esperó 15 s. |
+| Reintentos de escrituras | Ninguno | Repetir un guardado podría duplicar el registro. La persona decide con "Reintentar". |
+| Vigencia de los datos | 30 s | Evita repetir la misma petición al cambiar de pantalla en teléfonos de gama baja. |
+| `networkMode` | `always` | Sin conexión la petición falla de inmediato. El modo por defecto la deja en pausa y enviaría el guardado al volver la red, y la app no tiene colas de sincronización. |
+
+---
+
+## 8. Pruebas
 
 Las pruebas interceptan la red con MSW (`tests/mocks/servidor.ts`), así que
 ejercitan Axios, los interceptores y la validación reales. Cada prueba define
