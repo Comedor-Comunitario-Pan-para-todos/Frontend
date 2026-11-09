@@ -4,12 +4,14 @@ import type { Usuario } from '@/modules/auth/domain/Usuario.ts'
 
 export type EstadoSesion = 'cargando' | 'error' | 'anonimo' | 'autenticado'
 
+export type FinSesion = 'cerrada' | 'vencida'
+
 export interface Auth {
   readonly estado: EstadoSesion
   readonly usuario: Usuario | null
   readonly error: unknown
   readonly verificando: boolean
-  readonly cerroSesion: boolean
+  readonly finSesion: FinSesion | null
   reintentar(): void
   iniciarSesion(credenciales: Credenciales): Promise<void>
   cerrarSesion(): void

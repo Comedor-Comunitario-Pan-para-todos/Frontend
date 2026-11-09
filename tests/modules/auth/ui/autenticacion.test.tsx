@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react'
+import { act, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { beforeEach, describe, expect, it } from 'vitest'
@@ -10,6 +10,18 @@ import {
   renderizarApp,
 } from '../../../app/renderizarApp.tsx'
 import { servidor } from '../../../mocks/servidor.ts'
+
+const AVISO_SESION_VENCIDA = 'Su sesión terminó. Vuelva a iniciar sesión.'
+
+function cambiarTokenEnOtraPestana(token: string | null) {
+  const almacen = new SesionLocalStorage()
+  if (token === null) almacen.borrarToken()
+  else almacen.guardarToken(token)
+
+  act(() => {
+    window.dispatchEvent(new StorageEvent('storage', { key: 'sig-ccpt.token', newValue: token }))
+  })
+}
 
 async function ingresar(email: string, clave: string) {
   await userEvent.type(await screen.findByLabelText('Correo electrónico'), email)
@@ -97,6 +109,7 @@ describe('autenticación', () => {
 
     expect(await screen.findByRole('heading', { name: 'Iniciar sesión' })).toBeInTheDocument()
     expect(new SesionLocalStorage().obtenerToken()).toBeNull()
+    expect(screen.queryByText(AVISO_SESION_VENCIDA)).not.toBeInTheDocument()
 
     await ingresar('voluntario@comedor.test', CLAVE_MOCK)
 
@@ -113,6 +126,60 @@ describe('autenticación', () => {
 
     await screen.findByRole('heading', { name: 'Iniciar sesión' })
     expect(cliente.getQueryData(['beneficiarios', 'lista'])).toBeUndefined()
+  })
+
+  it('si el servidor rechaza la sesión durante el uso avisa y permite volver a la pantalla', async () => {
+    iniciarSesionDePrueba()
+    const cliente = crearClienteDePrueba()
+    cliente.setQueryData(['beneficiarios', 'lista'], ['Comensal de prueba'])
+    renderizarApp('/turnos', cliente)
+    await screen.findByRole('heading', { name: 'Turnos' })
+    servidor.use(
+      http.get(
+        '*/auth/me',
+        () => HttpResponse.json({ statusCode: 401, message: 'Unauthorized' }, { status: 401 }),
+        { once: true },
+      ),
+    )
+
+    void cliente.invalidateQueries({ queryKey: ['auth', 'me'] })
+
+    expect(await screen.findByText(AVISO_SESION_VENCIDA)).toBeInTheDocument()
+    expect(new SesionLocalStorage().obtenerToken()).toBeNull()
+    expect(cliente.getQueryData(['beneficiarios', 'lista'])).toBeUndefined()
+
+    await ingresar('voluntario@comedor.test', CLAVE_MOCK)
+
+    expect(await screen.findByRole('heading', { name: 'Turnos' })).toBeInTheDocument()
+  })
+
+  it('al abrir la app con el token vencido avisa que la sesión terminó', async () => {
+    new SesionLocalStorage().guardarToken('token-vencido')
+
+    renderizarApp('/')
+
+    expect(await screen.findByText(AVISO_SESION_VENCIDA)).toBeInTheDocument()
+  })
+
+  it('si se cierra la sesión en otra pestaña también sale de esta', async () => {
+    iniciarSesionDePrueba()
+    renderizarApp('/turnos')
+    await screen.findByRole('heading', { name: 'Turnos' })
+
+    cambiarTokenEnOtraPestana(null)
+
+    expect(await screen.findByRole('heading', { name: 'Iniciar sesión' })).toBeInTheDocument()
+  })
+
+  it('si otra persona ingresa en otra pestaña esta muestra a esa persona', async () => {
+    iniciarSesionDePrueba()
+    renderizarApp('/')
+    await screen.findByText('Coordinación de Prueba')
+
+    cambiarTokenEnOtraPestana('mock-token.mock-3')
+
+    expect(await screen.findByText('Voluntario de Prueba')).toBeInTheDocument()
+    expect(screen.queryByText('Coordinación de Prueba')).not.toBeInTheDocument()
   })
 
   it('si no se puede verificar la sesión permite reintentar sin perderla', async () => {

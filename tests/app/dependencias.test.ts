@@ -1,5 +1,5 @@
 import { http, HttpResponse } from 'msw'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { crearDependencias } from '@/app/dependencias.ts'
 import { servidor } from '../mocks/servidor.ts'
 
@@ -54,6 +54,31 @@ describe('crearDependencias', () => {
 
     await expect(restaurarSesion()).resolves.toBeNull()
     await expect(restaurarSesion()).resolves.toBeNull()
+  })
+
+  it('un 401 con el token vigente avisa a quien esté suscrito, y deja de avisar al cancelar', async () => {
+    responderLogin()
+    servidor.use(
+      http.get('*/api/auth/me', () =>
+        HttpResponse.json({ statusCode: 401, message: 'Unauthorized' }, { status: 401 }),
+      ),
+    )
+    const { iniciarSesion, restaurarSesion, suscribirExpiracion } = crearDependencias({
+      apiBaseUrl: '/api',
+    })
+    const oyente = vi.fn()
+    const cancelar = suscribirExpiracion(oyente)
+    await iniciarSesion(CREDENCIALES)
+
+    await restaurarSesion()
+
+    expect(oyente).toHaveBeenCalledTimes(1)
+
+    cancelar()
+    await iniciarSesion(CREDENCIALES)
+    await restaurarSesion()
+
+    expect(oyente).toHaveBeenCalledTimes(1)
   })
 
   it('cerrar sesión impide restaurarla sin consultar al servidor', async () => {

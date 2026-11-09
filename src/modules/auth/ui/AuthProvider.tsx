@@ -1,9 +1,9 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState, type ReactNode } from 'react'
+import { useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useDependencias } from '@/app/contextoDependencias.ts'
 import type { Credenciales } from '@/modules/auth/application/ports/AuthRepository.ts'
 import type { Usuario } from '@/modules/auth/domain/Usuario.ts'
-import { ContextoAuth, type Auth, type EstadoSesion } from './contextoAuth.ts'
+import { ContextoAuth, type Auth, type EstadoSesion, type FinSesion } from './contextoAuth.ts'
 
 const CLAVE_USUARIO = ['auth', 'me']
 
@@ -13,35 +13,72 @@ function calcularEstado(pendiente: boolean, usuario: Usuario | null | undefined)
   return usuario === null ? 'anonimo' : 'autenticado'
 }
 
+function vaciarDatos(cliente: QueryClient): void {
+  cliente.removeQueries({ predicate: ({ queryKey }) => queryKey[0] !== CLAVE_USUARIO[0] })
+  cliente.getMutationCache().clear()
+}
+
+function quitarUsuario(cliente: QueryClient): void {
+  cliente.setQueryData(CLAVE_USUARIO, null)
+  vaciarDatos(cliente)
+}
+
 export function AuthProvider({ children }: { readonly children: ReactNode }) {
-  const { restaurarSesion, iniciarSesion, cerrarSesion } = useDependencias()
+  const {
+    restaurarSesion,
+    iniciarSesion,
+    cerrarSesion,
+    suscribirExpiracion,
+    suscribirCambioDeToken,
+  } = useDependencias()
   const cliente = useQueryClient()
-  const [cerroSesion, setCerroSesion] = useState(false)
+  const [finSesion, setFinSesion] = useState<FinSesion | null>(null)
   const consulta = useQuery({
     queryKey: CLAVE_USUARIO,
     queryFn: restaurarSesion,
     staleTime: Infinity,
   })
 
+  useEffect(() => {
+    const dejarDeOirExpiracion = suscribirExpiracion(() => {
+      setFinSesion('vencida')
+      quitarUsuario(cliente)
+    })
+
+    const dejarDeOirToken = suscribirCambioDeToken((token) => {
+      if (token === null) {
+        setFinSesion('cerrada')
+        quitarUsuario(cliente)
+        return
+      }
+      // Otra pestaña inició sesión, quizá con otra persona: se pregunta de nuevo quién es.
+      setFinSesion(null)
+      vaciarDatos(cliente)
+      void cliente.invalidateQueries({ queryKey: CLAVE_USUARIO })
+    })
+
+    return () => {
+      dejarDeOirExpiracion()
+      dejarDeOirToken()
+    }
+  }, [cliente, suscribirExpiracion, suscribirCambioDeToken])
+
   const auth: Auth = {
     estado: calcularEstado(consulta.isPending, consulta.data),
     usuario: consulta.data ?? null,
     error: consulta.error,
     verificando: consulta.isFetching,
-    cerroSesion,
+    finSesion,
     reintentar: () => void consulta.refetch(),
     iniciarSesion: async (credenciales: Credenciales) => {
       const usuario = await iniciarSesion(credenciales)
       cliente.setQueryData(CLAVE_USUARIO, usuario)
-      setCerroSesion(false)
+      setFinSesion(null)
     },
     cerrarSesion: () => {
       cerrarSesion()
-      setCerroSesion(true)
-      cliente.setQueryData(CLAVE_USUARIO, null)
-      // El siguiente voluntario de este teléfono no debe ver datos del anterior.
-      cliente.removeQueries({ predicate: ({ queryKey }) => queryKey[0] !== CLAVE_USUARIO[0] })
-      cliente.getMutationCache().clear()
+      setFinSesion('cerrada')
+      quitarUsuario(cliente)
     },
   }
 

@@ -62,8 +62,9 @@ escribir su clave.
 * **El frontend no revisa el vencimiento (`exp`).** Compararlo con el reloj del
   teléfono sacaría de la app a quien tenga la fecha adelantada, aunque su token
   siga vigente. El servidor decide y responde 401.
-* **Un 401 durante el uso** borra el token, y solo si la petición usó el token
-  vigente (ver "Interceptores de sesión" en [HTTP.md](./HTTP.md)).
+* **Un 401 durante el uso** borra el token y termina la sesión, solo si la
+  petición usó el token vigente (ver "Interceptores de sesión" en
+  [HTTP.md](./HTTP.md)).
 
 ---
 
@@ -78,7 +79,19 @@ El backend no tiene endpoint de cierre: salir ocurre solo en el navegador.
 
 ---
 
-## 6. Probar sin backend
+## 6. Cuando la sesión termina sola
+
+| Situación | La app hace |
+| :--- | :--- |
+| El servidor rechaza el token (401) | Vacía los datos en memoria, lleva al login con el aviso "Su sesión terminó" y, al volver a entrar, regresa a la pantalla donde estaba |
+| Se cierra la sesión en otra pestaña | Sale también de esta, sin recordar la pantalla |
+| Se inicia sesión en otra pestaña | Vacía los datos y pregunta de nuevo quién es, porque puede ser otra persona |
+
+Lo escrito en un formulario sin enviar se pierde al terminar la sesión.
+
+---
+
+## 7. Probar sin backend
 
 ```bash
 pnpm dev:mock

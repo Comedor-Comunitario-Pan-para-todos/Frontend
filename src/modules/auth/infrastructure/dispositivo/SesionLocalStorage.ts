@@ -31,4 +31,14 @@ export class SesionLocalStorage implements SesionStoragePort {
       // Sin acceso al almacenamiento no hay nada que borrar.
     }
   }
+
+  // El evento `storage` solo llega a las demás pestañas del navegador.
+  suscribirCambiosExternos(oyente: (token: string | null) => void): () => void {
+    const alCambiar = ({ key, newValue }: StorageEvent) => {
+      if (key === CLAVE_TOKEN || key === null) oyente(newValue)
+    }
+
+    window.addEventListener('storage', alCambiar)
+    return () => window.removeEventListener('storage', alCambiar)
+  }
 }

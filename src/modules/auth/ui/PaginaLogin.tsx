@@ -27,7 +27,7 @@ function leerDestino(estadoNavegacion: unknown): string {
 }
 
 export function PaginaLogin() {
-  const { estado, iniciarSesion } = useAuth()
+  const { estado, finSesion, iniciarSesion } = useAuth()
   const location = useLocation()
   const ingreso = useMutation({ mutationFn: iniciarSesion })
   const {
@@ -76,6 +76,10 @@ export function PaginaLogin() {
               Use el correo y la contraseña que le entregó la coordinación.
             </p>
           </div>
+
+          {finSesion === 'vencida' && !ingreso.isError && (
+            <Alerta tipo="aviso">Su sesión terminó. Vuelva a iniciar sesión.</Alerta>
+          )}
 
           <CampoTexto
             etiqueta="Correo electrónico"
