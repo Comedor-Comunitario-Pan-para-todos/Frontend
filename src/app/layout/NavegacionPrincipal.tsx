@@ -1,4 +1,6 @@
 import { NavLink } from 'react-router'
+import { tienePermiso } from '@/modules/auth/domain/permisos.ts'
+import { useAuth } from '@/modules/auth/ui/contextoAuth.ts'
 import { MODULOS } from '../modulos.ts'
 
 const CLASES_ENLACE =
@@ -12,6 +14,9 @@ function clasesEnlace({ isActive }: { readonly isActive: boolean }) {
 }
 
 export function NavegacionPrincipal() {
+  const { usuario } = useAuth()
+  const modulosPermitidos = MODULOS.filter(({ permiso }) => tienePermiso(usuario, permiso))
+
   return (
     <nav
       aria-label="Principal"
@@ -19,7 +24,7 @@ export function NavegacionPrincipal() {
     >
       <p className="hidden px-4 pb-6 text-title font-semibold text-ink lg:block">Pan para Todos</p>
       <ul className="flex gap-2 lg:flex-col">
-        {MODULOS.map(({ ruta, nombre, Icono }) => (
+        {modulosPermitidos.map(({ ruta, nombre, Icono }) => (
           <li key={ruta} className="min-w-12 flex-auto lg:flex-none">
             <NavLink to={ruta} end={ruta === '/'} className={clasesEnlace}>
               <Icono aria-hidden="true" className="size-5" />

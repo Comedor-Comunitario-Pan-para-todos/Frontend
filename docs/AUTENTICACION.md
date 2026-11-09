@@ -56,7 +56,8 @@ escribir su clave.
 ## 4. El token
 
 * **Se guarda en `localStorage`**, solo el token. Una cookie `httpOnly` depende
-  de que el backend la emita, y hoy responde el token en el cuerpo.
+  de que el backend la emita, y hoy responde el token en el cuerpo. Guardarlo
+  solo en memoria obligaría a escribir la clave en cada recarga, en plena fila.
 * **Si el navegador bloquea `localStorage`**, el token queda en memoria hasta
   recargar.
 * **El frontend no revisa el vencimiento (`exp`).** Compararlo con el reloj del
@@ -91,7 +92,35 @@ Lo escrito en un formulario sin enviar se pierde al terminar la sesión.
 
 ---
 
-## 7. Probar sin backend
+## 7. Permisos por rol
+
+La matriz vive en `modules/auth/domain/permisos.ts` y es lo único que hay que
+tocar para cambiar quién ve qué.
+
+| Módulo | Coordinadora | Presidente JAC | Voluntario | Donante |
+| :--- | :---: | :---: | :---: | :---: |
+| Inicio | Sí | Sí | Sí | Sí |
+| Turnos | Sí | No | Sí | No |
+| Beneficiarios | Sí | No | Sí | No |
+| Inventario | Sí | No | Sí | No |
+| Aportes | No | No | No | Sí |
+| Reportes | Sí | Sí | No | Sí |
+
+Aportes es la vista del donante. La recepción de donaciones de la Coordinadora
+se ubicará cuando se construya ese módulo.
+
+* **`ConPermiso`** muestra su contenido solo si el rol tiene el permiso. Sirve
+  para rutas, secciones y botones.
+* **El menú** se filtra con la misma matriz: nadie ve un módulo al que no puede
+  entrar.
+* **Quien fuerza la dirección** ve la página 403 dentro de la app; la URL no
+  cambia y el menú sigue disponible.
+* **Esto solo ordena la interfaz.** Proteger los datos y registrar el intento en
+  la bitácora (HU-02) le corresponde al backend, que debe responder 403.
+
+---
+
+## 8. Probar sin backend
 
 ```bash
 pnpm dev:mock

@@ -75,7 +75,7 @@ Es el único lugar que conoce las implementaciones concretas y las conecta entre
 | `contextoDependencias.ts` | Context de React y hook `useDependencias`, con el que la interfaz recibe los casos de uso. |
 | `DependenciasProvider.tsx` | Proveedor de ese context. |
 | `rutas.tsx`, `modulos.ts` | Rutas de la aplicación y lista de módulos del menú. |
-| `layout/`, `paginas/` | Layout con navegación y páginas generales (error, no encontrada). |
+| `layout/`, `paginas/` | Layout con navegación y páginas generales (error, no encontrada, sin acceso). |
 | `entorno.ts` | Lee y valida las variables de entorno. |
 | `queryClient.ts` | Configuración de TanStack Query. |
 | `App.tsx` | Reúne los proveedores y el enrutador. |

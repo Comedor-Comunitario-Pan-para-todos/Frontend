@@ -10,8 +10,8 @@ import { AuthProvider } from '@/modules/auth/ui/AuthProvider.tsx'
 
 export const TOKEN_COORDINADORA = 'mock-token.mock-1'
 
-export function iniciarSesionDePrueba(): void {
-  new SesionLocalStorage().guardarToken(TOKEN_COORDINADORA)
+export function iniciarSesionDePrueba(token = TOKEN_COORDINADORA): void {
+  new SesionLocalStorage().guardarToken(token)
 }
 
 export function crearClienteDePrueba(): QueryClient {
