@@ -1,9 +1,9 @@
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { createMemoryRouter } from 'react-router'
-import { RouterProvider } from 'react-router/dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { rutas } from '@/app/rutas.tsx'
+import { handlers } from '@/mocks/handlers.ts'
+import { servidor } from '../mocks/servidor.ts'
+import { iniciarSesionDePrueba, renderizarApp as renderizarEn } from './renderizarApp.tsx'
 
 const fallos = vi.hoisted(() => ({ falloEnMenu: false }))
 
@@ -24,12 +24,11 @@ vi.mock('@/app/layout/NavegacionPrincipal.tsx', async (original) => {
   }
 })
 
-function renderizarEn(ruta: string) {
-  render(<RouterProvider router={createMemoryRouter(rutas, { initialEntries: [ruta] })} />)
-}
-
 describe('errores de ruta', () => {
   beforeEach(() => {
+    localStorage.clear()
+    servidor.use(...handlers)
+    iniciarSesionDePrueba()
     fallos.falloEnMenu = false
     vi.spyOn(console, 'error').mockImplementation(() => {})
     vi.spyOn(console, 'warn').mockImplementation(() => {})

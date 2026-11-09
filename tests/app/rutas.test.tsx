@@ -1,15 +1,17 @@
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { createMemoryRouter } from 'react-router'
-import { RouterProvider } from 'react-router/dom'
-import { describe, expect, it } from 'vitest'
-import { rutas } from '@/app/rutas.tsx'
-
-function renderizarEn(ruta: string) {
-  render(<RouterProvider router={createMemoryRouter(rutas, { initialEntries: [ruta] })} />)
-}
+import { beforeEach, describe, expect, it } from 'vitest'
+import { handlers } from '@/mocks/handlers.ts'
+import { servidor } from '../mocks/servidor.ts'
+import { iniciarSesionDePrueba, renderizarApp as renderizarEn } from './renderizarApp.tsx'
 
 describe('rutas', () => {
+  beforeEach(() => {
+    localStorage.clear()
+    servidor.use(...handlers)
+    iniciarSesionDePrueba()
+  })
+
   it('muestra el inicio en la raíz', async () => {
     renderizarEn('/')
 
