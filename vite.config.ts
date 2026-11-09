@@ -1,7 +1,25 @@
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
+import { rmSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { defineConfig, loadEnv, type ProxyOptions } from 'vite'
+import { defineConfig, loadEnv, type Plugin, type ProxyOptions } from 'vite'
+
+// Todo public/ se copia al build; este archivo solo sirve para `pnpm dev:mock`.
+function excluirWorkerDeMocks(): Plugin {
+  let carpetaSalida = 'dist'
+
+  return {
+    name: 'excluir-worker-de-mocks',
+    apply: 'build',
+    configResolved(config) {
+      carpetaSalida = config.build.outDir
+    },
+    closeBundle() {
+      rmSync(resolve(carpetaSalida, 'mockServiceWorker.js'), { force: true })
+    },
+  }
+}
 
 function crearProxy(variables: Record<string, string>): Record<string, ProxyOptions> | undefined {
   const base = (variables.VITE_API_BASE_URL || '/api').trim().replace(/\/+$/, '')
@@ -31,7 +49,7 @@ export default defineConfig(({ mode }) => {
   const variables = loadEnv(mode, process.cwd(), '')
 
   return {
-    plugins: [react(), tailwindcss()],
+    plugins: [react(), tailwindcss(), excluirWorkerDeMocks()],
     resolve: {
       alias: {
         '@': fileURLToPath(new URL('./src', import.meta.url)),
