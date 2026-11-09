@@ -22,7 +22,7 @@ El proyecto implementa una **Arquitectura Hexagonal (Puertos y Adaptadores)** en
 * **Patrón de Diseño:** **Arquitectura Hexagonal (Puertos y Adaptadores) organizada por módulo**. Cada área de negocio (`beneficiarios`, `turnos`, `inventario`…) vive en `src/modules/<modulo>/` con sus propias capas:
   * **Dominio (`domain`):** Entidades del comedor y reglas de negocio puras, sin React ni API.
   * **Aplicación (`application`):** Casos de uso y puertos (interfaces) hacia el exterior.
-  * **Infraestructura (`infrastructure`):** Adaptadores que implementan los puertos: HTTP hacia la API del Backend, dispositivo (cámara, compresión de imágenes) y en memoria para pruebas.
+  * **Infraestructura (`infrastructure`):** Adaptadores que implementan los puertos: HTTP hacia la API del Backend, dispositivo (cámara, compresión de imágenes).
   * **Interfaz (`ui`):** Componentes, hooks y páginas React maquetados con Tailwind CSS.
   * Lo común a varios módulos va en `src/shared/` y la composición de la aplicación en `src/app/`.
   * Estructura completa y reglas entre capas: [`docs/ARQUITECTURA.md`](./docs/ARQUITECTURA.md).
@@ -33,6 +33,17 @@ El proyecto implementa una **Arquitectura Hexagonal (Puertos y Adaptadores)** en
 
 ### 2.3 Sistema de Diseño
 * Tokens centralizados en `src/index.css` (Tailwind CSS v4, bloque `@theme`): colores, tipografías, escala de texto, breakpoints, medidas táctiles, radios y sombras.
+
+### 2.4 Desarrollo
+
+| Comando | Uso |
+| :--- | :--- |
+| `pnpm dev` | Servidor de desarrollo contra la API real (proxy hacia el backend). |
+| `pnpm dev:mock` | Servidor de desarrollo sin backend, con respuestas simuladas. |
+| `pnpm test` | Pruebas. |
+| `pnpm build` | Build de producción. |
+
+Más detalle en [`docs/HTTP.md`](./docs/HTTP.md) (entorno, cliente HTTP, errores) y [`docs/AUTENTICACION.md`](./docs/AUTENTICACION.md) (sesión, usuarios de prueba).
 
 ---
 

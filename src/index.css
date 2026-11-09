@@ -133,6 +133,14 @@
 
   /* Movimiento */
   --ease-press: cubic-bezier(0.2, 0, 0, 1);
+  --animate-constancia: constancia-entrada 200ms var(--ease-press);
+
+  @keyframes constancia-entrada {
+    from {
+      opacity: 0;
+      transform: translateY(0.5rem);
+    }
+  }
 }
 
 /* Márgenes seguros para barras fijas en teléfonos con notch / barra de gestos */
