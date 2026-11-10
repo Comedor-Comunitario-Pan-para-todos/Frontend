@@ -1,6 +1,9 @@
 import { http, HttpResponse } from 'msw'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { crearDependencias } from '@/app/dependencias.ts'
+import { reiniciarBeneficiariosMock } from '@/mocks/beneficiarios.ts'
+import { CLAVE_MOCK, handlers } from '@/mocks/handlers.ts'
+import { BeneficiarioDuplicado } from '@/modules/beneficiarios/domain/BeneficiarioDuplicado.ts'
 import { servidor } from '../mocks/servidor.ts'
 
 const USUARIO = {
@@ -91,5 +94,68 @@ describe('crearDependencias', () => {
     cerrarSesion()
 
     await expect(restaurarSesion()).resolves.toBeNull()
+  })
+
+  describe('beneficiarios', () => {
+    async function entrarComoVoluntario() {
+      reiniciarBeneficiariosMock()
+      servidor.use(...handlers)
+      const dependencias = crearDependencias({ apiBaseUrl: '/api' })
+      await dependencias.iniciarSesion({ email: 'voluntario@comedor.test', password: CLAVE_MOCK })
+      return dependencias
+    }
+
+    it('los casos de uso comparten la sesión: buscan con el token del login', async () => {
+      const { buscarBeneficiarios } = await entrarComoVoluntario()
+
+      const pagina = await buscarBeneficiarios({ texto: '42.185.390' })
+
+      expect(pagina.beneficiarios).toMatchObject([{ nombres: 'María Elena' }])
+    })
+
+    it('sin sesión el servidor rechaza la búsqueda', async () => {
+      servidor.use(...handlers)
+      const { buscarBeneficiarios } = crearDependencias({ apiBaseUrl: '/api' })
+
+      await expect(buscarBeneficiarios()).rejects.toMatchObject({ tipo: 'no-autenticado' })
+    })
+
+    it('registra, consulta la ficha y luego avisa del duplicado', async () => {
+      const { registrarBeneficiario, consultarBeneficiario, verificarDuplicado } =
+        await entrarComoVoluntario()
+
+      const ficha = await registrarBeneficiario({
+        nombres: ' Persona ',
+        apellidos: 'De Prueba',
+        documento: { tipo: 'CC', numero: '99.000.111' },
+        fechaNacimiento: '1990-01-31',
+        barrio: '',
+      })
+
+      expect(ficha).toMatchObject({
+        nombres: 'Persona',
+        documento: { tipo: 'CC', numero: '99000111' },
+        barrio: null,
+      })
+      await expect(consultarBeneficiario(ficha.id)).resolves.toEqual(ficha)
+      await expect(verificarDuplicado({ numeroDocumento: '99000111' })).resolves.toEqual({
+        motivo: 'documento',
+        beneficiario: ficha,
+      })
+    })
+
+    it('registrar un documento repetido lanza BeneficiarioDuplicado', async () => {
+      const { registrarBeneficiario } = await entrarComoVoluntario()
+
+      await expect(
+        registrarBeneficiario({
+          nombres: 'María Elena',
+          apellidos: 'Restrepo',
+          documento: { tipo: 'CC', numero: '42185390' },
+          fechaNacimiento: '1958-03-15',
+          barrio: null,
+        }),
+      ).rejects.toBeInstanceOf(BeneficiarioDuplicado)
+    })
   })
 })

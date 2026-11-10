@@ -6,6 +6,23 @@ import {
 } from '@/modules/auth/application/restaurarSesion.ts'
 import { SesionLocalStorage } from '@/modules/auth/infrastructure/dispositivo/SesionLocalStorage.ts'
 import { AuthHttpRepository } from '@/modules/auth/infrastructure/http/AuthHttpRepository.ts'
+import {
+  crearBuscarBeneficiarios,
+  type BuscarBeneficiarios,
+} from '@/modules/beneficiarios/application/buscarBeneficiarios.ts'
+import {
+  crearConsultarBeneficiario,
+  type ConsultarBeneficiario,
+} from '@/modules/beneficiarios/application/consultarBeneficiario.ts'
+import {
+  crearRegistrarBeneficiario,
+  type RegistrarBeneficiario,
+} from '@/modules/beneficiarios/application/registrarBeneficiario.ts'
+import {
+  crearVerificarDuplicado,
+  type VerificarDuplicado,
+} from '@/modules/beneficiarios/application/verificarDuplicado.ts'
+import { BeneficiarioHttpRepository } from '@/modules/beneficiarios/infrastructure/http/BeneficiarioHttpRepository.ts'
 import { AxiosHttpClient } from '@/shared/infrastructure/http/AxiosHttpClient.ts'
 import type { Entorno } from './entorno.ts'
 
@@ -15,6 +32,10 @@ export interface Dependencias {
   readonly cerrarSesion: CerrarSesion
   readonly suscribirExpiracion: (oyente: () => void) => () => void
   readonly suscribirCambioDeToken: (oyente: (token: string | null) => void) => () => void
+  readonly registrarBeneficiario: RegistrarBeneficiario
+  readonly buscarBeneficiarios: BuscarBeneficiarios
+  readonly consultarBeneficiario: ConsultarBeneficiario
+  readonly verificarDuplicado: VerificarDuplicado
 }
 
 export function crearDependencias({ apiBaseUrl }: Pick<Entorno, 'apiBaseUrl'>): Dependencias {
@@ -31,6 +52,7 @@ export function crearDependencias({ apiBaseUrl }: Pick<Entorno, 'apiBaseUrl'>): 
     },
   })
   const repositorio = new AuthHttpRepository(http)
+  const beneficiarios = new BeneficiarioHttpRepository(http)
 
   return {
     iniciarSesion: crearIniciarSesion({ repositorio, almacen }),
@@ -43,5 +65,9 @@ export function crearDependencias({ apiBaseUrl }: Pick<Entorno, 'apiBaseUrl'>): 
       }
     },
     suscribirCambioDeToken: (oyente) => almacen.suscribirCambiosExternos(oyente),
+    registrarBeneficiario: crearRegistrarBeneficiario({ repositorio: beneficiarios }),
+    buscarBeneficiarios: crearBuscarBeneficiarios({ repositorio: beneficiarios }),
+    consultarBeneficiario: crearConsultarBeneficiario({ repositorio: beneficiarios }),
+    verificarDuplicado: crearVerificarDuplicado({ repositorio: beneficiarios }),
   }
 }
