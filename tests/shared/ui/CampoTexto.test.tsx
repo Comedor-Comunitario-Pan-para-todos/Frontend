@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { Search } from 'lucide-react'
 import { createRef } from 'react'
 import { describe, expect, it } from 'vitest'
 import { CampoTexto } from '@/shared/ui/CampoTexto.tsx'
@@ -52,6 +53,29 @@ describe('CampoTexto', () => {
     render(<CampoTexto etiqueta="Correo" />)
 
     expect(screen.getByLabelText('Correo')).not.toHaveAttribute('aria-describedby')
+  })
+
+  it('suma la nota de la etiqueta a la descripción del campo', () => {
+    render(<CampoTexto etiqueta="Barrio" nota="Opcional" ayuda="No condiciona la entrega." />)
+
+    expect(screen.getByText('Opcional')).toBeInTheDocument()
+    expect(screen.getByLabelText('Barrio')).toHaveAccessibleDescription(
+      'Opcional No condiciona la entrega.',
+    )
+  })
+
+  it('la nota no cambia el nombre del campo', () => {
+    render(<CampoTexto etiqueta="Nombres" nota="Obligatorio" />)
+
+    expect(screen.getByRole('textbox', { name: 'Nombres' })).toBeInTheDocument()
+  })
+
+  it('el ícono es decorativo: no cambia el nombre ni la descripción', () => {
+    const { container } = render(<CampoTexto etiqueta="Buscar" icono={Search} />)
+    const campo = screen.getByRole('textbox', { name: 'Buscar' })
+
+    expect(container.querySelector('svg')).toHaveAttribute('aria-hidden', 'true')
+    expect(campo).not.toHaveAttribute('aria-describedby')
   })
 
   it('entrega la referencia al input, como necesita React Hook Form', () => {

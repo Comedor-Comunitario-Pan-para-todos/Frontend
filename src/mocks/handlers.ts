@@ -1,5 +1,6 @@
 import { delay, http, HttpResponse } from 'msw'
 import type { Rol } from '@/modules/auth/domain/Usuario.ts'
+import { crearHandlersBeneficiarios } from './beneficiarios.ts'
 
 export const CLAVE_MOCK = 'Comedor123*'
 
@@ -63,4 +64,6 @@ export const handlers = [
     const encontrado = buscarPorToken(request.headers.get('Authorization'))
     return encontrado ? HttpResponse.json(encontrado) : noAutorizado('Unauthorized')
   }),
+
+  ...crearHandlersBeneficiarios(buscarPorToken),
 ]

@@ -1,4 +1,4 @@
-import type { RouteObject } from 'react-router'
+import { Outlet, type RouteObject } from 'react-router'
 import { ConPermiso } from '@/modules/auth/ui/ConPermiso.tsx'
 import { RutaProtegida } from '@/modules/auth/ui/RutaProtegida.tsx'
 import { PantallaCarga } from '@/shared/ui/PantallaCarga.tsx'
@@ -15,6 +15,37 @@ const ERROR_SIN_LAYOUT = (
     <PaginaError />
   </main>
 )
+
+// Páginas ya construidas de cada módulo. Los que no aparecen aquí muestran "Próximamente".
+const PAGINAS_DE_MODULO: Readonly<Record<string, RouteObject[]>> = {
+  '/beneficiarios': [
+    {
+      index: true,
+      lazy: async () => {
+        const { PaginaBeneficiarios } =
+          await import('@/modules/beneficiarios/ui/PaginaBeneficiarios.tsx')
+        return { Component: PaginaBeneficiarios }
+      },
+      hydrateFallbackElement: <PantallaCarga />,
+    },
+    {
+      path: 'nuevo',
+      lazy: async () => {
+        const { PaginaRegistro } = await import('@/modules/beneficiarios/ui/PaginaRegistro.tsx')
+        return { Component: PaginaRegistro }
+      },
+      hydrateFallbackElement: <PantallaCarga />,
+    },
+    {
+      path: ':id',
+      lazy: async () => {
+        const { PaginaFicha } = await import('@/modules/beneficiarios/ui/PaginaFicha.tsx')
+        return { Component: PaginaFicha }
+      },
+      hydrateFallbackElement: <PantallaCarga />,
+    },
+  ],
+}
 
 export const rutas: RouteObject[] = [
   {
@@ -38,15 +69,20 @@ export const rutas: RouteObject[] = [
       {
         errorElement: <PaginaError />,
         children: [
-          // Cada módulo reemplaza su página "Próximamente" cuando se construye su feature.
-          ...MODULOS.map(({ ruta, nombre, permiso }) => ({
-            path: ruta,
-            element: (
-              <ConPermiso permiso={permiso} alternativa={<PaginaSinAcceso />}>
-                <PaginaProximamente modulo={nombre} />
-              </ConPermiso>
-            ),
-          })),
+          // El permiso del módulo cubre también todas sus páginas internas.
+          ...MODULOS.map(({ ruta, nombre, permiso }) => {
+            const paginas = PAGINAS_DE_MODULO[ruta]
+
+            return {
+              path: ruta,
+              element: (
+                <ConPermiso permiso={permiso} alternativa={<PaginaSinAcceso />}>
+                  {paginas ? <Outlet /> : <PaginaProximamente modulo={nombre} />}
+                </ConPermiso>
+              ),
+              children: paginas,
+            }
+          }),
           { path: '*', element: <PaginaNoEncontrada /> },
         ],
       },
