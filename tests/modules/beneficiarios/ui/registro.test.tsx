@@ -30,6 +30,10 @@ async function marcar(casilla: string) {
   await userEvent.click(screen.getByRole('checkbox', { name: casilla }))
 }
 
+async function elegir(opcion: string) {
+  await userEvent.click(screen.getByRole('radio', { name: opcion }))
+}
+
 async function registrar() {
   await userEvent.click(screen.getByRole('button', { name: 'Registrar persona' }))
 }
@@ -52,12 +56,35 @@ describe('registro de beneficiarios', () => {
     expect(await screen.findByRole('heading', { name: 'Registrar persona' })).toBeInTheDocument()
   })
 
-  it('registra a la persona, lo confirma y abre su ficha', async () => {
+  it('por defecto registra en nivel básico, sin pedir datos sensibles', async () => {
     const enrutador = await abrirRegistro()
     await llenarIdentidad()
-    await escribir('Número de documento', '99.000.111')
-    await escribir('Barrio o sector', 'El Jardín')
     await marcar('Informé a la persona')
+
+    expect(screen.getByRole('radio', { name: 'Básico' })).toBeChecked()
+    expect(screen.queryByLabelText('Número de documento')).not.toBeInTheDocument()
+
+    await registrar()
+
+    expect(await screen.findByText('Persona registrada')).toBeInTheDocument()
+    expect(
+      await screen.findByRole('heading', { name: 'Persona De Prueba', level: 2 }),
+    ).toBeInTheDocument()
+    expect(enrutador.state.location.pathname).toMatch(/^\/beneficiarios\/[0-9a-f-]{36}$/)
+  })
+
+  it('en nivel extendido registra documento, teléfono y clasificación', async () => {
+    await abrirRegistro()
+    await llenarIdentidad()
+    await escribir('Barrio o sector', 'El Jardín')
+    await elegir('Extendido')
+    await escribir('Número de documento', '99.000.111')
+    await escribir('Teléfono', '315 123 4567')
+    await elegir('Registro Universal de Ingresos (RUI)')
+    await escribir('Grupo', 'c12')
+    await marcar('Informé a la persona')
+
+    expect(screen.getByLabelText('Grupo')).toHaveAccessibleDescription('Vulnerable')
 
     await registrar()
 
@@ -67,12 +94,12 @@ describe('registro de beneficiarios', () => {
       await screen.findByRole('heading', { name: 'Persona De Prueba', level: 2 }),
     ).toBeInTheDocument()
     expect(screen.getByText('CC ••••0111')).toBeInTheDocument()
-    expect(enrutador.state.location.pathname).toMatch(/^\/beneficiarios\/[0-9a-f-]{36}$/)
   })
 
-  it('registra a una persona sin documento', async () => {
+  it('en nivel extendido registra a una persona sin documento', async () => {
     await abrirRegistro()
     await llenarIdentidad()
+    await elegir('Extendido')
     await marcar('Sin documento')
     await marcar('Informé a la persona')
 
@@ -98,12 +125,29 @@ describe('registro de beneficiarios', () => {
 
     expect(await screen.findByText('Escriba los nombres.')).toBeInTheDocument()
     expect(screen.getByText('Escriba los apellidos.')).toBeInTheDocument()
-    expect(screen.getByText('Escriba el número o marque «Sin documento».')).toBeInTheDocument()
     expect(screen.getByText('Indique la fecha de nacimiento.')).toBeInTheDocument()
     expect(
       screen.getByText('Confirme que informó a la persona antes de registrarla.'),
     ).toBeInTheDocument()
     expect(llamadas).toBe(0)
+  })
+
+  it('en nivel extendido valida documento, teléfono y grupo', async () => {
+    await abrirRegistro()
+    await elegir('Extendido')
+    await escribir('Teléfono', '12345')
+    await elegir('Sisbén IV')
+    await escribir('Grupo', 'E1')
+
+    await registrar()
+
+    expect(
+      await screen.findByText('Escriba el número o marque «Sin documento».'),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText('Revise el teléfono: 7 dígitos si es fijo o 10 si es celular.'),
+    ).toBeInTheDocument()
+    expect(screen.getByText('Escriba un grupo entre A1 y D21, como C12.')).toBeInTheDocument()
   })
 
   it('no acepta una fecha de nacimiento futura', async () => {
@@ -129,6 +173,7 @@ describe('registro de beneficiarios', () => {
 
   it('avisa mientras se escribe si el documento ya está en el padrón', async () => {
     await abrirRegistro()
+    await elegir('Extendido')
 
     await escribir('Número de documento', '42.185.390')
 
@@ -140,7 +185,6 @@ describe('registro de beneficiarios', () => {
 
   it('avisa si coincide el nombre y la fecha de nacimiento de alguien sin documento', async () => {
     await abrirRegistro()
-    await marcar('Sin documento')
 
     await llenarIdentidad('carlos julio', 'morales restrepo', '2014-03-15')
 
@@ -156,6 +200,7 @@ describe('registro de beneficiarios', () => {
   it('si el servidor responde que ya existe, lo dice y conserva lo escrito', async () => {
     const enrutador = await abrirRegistro()
     await llenarIdentidad('María Elena', 'Restrepo', '1958-03-15')
+    await elegir('Extendido')
     await escribir('Número de documento', '42185390')
     await marcar('Informé a la persona')
 
@@ -176,7 +221,6 @@ describe('registro de beneficiarios', () => {
     )
     await abrirRegistro()
     await llenarIdentidad()
-    await marcar('Sin documento')
     await marcar('Informé a la persona')
 
     await registrar()

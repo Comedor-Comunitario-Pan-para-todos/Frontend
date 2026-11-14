@@ -1,7 +1,7 @@
-import { IdCard, MapPin, ShieldCheck, User } from 'lucide-react'
+import { LockKeyhole, MapPin, ShieldCheck, User } from 'lucide-react'
 import { Link } from 'react-router'
 import { useAuth } from '@/modules/auth/index.ts'
-import { etiquetaTipoDocumento, TIPOS_DOCUMENTO } from '@/modules/beneficiarios/domain/documento.ts'
+import type { NivelCaptura } from '@/modules/beneficiarios/domain/nivelCaptura.ts'
 import { Alerta } from '@/shared/ui/Alerta.tsx'
 import { Boton } from '@/shared/ui/Boton.tsx'
 import { CampoTexto } from '@/shared/ui/CampoTexto.tsx'
@@ -10,6 +10,7 @@ import { mensajeDeError } from '@/shared/ui/mensajeDeError.ts'
 import { SelectorOpciones } from '@/shared/ui/SelectorOpciones.tsx'
 import { AvisoDuplicado } from './AvisoDuplicado.tsx'
 import { fechaDeHoy } from './esquemaRegistro.ts'
+import { SeccionDatosExtendidos } from './SeccionDatosExtendidos.tsx'
 import type { Registro } from './useRegistro.ts'
 
 interface FormularioRegistroProps {
@@ -19,15 +20,19 @@ interface FormularioRegistroProps {
 const CLASES_TARJETA =
   'flex flex-col gap-4 rounded-lg border border-hairline bg-surface p-4 shadow-card'
 
-const OPCIONES_DE_TIPO = TIPOS_DOCUMENTO.map((tipo) => ({
-  valor: tipo,
-  etiqueta: tipo,
-  nombre: etiquetaTipoDocumento(tipo),
-}))
+const OPCIONES_DE_NIVEL = [
+  { valor: 'BASICO', etiqueta: 'Básico' },
+  { valor: 'EXTENDIDO', etiqueta: 'Extendido' },
+]
+
+const AYUDA_NIVEL: Record<NivelCaptura, string> = {
+  BASICO: 'Basta con el nombre y la fecha de nacimiento para recibir la ración.',
+  EXTENDIDO: 'Agrega documento, teléfono y clasificación. Solo la coordinación los ve completos.',
+}
 
 export function FormularioRegistro({ registro }: FormularioRegistroProps) {
   const { usuario } = useAuth()
-  const { formulario, sinDocumento, posibleDuplicado } = registro
+  const { formulario, nivel, posibleDuplicado } = registro
   const {
     register,
     formState: { errors },
@@ -44,6 +49,7 @@ export function FormularioRegistro({ registro }: FormularioRegistroProps) {
           <CampoTexto
             etiqueta="Nombres"
             nota="Obligatorio"
+            placeholder="Ej.: María Elena"
             icono={User}
             autoComplete="off"
             autoCapitalize="words"
@@ -53,39 +59,12 @@ export function FormularioRegistro({ registro }: FormularioRegistroProps) {
           <CampoTexto
             etiqueta="Apellidos"
             nota="Obligatorio"
+            placeholder="Ej.: Restrepo Gómez"
             icono={User}
             autoComplete="off"
             autoCapitalize="words"
             error={errors.apellidos?.message}
             {...register('apellidos')}
-          />
-        </div>
-
-        {!sinDocumento && (
-          <>
-            <SelectorOpciones
-              etiqueta="Tipo de documento"
-              opciones={OPCIONES_DE_TIPO}
-              error={errors.tipoDocumento?.message}
-              {...register('tipoDocumento')}
-            />
-            <CampoTexto
-              etiqueta="Número de documento"
-              icono={IdCard}
-              inputMode="numeric"
-              autoComplete="off"
-              className="font-mono"
-              error={errors.numeroDocumento?.message}
-              {...register('numeroDocumento')}
-            />
-          </>
-        )}
-
-        <div className="rounded-md bg-warning-soft px-3">
-          <CasillaVerificacion
-            etiqueta="Sin documento"
-            descripcion="Para quien no lo tiene o no lo trae. No impide recibir la ración."
-            {...register('sinDocumento')}
           />
         </div>
 
@@ -102,6 +81,7 @@ export function FormularioRegistro({ registro }: FormularioRegistroProps) {
         <CampoTexto
           etiqueta="Barrio o sector"
           nota="Opcional"
+          placeholder="Ej.: El Jardín"
           ayuda="No condiciona la entrega del almuerzo."
           icono={MapPin}
           autoComplete="off"
@@ -109,6 +89,27 @@ export function FormularioRegistro({ registro }: FormularioRegistroProps) {
           error={errors.barrio?.message}
           {...register('barrio')}
         />
+      </section>
+
+      <section aria-labelledby="titulo-nivel" className={CLASES_TARJETA}>
+        <div className="flex items-center gap-3">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-sm bg-privacy-soft text-privacy">
+            <LockKeyhole aria-hidden="true" className="size-5" />
+          </span>
+          <div>
+            <h2 id="titulo-nivel" className="text-body-lg font-semibold text-ink">
+              Datos sensibles
+            </h2>
+            <p className="text-label text-ink-secondary">Se pueden completar después</p>
+          </div>
+        </div>
+        <SelectorOpciones
+          etiqueta="Nivel de registro"
+          opciones={OPCIONES_DE_NIVEL}
+          ayuda={AYUDA_NIVEL[nivel]}
+          {...register('nivel')}
+        />
+        {nivel === 'EXTENDIDO' && <SeccionDatosExtendidos formulario={formulario} />}
       </section>
 
       {posibleDuplicado && !registro.yaRegistrada && (

@@ -1,16 +1,24 @@
 import { z } from 'zod'
-import type { NuevoBeneficiario } from '@/modules/beneficiarios/domain/NuevoBeneficiario.ts'
+import {
+  esGrupoClasificacion,
+  esSistemaClasificacion,
+} from '@/modules/beneficiarios/domain/clasificacionSocioeconomica.ts'
 import {
   normalizarNumeroDocumento,
   TIPOS_DOCUMENTO,
   type TipoDocumento,
 } from '@/modules/beneficiarios/domain/documento.ts'
+import { NIVELES_CAPTURA } from '@/modules/beneficiarios/domain/nivelCaptura.ts'
+import type { NuevoBeneficiario } from '@/modules/beneficiarios/domain/NuevoBeneficiario.ts'
+import { normalizarTelefono } from '@/modules/beneficiarios/domain/telefono.ts'
 
 // Los mismos límites que valida el backend, para avisar antes de enviar.
 const MAXIMO_NOMBRE = 100
 const MAXIMO_DOCUMENTO = 50
 const MAXIMO_BARRIO = 100
 const FECHA_MAS_ANTIGUA = '1900-01-01'
+// Fijo de 7 dígitos o celular de 10.
+const TELEFONO_VALIDO = /^\d{7,10}$/
 
 /** La fecha de hoy en Colombia, sin importar cómo esté configurado el teléfono. */
 export function fechaDeHoy(ahora: Date = new Date()): string {
@@ -23,13 +31,17 @@ function nombre(vacio: string, largo: string) {
 
 export const esquemaRegistro = z
   .object({
+    nivel: z.enum(NIVELES_CAPTURA),
     nombres: nombre('Escriba los nombres.', 'Los nombres son demasiado largos.'),
     apellidos: nombre('Escriba los apellidos.', 'Los apellidos son demasiado largos.'),
+    fechaNacimiento: z.string().min(1, 'Indique la fecha de nacimiento.'),
+    barrio: z.string().trim().max(MAXIMO_BARRIO, 'El nombre del barrio es demasiado largo.'),
     sinDocumento: z.boolean(),
     tipoDocumento: z.string(),
     numeroDocumento: z.string().trim().max(MAXIMO_DOCUMENTO, 'El número es demasiado largo.'),
-    fechaNacimiento: z.string().min(1, 'Indique la fecha de nacimiento.'),
-    barrio: z.string().trim().max(MAXIMO_BARRIO, 'El nombre del barrio es demasiado largo.'),
+    telefono: z.string().trim(),
+    sistemaClasificacion: z.string(),
+    grupoClasificacion: z.string().trim().toUpperCase(),
     informado: z.boolean(),
   })
   .superRefine((campos, contexto) => {
@@ -37,19 +49,31 @@ export const esquemaRegistro = z
       contexto.addIssue({ code: 'custom', path: [campo], message: mensaje })
     }
 
-    if (!campos.sinDocumento) {
-      if (!TIPOS_DOCUMENTO.includes(campos.tipoDocumento as TipoDocumento)) {
-        rechazar('tipoDocumento', 'Elija el tipo de documento.')
-      }
-      if (normalizarNumeroDocumento(campos.numeroDocumento) === '') {
-        rechazar('numeroDocumento', 'Escriba el número o marque «Sin documento».')
-      }
-    }
-
     if (campos.fechaNacimiento > fechaDeHoy()) {
       rechazar('fechaNacimiento', 'La fecha de nacimiento no puede ser futura.')
     } else if (campos.fechaNacimiento !== '' && campos.fechaNacimiento < FECHA_MAS_ANTIGUA) {
       rechazar('fechaNacimiento', 'Revise el año de nacimiento.')
+    }
+
+    if (campos.nivel === 'EXTENDIDO') {
+      if (!campos.sinDocumento) {
+        if (!TIPOS_DOCUMENTO.includes(campos.tipoDocumento as TipoDocumento)) {
+          rechazar('tipoDocumento', 'Elija el tipo de documento.')
+        }
+        if (normalizarNumeroDocumento(campos.numeroDocumento) === '') {
+          rechazar('numeroDocumento', 'Escriba el número o marque «Sin documento».')
+        }
+      }
+      const telefono = normalizarTelefono(campos.telefono)
+      if (telefono !== '' && !TELEFONO_VALIDO.test(telefono)) {
+        rechazar('telefono', 'Revise el teléfono: 7 dígitos si es fijo o 10 si es celular.')
+      }
+      if (
+        esSistemaClasificacion(campos.sistemaClasificacion) &&
+        !esGrupoClasificacion(campos.grupoClasificacion)
+      ) {
+        rechazar('grupoClasificacion', 'Escriba un grupo entre A1 y D21, como C12.')
+      }
     }
 
     if (!campos.informado) {
@@ -60,28 +84,41 @@ export const esquemaRegistro = z
 export type CamposRegistro = z.infer<typeof esquemaRegistro>
 
 export const CAMPOS_INICIALES: CamposRegistro = {
+  nivel: 'BASICO',
   nombres: '',
   apellidos: '',
+  fechaNacimiento: '',
+  barrio: '',
   sinDocumento: false,
   tipoDocumento: 'CC',
   numeroDocumento: '',
-  fechaNacimiento: '',
-  barrio: '',
+  telefono: '',
+  sistemaClasificacion: '',
+  grupoClasificacion: '',
   informado: false,
 }
 
-// El formulario todavía pide el documento, así que registra en nivel extendido.
 export function aNuevoBeneficiario(campos: CamposRegistro): NuevoBeneficiario {
-  return {
+  const basicos = {
     nombres: campos.nombres,
     apellidos: campos.apellidos,
     fechaNacimiento: campos.fechaNacimiento,
     barrio: campos.barrio,
+  }
+  if (campos.nivel === 'BASICO') {
+    return { ...basicos, nivel: 'BASICO' }
+  }
+
+  const sistema = campos.sistemaClasificacion
+  return {
+    ...basicos,
+    nivel: 'EXTENDIDO',
     documento: campos.sinDocumento
       ? null
       : { tipo: campos.tipoDocumento, numero: campos.numeroDocumento },
-    telefono: null,
-    clasificacion: null,
-    nivel: 'EXTENDIDO',
+    telefono: campos.telefono,
+    clasificacion: esSistemaClasificacion(sistema)
+      ? { sistema, grupo: campos.grupoClasificacion }
+      : null,
   }
 }
