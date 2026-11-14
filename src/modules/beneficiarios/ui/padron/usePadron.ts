@@ -2,7 +2,7 @@ import { keepPreviousData, useInfiniteQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useDependencias } from '@/app/contextoDependencias.ts'
 import type { Beneficiario } from '@/modules/beneficiarios/domain/Beneficiario.ts'
-import { useValorRetrasado } from './useValorRetrasado.ts'
+import { useValorRetrasado } from '@/modules/beneficiarios/ui/useValorRetrasado.ts'
 
 // Lo que se espera a que la persona deje de escribir antes de consultar al servidor.
 const RETRASO_BUSQUEDA_MS = 300

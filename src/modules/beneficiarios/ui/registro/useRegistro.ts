@@ -12,7 +12,7 @@ import {
   esquemaRegistro,
   type CamposRegistro,
 } from './esquemaRegistro.ts'
-import { useValorRetrasado } from './useValorRetrasado.ts'
+import { useValorRetrasado } from '@/modules/beneficiarios/ui/useValorRetrasado.ts'
 
 // Lo que se espera a que la persona deje de escribir antes de revisar si ya está en el padrón.
 const RETRASO_VERIFICACION_MS = 500

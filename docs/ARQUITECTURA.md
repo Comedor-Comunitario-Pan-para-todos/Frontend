@@ -43,6 +43,7 @@ src/
 │       │   ├── http/
 │       │   └── dispositivo/
 │       ├── ui/
+│       │   └── <pantalla>/       Una carpeta por pantalla del módulo
 │       └── index.ts              Solo si otro módulo lo necesita
 │
 ├── shared/                       Piezas comunes a varios módulos
@@ -120,6 +121,12 @@ Todo lo que es React.
 * **Componentes:** piezas visuales del módulo (`NombreComponente.tsx`).
 * **Hooks:** conectan los componentes con los casos de uso (`useX.ts`).
 * **Páginas:** pantallas completas que arma el módulo.
+
+Se organiza **por pantalla**, no por tipo de archivo: cada pantalla tiene su
+carpeta con su página, sus componentes, sus hooks y sus esquemas de formulario
+(`ui/registro/`, `ui/ficha/`). Lo que usan dos o más pantallas del módulo queda
+en la raíz de `ui/` (`TarjetaBeneficiario.tsx`). Si además lo usa otro módulo,
+pasa a `shared/ui/`.
 
 #### `index.ts` — API pública del módulo
 

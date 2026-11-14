@@ -8,7 +8,7 @@ import { esErrorApi } from '@/shared/application/errores/ErrorApi.ts'
 import { Alerta } from '@/shared/ui/Alerta.tsx'
 import { Boton } from '@/shared/ui/Boton.tsx'
 import { mensajeDeError } from '@/shared/ui/mensajeDeError.ts'
-import { DocumentoBeneficiario } from './DocumentoBeneficiario.tsx'
+import { DocumentoBeneficiario } from '@/modules/beneficiarios/ui/DocumentoBeneficiario.tsx'
 import { useBeneficiario } from './useBeneficiario.ts'
 
 const CLASES_TARJETA = 'rounded-lg border border-hairline bg-surface p-4 shadow-card'
