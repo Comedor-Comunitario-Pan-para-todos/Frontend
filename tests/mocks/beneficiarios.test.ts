@@ -5,19 +5,22 @@ import { handlers, USUARIOS_MOCK } from '@/mocks/handlers.ts'
 import type { Rol } from '@/modules/auth/domain/Usuario.ts'
 import { crearVerificarDuplicado } from '@/modules/beneficiarios/application/verificarDuplicado.ts'
 import { BeneficiarioDuplicado } from '@/modules/beneficiarios/domain/BeneficiarioDuplicado.ts'
-import type { NuevoBeneficiario } from '@/modules/beneficiarios/domain/Beneficiario.ts'
+import type { NuevoBeneficiarioExtendido } from '@/modules/beneficiarios/domain/NuevoBeneficiario.ts'
 import { BeneficiarioHttpRepository } from '@/modules/beneficiarios/infrastructure/http/BeneficiarioHttpRepository.ts'
 import { AxiosHttpClient } from '@/shared/infrastructure/http/AxiosHttpClient.ts'
 import { servidor } from './servidor.ts'
 
 const TOTAL_INICIAL = 24
 
-const NUEVA: NuevoBeneficiario = {
+const NUEVA: NuevoBeneficiarioExtendido = {
+  nivel: 'EXTENDIDO',
   nombres: 'Persona',
   apellidos: 'De Prueba',
   documento: { tipo: 'CC', numero: '99000111' },
   fechaNacimiento: '1990-01-31',
   barrio: 'El Jardín',
+  telefono: null,
+  clasificacion: null,
 }
 
 function tokenDe(rol: Rol): string {

@@ -1,15 +1,18 @@
 import { describe, expect, it, vi } from 'vitest'
 import { crearRegistrarBeneficiario } from '@/modules/beneficiarios/application/registrarBeneficiario.ts'
 import { BeneficiarioDuplicado } from '@/modules/beneficiarios/domain/BeneficiarioDuplicado.ts'
-import type { NuevoBeneficiario } from '@/modules/beneficiarios/domain/Beneficiario.ts'
+import type { NuevoBeneficiarioExtendido } from '@/modules/beneficiarios/domain/NuevoBeneficiario.ts'
 import { crearRepositorioDePrueba, MARIA } from '../datosDePrueba.ts'
 
-const DATOS: NuevoBeneficiario = {
+const DATOS: NuevoBeneficiarioExtendido = {
+  nivel: 'EXTENDIDO',
   nombres: 'María Elena',
   apellidos: 'Restrepo',
   documento: { tipo: 'CC', numero: '42185390' },
   fechaNacimiento: '1958-03-15',
   barrio: 'El Poblado',
+  telefono: null,
+  clasificacion: null,
 }
 
 describe('registrarBeneficiario', () => {

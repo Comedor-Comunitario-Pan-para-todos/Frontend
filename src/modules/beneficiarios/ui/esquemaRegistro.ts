@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import type { NuevoBeneficiario } from '@/modules/beneficiarios/domain/Beneficiario.ts'
+import type { NuevoBeneficiario } from '@/modules/beneficiarios/domain/NuevoBeneficiario.ts'
 import {
   normalizarNumeroDocumento,
   TIPOS_DOCUMENTO,
@@ -70,14 +70,18 @@ export const CAMPOS_INICIALES: CamposRegistro = {
   informado: false,
 }
 
+// El formulario todavía pide el documento, así que registra en nivel extendido.
 export function aNuevoBeneficiario(campos: CamposRegistro): NuevoBeneficiario {
   return {
     nombres: campos.nombres,
     apellidos: campos.apellidos,
+    fechaNacimiento: campos.fechaNacimiento,
+    barrio: campos.barrio,
     documento: campos.sinDocumento
       ? null
       : { tipo: campos.tipoDocumento, numero: campos.numeroDocumento },
-    fechaNacimiento: campos.fechaNacimiento,
-    barrio: campos.barrio,
+    telefono: null,
+    clasificacion: null,
+    nivel: 'EXTENDIDO',
   }
 }

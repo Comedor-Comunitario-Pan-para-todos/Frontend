@@ -1,7 +1,5 @@
-import type {
-  Beneficiario,
-  NuevoBeneficiario,
-} from '@/modules/beneficiarios/domain/Beneficiario.ts'
+import type { Beneficiario } from '@/modules/beneficiarios/domain/Beneficiario.ts'
+import type { NuevoBeneficiario } from '@/modules/beneficiarios/domain/NuevoBeneficiario.ts'
 
 export interface CriteriosBusqueda {
   /** Parte del nombre, del apellido o del número de documento. Vacío trae a todos. */

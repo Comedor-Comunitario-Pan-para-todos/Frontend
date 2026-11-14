@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw'
 import { describe, expect, it, vi } from 'vitest'
 import { BeneficiarioDuplicado } from '@/modules/beneficiarios/domain/BeneficiarioDuplicado.ts'
-import type { NuevoBeneficiario } from '@/modules/beneficiarios/domain/Beneficiario.ts'
+import type { NuevoBeneficiarioExtendido } from '@/modules/beneficiarios/domain/NuevoBeneficiario.ts'
 import { BeneficiarioHttpRepository } from '@/modules/beneficiarios/infrastructure/http/BeneficiarioHttpRepository.ts'
 import { AxiosHttpClient } from '@/shared/infrastructure/http/AxiosHttpClient.ts'
 import { servidor } from '../../../../mocks/servidor.ts'
@@ -36,12 +36,15 @@ const DTO_CARLOS = {
   deletedAt: null,
 }
 
-const NUEVA: NuevoBeneficiario = {
+const NUEVA: NuevoBeneficiarioExtendido = {
+  nivel: 'EXTENDIDO',
   nombres: 'María Elena',
   apellidos: 'Restrepo',
   documento: { tipo: 'CC', numero: '42185390' },
   fechaNacimiento: '1958-03-15',
   barrio: 'El Poblado',
+  telefono: null,
+  clasificacion: null,
 }
 
 function crearRepositorio() {
@@ -91,11 +94,14 @@ describe('BeneficiarioHttpRepository', () => {
       )
 
       const ficha = await crearRepositorio().registrar({
+        nivel: 'EXTENDIDO',
         nombres: 'Carlos Julio',
         apellidos: 'Morales Restrepo',
         documento: null,
         fechaNacimiento: '2014-03-15',
         barrio: null,
+        telefono: null,
+        clasificacion: null,
       })
 
       expect(cuerpo).toEqual({
