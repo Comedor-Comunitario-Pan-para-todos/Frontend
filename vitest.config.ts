@@ -8,6 +8,7 @@ export default defineConfig((entorno) =>
       include: ['tests/**/*.test.{ts,tsx}'],
       setupFiles: ['./tests/setup.ts'],
       css: false,
+      maxWorkers: '50%',
     },
   }),
 )
