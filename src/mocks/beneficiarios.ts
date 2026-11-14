@@ -1,17 +1,25 @@
 import { delay, http, HttpResponse } from 'msw'
 import type { Rol } from '@/modules/auth/domain/Usuario.ts'
+import {
+  esGrupoClasificacion,
+  esSistemaClasificacion,
+  type ClasificacionSocioeconomica,
+} from '@/modules/beneficiarios/domain/clasificacionSocioeconomica.ts'
+import type { NivelCaptura } from '@/modules/beneficiarios/domain/nivelCaptura.ts'
 
 // Simula el módulo `beneficiarios` del backend (NestJS) con un padrón en memoria:
 // mismas rutas, mismos nombres de campo y mismos mensajes. Al recargar vuelve al estado inicial.
 //
-// Única diferencia con el backend actual: acepta registrar a una persona sin documento,
-// que es lo que piden el SRS (RNF-15) y el diseño. El backend real todavía lo rechaza con 400.
+// Diferencias con el backend actual, que siguen el contrato propuesto (docs/BENEFICIARIOS.md):
+// * acepta registrar a una persona sin documento (RNF-15);
+// * recibe y entrega `nivel` y `clasificacion` (RF-02), y en nivel básico rechaza datos sensibles.
 
 /** Buscar este texto fuerza un error 500, para probar la pantalla de error. */
 export const BUSQUEDA_SERVIDOR_CAIDO = 'caida'
 
 interface BeneficiarioMock {
   readonly id: string
+  readonly nivel: NivelCaptura
   readonly tipoDocumento: string | null
   readonly numeroDocumento: string | null
   readonly nombres: string
@@ -19,6 +27,7 @@ interface BeneficiarioMock {
   readonly fechaNacimiento: string
   readonly barrio: string | null
   readonly telefono: string | null
+  readonly clasificacion: ClasificacionSocioeconomica | null
   readonly createdAt: string
   readonly updatedAt: string
   readonly deletedAt: null
@@ -60,21 +69,30 @@ const SEMILLAS: readonly Semilla[] = [
   ['Mateo', 'Arias Bedoya', ['TI', '1086001234'], '2015-06-02', 'El Jardín'],
 ]
 
+// Algunas personas con todos los datos extendidos, por número de documento.
+const EXTENDIDOS_COMPLETOS: Record<string, Pick<BeneficiarioMock, 'telefono' | 'clasificacion'>> = {
+  '24891034': { telefono: '3104567812', clasificacion: { sistema: 'RUI', grupo: 'A3' } },
+  '24567890': { telefono: '3127788990', clasificacion: { sistema: 'SISBEN_IV', grupo: 'B5' } },
+}
+
 const PRIMER_REGISTRO = Date.parse('2026-11-08T17:00:00.000Z')
 const UNA_HORA = 3_600_000
 
 function sembrar(): BeneficiarioMock[] {
   return SEMILLAS.map(([nombres, apellidos, documento, fechaNacimiento, barrio], indice) => {
     const registro = new Date(PRIMER_REGISTRO - indice * UNA_HORA).toISOString()
+    const extendidos = (documento && EXTENDIDOS_COMPLETOS[documento[1]]) || null
     return {
       id: `00000000-0000-4000-8000-${String(indice + 1).padStart(12, '0')}`,
+      nivel: documento ? 'EXTENDIDO' : 'BASICO',
       tipoDocumento: documento?.[0] ?? null,
       numeroDocumento: documento?.[1] ?? null,
       nombres,
       apellidos,
       fechaNacimiento,
       barrio,
-      telefono: null,
+      telefono: extendidos?.telefono ?? null,
+      clasificacion: extendidos?.clasificacion ?? null,
       createdAt: registro,
       updatedAt: registro,
       deletedAt: null,
@@ -90,15 +108,8 @@ export function reiniciarBeneficiariosMock(): void {
 }
 
 const ROLES_PERMITIDOS: readonly Rol[] = ['COORDINADORA', 'VOLUNTARIO']
-const CAMPOS_DE_REGISTRO = [
-  'tipoDocumento',
-  'numeroDocumento',
-  'nombres',
-  'apellidos',
-  'fechaNacimiento',
-  'barrio',
-  'telefono',
-]
+const CAMPOS_BASICOS = ['nivel', 'nombres', 'apellidos', 'fechaNacimiento', 'barrio']
+const CAMPOS_EXTENDIDOS = ['tipoDocumento', 'numeroDocumento', 'telefono', 'clasificacion']
 const PARAMETROS_DE_BUSQUEDA = ['search', 'page', 'limit', 'barrio']
 const FECHA_CALENDARIO = /^\d{4}-\d{2}-\d{2}$/
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -138,22 +149,67 @@ function entero(valor: string | null, porDefecto: number): number {
   return valor === null ? porDefecto : Number(valor)
 }
 
-function validarRegistro(cuerpo: Record<string, unknown>): string[] {
-  const errores = Object.keys(cuerpo)
-    .filter((campo) => !CAMPOS_DE_REGISTRO.includes(campo))
-    .map((campo) => `property ${campo} should not exist`)
+function validarClasificacion(valor: unknown): string[] {
+  if (valor === undefined || valor === null) return []
+  const { sistema, grupo } = valor as Record<string, unknown>
+  const errores: string[] = []
+  if (!esSistemaClasificacion(texto(sistema))) {
+    errores.push('El sistema de clasificación debe ser RUI o SISBEN_IV')
+  }
+  if (!esGrupoClasificacion(texto(grupo))) {
+    errores.push('El grupo de clasificación debe estar entre A1 y D21')
+  }
+  return errores
+}
 
-  const tieneTipo = texto(cuerpo.tipoDocumento) !== ''
-  const tieneNumero = texto(cuerpo.numeroDocumento) !== ''
-  if (tieneNumero && !tieneTipo) errores.push('El tipo de documento es requerido')
-  if (tieneTipo && !tieneNumero) errores.push('El número de documento es requerido')
+function aClasificacion(valor: unknown): ClasificacionSocioeconomica | null {
+  if (valor === undefined || valor === null) return null
+  const { sistema, grupo } = valor as Record<string, unknown>
+  return { sistema: texto(sistema) as ClasificacionSocioeconomica['sistema'], grupo: texto(grupo) }
+}
+
+function validarCamposPermitidos(cuerpo: Record<string, unknown>, nivel: NivelCaptura): string[] {
+  const permitidos = nivel === 'BASICO' ? CAMPOS_BASICOS : [...CAMPOS_BASICOS, ...CAMPOS_EXTENDIDOS]
+
+  return Object.keys(cuerpo)
+    .filter((campo) => !permitidos.includes(campo))
+    .map((campo) =>
+      CAMPOS_EXTENDIDOS.includes(campo)
+        ? `property ${campo} should not exist in nivel BASICO`
+        : `property ${campo} should not exist`,
+    )
+}
+
+function validarBasicos(cuerpo: Record<string, unknown>): string[] {
+  const errores: string[] = []
   if (texto(cuerpo.nombres) === '') errores.push('Los nombres son requeridos')
   if (texto(cuerpo.apellidos) === '') errores.push('Los apellidos son requeridos')
   if (!FECHA_CALENDARIO.test(texto(cuerpo.fechaNacimiento))) {
     errores.push('La fecha de nacimiento debe tener formato válido AAAA-MM-DD')
   }
-
   return errores
+}
+
+function validarExtendidos(cuerpo: Record<string, unknown>): string[] {
+  const errores: string[] = []
+  const tieneTipo = texto(cuerpo.tipoDocumento) !== ''
+  const tieneNumero = texto(cuerpo.numeroDocumento) !== ''
+  if (tieneNumero && !tieneTipo) errores.push('El tipo de documento es requerido')
+  if (tieneTipo && !tieneNumero) errores.push('El número de documento es requerido')
+  return [...errores, ...validarClasificacion(cuerpo.clasificacion)]
+}
+
+function validarRegistro(cuerpo: Record<string, unknown>): string[] {
+  const nivel = cuerpo.nivel
+  if (nivel !== 'BASICO' && nivel !== 'EXTENDIDO') {
+    return ['El nivel debe ser BASICO o EXTENDIDO']
+  }
+
+  const desconocidos = validarCamposPermitidos(cuerpo, nivel)
+  const basicos = validarBasicos(cuerpo)
+  const extendidos = nivel === 'EXTENDIDO' ? validarExtendidos(cuerpo) : []
+
+  return [...desconocidos, ...extendidos, ...basicos]
 }
 
 type Identificar = (autorizacion: string | null) => { readonly rol: Rol } | undefined
@@ -195,6 +251,7 @@ export function crearHandlersBeneficiarios(identificar: Identificar) {
       const ahora = new Date().toISOString()
       const nuevo: BeneficiarioMock = {
         id: crypto.randomUUID(),
+        nivel: cuerpo.nivel as NivelCaptura,
         tipoDocumento: numeroDocumento ? texto(cuerpo.tipoDocumento).toUpperCase() : null,
         numeroDocumento,
         nombres: texto(cuerpo.nombres),
@@ -202,6 +259,7 @@ export function crearHandlersBeneficiarios(identificar: Identificar) {
         fechaNacimiento: texto(cuerpo.fechaNacimiento),
         barrio: texto(cuerpo.barrio) || null,
         telefono: texto(cuerpo.telefono) || null,
+        clasificacion: aClasificacion(cuerpo.clasificacion),
         createdAt: ahora,
         updatedAt: ahora,
         deletedAt: null,
