@@ -4,21 +4,25 @@ import {
   esSistemaClasificacion,
 } from '@/modules/beneficiarios/domain/clasificacionSocioeconomica.ts'
 import {
+  etiquetaTipoDocumento,
   normalizarNumeroDocumento,
   TIPOS_DOCUMENTO,
   type TipoDocumento,
 } from '@/modules/beneficiarios/domain/documento.ts'
+import {
+  cumpleFormatoDocumento,
+  FORMATOS_DOCUMENTO,
+} from '@/modules/beneficiarios/domain/formatoDocumento.ts'
 import type { DatosExtendidos } from '@/modules/beneficiarios/domain/NuevoBeneficiario.ts'
 import { normalizarTelefono } from '@/modules/beneficiarios/domain/telefono.ts'
 
-const MAXIMO_DOCUMENTO = 50
 // Fijo de 7 dígitos o celular de 10.
 const TELEFONO_VALIDO = /^\d{7,10}$/
 
 export const camposExtendidos = {
   sinDocumento: z.boolean(),
   tipoDocumento: z.string(),
-  numeroDocumento: z.string().trim().max(MAXIMO_DOCUMENTO, 'El número es demasiado largo.'),
+  numeroDocumento: z.string().trim(),
   telefono: z.string().trim(),
   sistemaClasificacion: z.string(),
   grupoClasificacion: z.string().trim().toUpperCase(),
@@ -37,14 +41,25 @@ export const CAMPOS_EXTENDIDOS_INICIALES: CamposExtendidos = {
   grupoClasificacion: '',
 }
 
+function mensajeDeFormato(tipo: TipoDocumento): string {
+  const { soloDigitos, minimo, maximo } = FORMATOS_DOCUMENTO[tipo]
+  const nombre = etiquetaTipoDocumento(tipo)
+  const unidad = soloDigitos ? 'dígitos' : 'letras o números'
+  return `Revise el número: ${nombre.charAt(0).toLowerCase()}${nombre.slice(1)} lleva de ${minimo} a ${maximo} ${unidad}.`
+}
+
 type MarcarError = (campo: keyof CamposExtendidos, mensaje: string) => void
 
 export function validarDatosExtendidos(campos: CamposExtendidos, marcarError: MarcarError): void {
   if (!campos.sinDocumento) {
-    if (!TIPOS_DOCUMENTO.includes(campos.tipoDocumento as TipoDocumento)) {
+    const tipo = campos.tipoDocumento as TipoDocumento
+    const numero = normalizarNumeroDocumento(campos.numeroDocumento)
+    if (!TIPOS_DOCUMENTO.includes(tipo)) {
       marcarError('tipoDocumento', 'Elija el tipo de documento.')
+    } else if (numero !== '' && !cumpleFormatoDocumento(tipo, numero)) {
+      marcarError('numeroDocumento', mensajeDeFormato(tipo))
     }
-    if (normalizarNumeroDocumento(campos.numeroDocumento) === '') {
+    if (numero === '') {
       marcarError('numeroDocumento', 'Escriba el número o marque «Sin documento».')
     }
   }

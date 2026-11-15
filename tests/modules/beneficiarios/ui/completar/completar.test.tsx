@@ -1,5 +1,6 @@
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { http, HttpResponse } from 'msw'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { reiniciarBeneficiariosMock } from '@/mocks/beneficiarios.ts'
 import { handlers } from '@/mocks/handlers.ts'
@@ -64,7 +65,25 @@ describe('completar datos extendidos', () => {
     ).toBeInTheDocument()
   })
 
-  it('avisa si el documento ya es de otra persona y conserva lo escrito', async () => {
+  it('avisa mientras se escribe si el documento ya es de otra persona', async () => {
+    iniciarSesionDePrueba(VOLUNTARIO)
+    renderizarApp(`/beneficiarios/${ID_CARLOS}/completar`)
+    await screen.findByRole('button', { name: 'Guardar datos' })
+
+    await escribir('Número de documento', '42.185.390')
+
+    expect(
+      await screen.findByText('Ese documento ya es de otra persona', {}, { timeout: 3000 }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'María Elena Restrepo' })).toBeInTheDocument()
+  })
+
+  it('si el servidor responde que el documento es de otra persona, lo dice y conserva lo escrito', async () => {
+    servidor.use(
+      http.get('*/beneficiarios/validar-documento/:numero', () =>
+        HttpResponse.json({ existe: false, beneficiario: null }),
+      ),
+    )
     iniciarSesionDePrueba(VOLUNTARIO)
     renderizarApp(`/beneficiarios/${ID_CARLOS}/completar`)
     await screen.findByRole('button', { name: 'Guardar datos' })

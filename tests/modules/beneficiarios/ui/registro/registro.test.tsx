@@ -168,6 +168,27 @@ describe('registro de beneficiarios', () => {
     ).not.toBeInTheDocument()
   })
 
+  it('revisa el número según el tipo de documento', async () => {
+    await abrirRegistro()
+    await elegir('Extendido')
+
+    await escribir('Número de documento', '42A85')
+    await userEvent.tab()
+
+    expect(
+      await screen.findByText('Revise el número: cédula de ciudadanía lleva de 3 a 10 dígitos.'),
+    ).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('radio', { name: /Registro civil/ }))
+
+    expect(
+      screen.queryByText('Revise el número: cédula de ciudadanía lleva de 3 a 10 dígitos.'),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.getByText('Revise el número: registro civil lleva de 6 a 11 letras o números.'),
+    ).toBeInTheDocument()
+  })
+
   it('no acepta una fecha de nacimiento futura', async () => {
     await abrirRegistro()
     await llenarIdentidad('Persona', 'De Prueba', '2999-01-01')

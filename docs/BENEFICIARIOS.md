@@ -40,6 +40,22 @@ Cada registro declara cuántos datos se piden según el propósito de la atenci�
   impide recibir la ración (RNF-15). Si llega uno de `tipoDocumento` o
   `numeroDocumento`, el otro es obligatorio.
 
+### Formato del número de documento
+
+El número se guarda sin puntos, espacios ni guiones. El frontend revisa su forma
+según el tipo; se propone que el backend aplique la misma regla:
+
+| Tipo | Caracteres | Largo | Por qué |
+| :--- | :--- | :--- | :--- |
+| `CC` | Solo dígitos | 3 a 10 | El NUIP tiene 10 dígitos; las cédulas anteriores conservan su número corto. |
+| `TI` | Solo dígitos | 10 a 11 | NUIP de 10; las expedidas antes de 2004 tenían 11. |
+| `RC` | Letras y dígitos | 6 a 11 | Los registros anteriores al NUIP pueden traer letras en el serial. |
+| `PPT` | Solo dígitos | 4 a 10 | Hoy son de 7 dígitos y Migración Colombia anunció que podrían crecer. |
+
+Los rangos son amplios a propósito: rechazar un documento real deja a la
+persona sin registro. Fuentes: Resolución 3571 de 2003 de la Registraduría
+(NUIP) y Resolución 572 de 2022 de MinSalud (PPT).
+
 ### Clasificación socioeconómica
 
 Desde agosto de 2026 el RUI (Registro Universal de Ingresos) reemplaza
@@ -118,7 +134,8 @@ envíe a los roles que no deben verlos.
    «Solo lo ve la coordinación» en teléfono y clasificación.
 3. **Completar** (`/beneficiarios/:id/completar`): desde la ficha básica, el
    botón «Completar datos extendidos» pide los mismos campos del registro
-   extendido y la autorización de la Ley 1581, y envía el `PATCH`.
+   extendido y la autorización de la Ley 1581, y envía el `PATCH`. Si el
+   documento que se escribe ya es de otra persona, lo avisa antes de guardar.
 
 Los formularios validan cada campo al salir de él y, desde ahí, mientras se
 escribe.

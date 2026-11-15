@@ -4,7 +4,12 @@ import {
   descripcionGrupo,
   etiquetaSistemaClasificacion,
 } from '@/modules/beneficiarios/domain/clasificacionSocioeconomica.ts'
-import { etiquetaTipoDocumento, TIPOS_DOCUMENTO } from '@/modules/beneficiarios/domain/documento.ts'
+import {
+  etiquetaTipoDocumento,
+  TIPOS_DOCUMENTO,
+  type TipoDocumento,
+} from '@/modules/beneficiarios/domain/documento.ts'
+import { FORMATOS_DOCUMENTO } from '@/modules/beneficiarios/domain/formatoDocumento.ts'
 import { CampoTexto } from '@/shared/ui/CampoTexto.tsx'
 import { CasillaVerificacion } from '@/shared/ui/CasillaVerificacion.tsx'
 import { SelectorOpciones } from '@/shared/ui/SelectorOpciones.tsx'
@@ -27,12 +32,20 @@ export function SeccionDatosExtendidos() {
   const {
     register,
     control,
+    trigger,
+    getFieldState,
     formState: { errors },
   } = useFormContext<CamposExtendidos>()
-  const [sinDocumento, sistema, grupo] = useWatch({
+  const [sinDocumento, tipoDocumento, sistema, grupo] = useWatch({
     control,
-    name: ['sinDocumento', 'sistemaClasificacion', 'grupoClasificacion'],
+    name: ['sinDocumento', 'tipoDocumento', 'sistemaClasificacion', 'grupoClasificacion'],
   })
+  const admiteLetras = FORMATOS_DOCUMENTO[tipoDocumento as TipoDocumento]?.soloDigitos === false
+
+  // El número que era válido para un tipo puede no serlo para otro.
+  function revisarNumeroSiYaSeEscribio() {
+    if (getFieldState('numeroDocumento').isTouched) void trigger('numeroDocumento')
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -42,14 +55,15 @@ export function SeccionDatosExtendidos() {
             etiqueta="Tipo de documento"
             opciones={OPCIONES_DE_TIPO}
             error={errors.tipoDocumento?.message}
-            {...register('tipoDocumento')}
+            {...register('tipoDocumento', { onChange: revisarNumeroSiYaSeEscribio })}
           />
           <CampoTexto
             etiqueta="Número de documento"
             placeholder="Ej.: 1023456789"
             icono={IdCard}
-            inputMode="numeric"
+            inputMode={admiteLetras ? 'text' : 'numeric'}
             autoComplete="off"
+            autoCapitalize={admiteLetras ? 'characters' : undefined}
             className="font-mono"
             error={errors.numeroDocumento?.message}
             {...register('numeroDocumento')}
