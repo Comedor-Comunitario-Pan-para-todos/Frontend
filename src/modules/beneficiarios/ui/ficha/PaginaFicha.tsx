@@ -1,70 +1,13 @@
-import { ArrowLeft, ShieldCheck } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { ArrowLeft, PencilLine, ShieldCheck } from 'lucide-react'
 import { Link, useParams } from 'react-router'
-import { usePermiso } from '@/modules/auth/index.ts'
-import { nombreCompleto, type Beneficiario } from '@/modules/beneficiarios/domain/Beneficiario.ts'
-import { formatearFechaCalendario } from '@/modules/beneficiarios/domain/fechaCalendario.ts'
+import { useBeneficiario } from '@/modules/beneficiarios/ui/beneficiario/useBeneficiario.ts'
 import { esErrorApi } from '@/shared/application/errores/ErrorApi.ts'
 import { Alerta } from '@/shared/ui/Alerta.tsx'
 import { Boton } from '@/shared/ui/Boton.tsx'
 import { mensajeDeError } from '@/shared/ui/mensajeDeError.ts'
-import { DocumentoBeneficiario } from './DocumentoBeneficiario.tsx'
-import { useBeneficiario } from './useBeneficiario.ts'
+import { DatosDelComensal } from './DatosDelComensal.tsx'
 
 const CLASES_TARJETA = 'rounded-lg border border-hairline bg-surface p-4 shadow-card'
-
-function formatearMomento(momento: string): string {
-  return new Date(momento).toLocaleDateString('es-CO', {
-    timeZone: 'America/Bogota',
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  })
-}
-
-interface DatoProps {
-  readonly nombre: string
-  readonly children: ReactNode
-}
-
-function Dato({ nombre, children }: DatoProps) {
-  return (
-    <div className="flex min-w-0 flex-col">
-      <dt className="text-label text-ink-muted">{nombre}</dt>
-      <dd className="text-body break-words text-ink">{children}</dd>
-    </div>
-  )
-}
-
-function DatosDelComensal({ beneficiario }: { readonly beneficiario: Beneficiario }) {
-  const puedeVerTelefono = usePermiso('beneficiarios.verDatosSensibles')
-  const { documento, fechaNacimiento, barrio, telefono, registradoEn } = beneficiario
-
-  return (
-    <article className={`flex flex-col gap-4 ${CLASES_TARJETA}`}>
-      <h2 className="text-title font-semibold break-words text-ink">
-        {nombreCompleto(beneficiario)}
-      </h2>
-      <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
-        <Dato nombre="Documento">
-          <DocumentoBeneficiario documento={documento} />
-        </Dato>
-        <Dato nombre="Nacimiento">
-          <span className="font-mono">{formatearFechaCalendario(fechaNacimiento)}</span>
-        </Dato>
-        <Dato nombre="Barrio">{barrio ?? 'Sin registrar'}</Dato>
-        {puedeVerTelefono && (
-          <Dato nombre="Teléfono">
-            {telefono ? <span className="font-mono">{telefono}</span> : 'Sin registrar'}
-          </Dato>
-        )}
-        <Dato nombre="En el padrón desde">
-          <span className="font-mono">{formatearMomento(registradoEn)}</span>
-        </Dato>
-      </dl>
-    </article>
-  )
-}
 
 function EsperaDeLaFicha() {
   return (
@@ -127,7 +70,17 @@ export function PaginaFicha() {
           </>
         ))}
 
-      {ficha.data && <DatosDelComensal beneficiario={ficha.data} />}
+      {ficha.data && <DatosDelComensal beneficiario={ficha.data} className={CLASES_TARJETA} />}
+
+      {ficha.data?.nivel === 'BASICO' && (
+        <Link
+          to={`/beneficiarios/${id}/completar`}
+          className="inline-flex min-h-touch w-full items-center justify-center gap-2 rounded-md border border-border-input bg-surface px-6 py-2 text-body-lg font-semibold text-primary transition duration-150 ease-press hover:bg-surface-hover active:translate-y-px active:scale-99 md:w-auto md:self-end"
+        >
+          <PencilLine aria-hidden="true" className="size-5 shrink-0" />
+          Completar datos extendidos
+        </Link>
+      )}
     </div>
   )
 }

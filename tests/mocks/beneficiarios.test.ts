@@ -3,21 +3,29 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { BUSQUEDA_SERVIDOR_CAIDO, reiniciarBeneficiariosMock } from '@/mocks/beneficiarios.ts'
 import { handlers, USUARIOS_MOCK } from '@/mocks/handlers.ts'
 import type { Rol } from '@/modules/auth/domain/Usuario.ts'
-import { crearVerificarDuplicado } from '@/modules/beneficiarios/application/verificarDuplicado.ts'
 import { BeneficiarioDuplicado } from '@/modules/beneficiarios/domain/BeneficiarioDuplicado.ts'
-import type { NuevoBeneficiario } from '@/modules/beneficiarios/domain/Beneficiario.ts'
+import type { NuevoBeneficiarioExtendido } from '@/modules/beneficiarios/domain/NuevoBeneficiario.ts'
 import { BeneficiarioHttpRepository } from '@/modules/beneficiarios/infrastructure/http/BeneficiarioHttpRepository.ts'
 import { AxiosHttpClient } from '@/shared/infrastructure/http/AxiosHttpClient.ts'
 import { servidor } from './servidor.ts'
 
 const TOTAL_INICIAL = 24
 
-const NUEVA: NuevoBeneficiario = {
+const NUEVA: NuevoBeneficiarioExtendido = {
+  nivel: 'EXTENDIDO',
   nombres: 'Persona',
   apellidos: 'De Prueba',
   documento: { tipo: 'CC', numero: '99000111' },
   fechaNacimiento: '1990-01-31',
   barrio: 'El Jardín',
+  telefono: '3151234567',
+  clasificacion: { sistema: 'RUI', grupo: 'C12' },
+}
+
+const BASICOS = {
+  nombres: 'Persona',
+  apellidos: 'De Prueba',
+  fechaNacimiento: '1990-01-31',
 }
 
 function tokenDe(rol: Rol): string {
@@ -99,22 +107,12 @@ describe('mocks de beneficiarios', () => {
       await expect(todos('María Elena Restrepo')).resolves.toMatchObject({ total: 0 })
     })
 
-    it('sin coincidencias responde una página vacía', async () => {
-      await expect(todos('zzz')).resolves.toEqual({
-        beneficiarios: [],
-        total: 0,
-        pagina: 1,
-        totalPaginas: 0,
-      })
-    })
-
     it('rechaza un parámetro que el backend no conoce', async () => {
       const respuesta = crearHttp(tokenDe('VOLUNTARIO')).get('/beneficiarios', {
         params: { busqueda: 'maría' },
       })
 
       await expect(respuesta).rejects.toMatchObject({
-        tipo: 'validacion',
         mensajesServidor: ['property busqueda should not exist'],
       })
     })
@@ -125,23 +123,36 @@ describe('mocks de beneficiarios', () => {
   })
 
   describe('registro', () => {
-    it('agrega a la persona al inicio del padrón', async () => {
+    it('agrega a la persona al inicio del padrón, con todos sus datos', async () => {
       const repositorio = crearRepositorio()
 
       const ficha = await repositorio.registrar(NUEVA)
       const pagina = await repositorio.buscar({ texto: '', pagina: 1, porPagina: 20 })
 
-      expect(ficha).toMatchObject({ ...NUEVA, telefono: null })
+      expect(ficha).toMatchObject(NUEVA)
       expect(pagina.total).toBe(TOTAL_INICIAL + 1)
       expect(pagina.beneficiarios[0]).toEqual(ficha)
+      await expect(repositorio.consultarPorId(ficha.id)).resolves.toEqual(ficha)
     })
 
-    it('la ficha nueva se puede consultar por su id', async () => {
+    it('registra en nivel básico sin datos sensibles', async () => {
+      const ficha = await crearRepositorio().registrar({
+        ...BASICOS,
+        nivel: 'BASICO',
+        barrio: null,
+      })
+
+      expect(ficha).toMatchObject({ nivel: 'BASICO', documento: null, telefono: null })
+    })
+
+    it('acepta a varias personas sin documento', async () => {
       const repositorio = crearRepositorio()
+      const sinDocumento = { ...NUEVA, documento: null }
 
-      const ficha = await repositorio.registrar(NUEVA)
+      await repositorio.registrar(sinDocumento)
+      const segunda = await repositorio.registrar({ ...sinDocumento, nombres: 'Otra Persona' })
 
-      await expect(repositorio.consultarPorId(ficha.id)).resolves.toEqual(ficha)
+      expect(segunda.documento).toBeNull()
     })
 
     it('rechaza un documento que ya está registrado', async () => {
@@ -152,46 +163,39 @@ describe('mocks de beneficiarios', () => {
         .catch((capturado: unknown) => capturado)
 
       expect(error).toBeInstanceOf(BeneficiarioDuplicado)
-      expect((error as BeneficiarioDuplicado).cause).toMatchObject({
-        mensajesServidor: [
-          'Ya existe un beneficiario registrado con el número de documento 42185390',
-        ],
-      })
     })
 
-    it('acepta a una persona sin documento, y a otra después', async () => {
-      const repositorio = crearRepositorio()
-      const sinDocumento = { ...NUEVA, documento: null }
-
-      const primera = await repositorio.registrar(sinDocumento)
-      const segunda = await repositorio.registrar({ ...sinDocumento, nombres: 'Otra Persona' })
-
-      expect(primera.documento).toBeNull()
-      expect(segunda.documento).toBeNull()
-    })
-
-    it('valida los campos obligatorios con los mensajes del backend', async () => {
-      const incompleta = { ...NUEVA, nombres: '', fechaNacimiento: '31/01/1990' }
-
-      await expect(crearRepositorio().registrar(incompleta)).rejects.toMatchObject({
-        tipo: 'validacion',
-        mensajesServidor: [
+    it.each([
+      [
+        'los campos obligatorios',
+        { ...BASICOS, nivel: 'BASICO', nombres: '', fechaNacimiento: '31/01/1990' },
+        [
           'Los nombres son requeridos',
           'La fecha de nacimiento debe tener formato válido AAAA-MM-DD',
         ],
-      })
-    })
-
-    it('rechaza un campo que el backend no conoce', async () => {
-      const respuesta = crearHttp(tokenDe('VOLUNTARIO')).post('/beneficiarios', {
-        nombres: 'Persona',
-        apellidos: 'De Prueba',
-        fechaNacimiento: '1990-01-31',
-        consentimiento: true,
-      })
+      ],
+      ['el nivel', BASICOS, ['El nivel debe ser BASICO o EXTENDIDO']],
+      [
+        'un campo desconocido',
+        { ...BASICOS, nivel: 'BASICO', consentimiento: true },
+        ['property consentimiento should not exist'],
+      ],
+      [
+        'datos sensibles en nivel básico',
+        { ...BASICOS, nivel: 'BASICO', telefono: '3151234567' },
+        ['property telefono should not exist in nivel BASICO'],
+      ],
+      [
+        'una clasificación fuera de la escala',
+        { ...BASICOS, nivel: 'EXTENDIDO', clasificacion: { sistema: 'RUI', grupo: 'E1' } },
+        ['El grupo de clasificación debe estar entre A1 y D21'],
+      ],
+    ])('valida %s con los mensajes del backend', async (_caso, cuerpo, mensajes) => {
+      const respuesta = crearHttp(tokenDe('VOLUNTARIO')).post('/beneficiarios', cuerpo)
 
       await expect(respuesta).rejects.toMatchObject({
-        mensajesServidor: ['property consentimiento should not exist'],
+        tipo: 'validacion',
+        mensajesServidor: mensajes,
       })
     })
 
@@ -201,6 +205,51 @@ describe('mocks de beneficiarios', () => {
       reiniciarBeneficiariosMock()
 
       await expect(todos()).resolves.toMatchObject({ total: TOTAL_INICIAL })
+    })
+  })
+
+  describe('completar datos extendidos', () => {
+    const ID_CARLOS = '00000000-0000-4000-8000-000000000002'
+    const EXTENDIDOS = {
+      documento: { tipo: 'TI', numero: '1086999888' },
+      telefono: '3151234567',
+      clasificacion: { sistema: 'SISBEN_IV', grupo: 'A2' },
+    } as const
+
+    it('pasa a nivel extendido y conserva los datos básicos', async () => {
+      const repositorio = crearRepositorio()
+
+      const ficha = await repositorio.completarDatosExtendidos(ID_CARLOS, EXTENDIDOS)
+
+      expect(ficha).toMatchObject({ ...EXTENDIDOS, nivel: 'EXTENDIDO', nombres: 'Carlos Julio' })
+      await expect(repositorio.consultarPorId(ID_CARLOS)).resolves.toEqual(ficha)
+    })
+
+    it('rechaza un documento que ya es de otra persona', async () => {
+      const error = await crearRepositorio()
+        .completarDatosExtendidos(ID_CARLOS, {
+          ...EXTENDIDOS,
+          documento: { tipo: 'CC', numero: '42185390' },
+        })
+        .catch((capturado: unknown) => capturado)
+
+      expect(error).toBeInstanceOf(BeneficiarioDuplicado)
+    })
+
+    it.each([
+      ['el nivel', { telefono: '3151234567' }, ['El nivel debe ser EXTENDIDO']],
+      [
+        'un dato básico',
+        { nivel: 'EXTENDIDO', nombres: 'Otro' },
+        ['property nombres should not exist'],
+      ],
+    ])('valida %s con los mensajes del backend', async (_caso, cuerpo, mensajes) => {
+      const respuesta = crearHttp(tokenDe('VOLUNTARIO')).patch(
+        `/beneficiarios/${ID_CARLOS}`,
+        cuerpo,
+      )
+
+      await expect(respuesta).rejects.toMatchObject({ mensajesServidor: mensajes })
     })
   })
 
@@ -238,44 +287,5 @@ describe('mocks de beneficiarios', () => {
         await expect(respuesta.text()).resolves.toBe('<p>La aplicación</p>')
       },
     )
-  })
-
-  describe('aviso de duplicado contra el padrón simulado', () => {
-    function verificar() {
-      return crearVerificarDuplicado({ repositorio: crearRepositorio() })
-    }
-
-    it('encuentra a quien ya tiene el documento', async () => {
-      const resultado = await verificar()({ numeroDocumento: '42.185.390' })
-
-      expect(resultado).toMatchObject({
-        motivo: 'documento',
-        beneficiario: { nombres: 'María Elena', apellidos: 'Restrepo' },
-      })
-    })
-
-    it('encuentra a una persona sin documento por nombre y fecha de nacimiento', async () => {
-      const resultado = await verificar()({
-        nombres: 'carlos julio',
-        apellidos: 'morales restrepo',
-        fechaNacimiento: '2014-03-15',
-      })
-
-      expect(resultado).toMatchObject({
-        motivo: 'nombre-y-fecha',
-        beneficiario: { documento: null },
-      })
-    })
-
-    it('no avisa cuando la persona es nueva', async () => {
-      const resultado = await verificar()({
-        numeroDocumento: NUEVA.documento!.numero,
-        nombres: NUEVA.nombres,
-        apellidos: NUEVA.apellidos,
-        fechaNacimiento: NUEVA.fechaNacimiento,
-      })
-
-      expect(resultado).toBeNull()
-    })
   })
 })

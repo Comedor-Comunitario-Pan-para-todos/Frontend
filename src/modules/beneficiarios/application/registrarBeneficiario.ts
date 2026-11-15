@@ -1,8 +1,8 @@
+import type { Beneficiario } from '@/modules/beneficiarios/domain/Beneficiario.ts'
 import {
   limpiarNuevoBeneficiario,
-  type Beneficiario,
   type NuevoBeneficiario,
-} from '@/modules/beneficiarios/domain/Beneficiario.ts'
+} from '@/modules/beneficiarios/domain/NuevoBeneficiario.ts'
 import type { BeneficiarioRepository } from './ports/BeneficiarioRepository.ts'
 
 interface Dependencias {

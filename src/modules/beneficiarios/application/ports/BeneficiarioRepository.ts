@@ -1,7 +1,8 @@
+import type { Beneficiario } from '@/modules/beneficiarios/domain/Beneficiario.ts'
 import type {
-  Beneficiario,
+  DatosExtendidos,
   NuevoBeneficiario,
-} from '@/modules/beneficiarios/domain/Beneficiario.ts'
+} from '@/modules/beneficiarios/domain/NuevoBeneficiario.ts'
 
 export interface CriteriosBusqueda {
   /** Parte del nombre, del apellido o del número de documento. Vacío trae a todos. */
@@ -22,6 +23,8 @@ export interface PaginaBeneficiarios {
 export interface BeneficiarioRepository {
   /** Lanza `BeneficiarioDuplicado` si la persona ya está en el padrón. */
   registrar(datos: NuevoBeneficiario): Promise<Beneficiario>
+  /** Lanza `BeneficiarioDuplicado` si el documento ya es de otra persona. */
+  completarDatosExtendidos(id: string, datos: DatosExtendidos): Promise<Beneficiario>
   buscar(criterios: CriteriosBusqueda, signal?: AbortSignal): Promise<PaginaBeneficiarios>
   consultarPorId(id: string, signal?: AbortSignal): Promise<Beneficiario>
   /** `null` si nadie tiene ese número de documento. */

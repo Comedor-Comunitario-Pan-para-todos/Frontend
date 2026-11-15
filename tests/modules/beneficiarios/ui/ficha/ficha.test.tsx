@@ -4,13 +4,14 @@ import { http, HttpResponse } from 'msw'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { reiniciarBeneficiariosMock } from '@/mocks/beneficiarios.ts'
 import { handlers } from '@/mocks/handlers.ts'
-import { iniciarSesionDePrueba, renderizarApp } from '../../../app/renderizarApp.tsx'
-import { servidor } from '../../../mocks/servidor.ts'
+import { iniciarSesionDePrueba, renderizarApp } from '../../../../app/renderizarApp.tsx'
+import { servidor } from '../../../../mocks/servidor.ts'
 
 const COORDINADORA = 'mock-token.mock-1'
 const VOLUNTARIO = 'mock-token.mock-3'
 const ID_MARIA = '00000000-0000-4000-8000-000000000001'
 const ID_CARLOS = '00000000-0000-4000-8000-000000000002'
+const ID_ROSA = '00000000-0000-4000-8000-000000000003'
 
 function abrirFicha(id: string, token = VOLUNTARIO) {
   iniciarSesionDePrueba(token)
@@ -40,28 +41,35 @@ describe('ficha del comensal', () => {
     expect(dato('En el padrón desde')).toHaveTextContent('08/11/2026')
   })
 
-  it('el voluntario ve el documento enmascarado y no ve el teléfono', async () => {
-    abrirFicha(ID_MARIA, VOLUNTARIO)
-    await screen.findByRole('heading', { name: 'María Elena Restrepo' })
+  it('el voluntario ve el documento enmascarado y no ve los demás datos sensibles', async () => {
+    abrirFicha(ID_ROSA, VOLUNTARIO)
+    await screen.findByRole('heading', { name: 'Rosa Martínez de Osorio' })
 
-    expect(dato('Documento')).toHaveTextContent('CC ••••5390')
-    expect(screen.queryByText('Teléfono')).not.toBeInTheDocument()
-    expect(screen.queryByText(/42\.?185\.?390/)).not.toBeInTheDocument()
+    expect(screen.getByText('Registro extendido')).toBeInTheDocument()
+    expect(dato('Documento')).toHaveTextContent('CC ••••1034')
+    expect(dato('Teléfono')).toHaveTextContent('Solo lo ve la coordinación')
+    expect(dato('Clasificación socioeconómica')).toHaveTextContent('Solo lo ve la coordinación')
+    expect(screen.queryByText(/3104567812|A3/)).not.toBeInTheDocument()
   })
 
-  it('la coordinadora ve el documento completo y el teléfono', async () => {
-    abrirFicha(ID_MARIA, COORDINADORA)
-    await screen.findByRole('heading', { name: 'María Elena Restrepo' })
+  it('la coordinadora ve todos los datos sensibles', async () => {
+    abrirFicha(ID_ROSA, COORDINADORA)
+    await screen.findByRole('heading', { name: 'Rosa Martínez de Osorio' })
 
-    expect(dato('Documento')).toHaveTextContent('CC 42.185.390')
-    expect(dato('Teléfono')).toHaveTextContent('Sin registrar')
+    expect(dato('Documento')).toHaveTextContent('CC 24.891.034')
+    expect(dato('Teléfono')).toHaveTextContent('3104567812')
+    expect(dato('Clasificación socioeconómica')).toHaveTextContent(
+      'Registro Universal de Ingresos (RUI)A3 · Pobreza extrema',
+    )
   })
 
-  it('dice cuando la persona no tiene documento', async () => {
-    abrirFicha(ID_CARLOS)
+  it('en nivel básico no muestra campos sensibles vacíos', async () => {
+    abrirFicha(ID_CARLOS, COORDINADORA)
     await screen.findByRole('heading', { name: 'Carlos Julio Morales Restrepo' })
 
-    expect(dato('Documento')).toHaveTextContent('Sin documento')
+    expect(screen.getByText('Registro básico')).toBeInTheDocument()
+    expect(dato('Datos sensibles')).toHaveTextContent('No se registraron')
+    expect(screen.queryByText('Documento', { selector: 'dt' })).not.toBeInTheDocument()
   })
 
   it('permite volver al padrón', async () => {

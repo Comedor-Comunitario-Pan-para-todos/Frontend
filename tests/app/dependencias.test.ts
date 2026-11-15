@@ -125,11 +125,14 @@ describe('crearDependencias', () => {
         await entrarComoVoluntario()
 
       const ficha = await registrarBeneficiario({
+        nivel: 'EXTENDIDO',
         nombres: ' Persona ',
         apellidos: 'De Prueba',
         documento: { tipo: 'CC', numero: '99.000.111' },
         fechaNacimiento: '1990-01-31',
         barrio: '',
+        telefono: null,
+        clasificacion: null,
       })
 
       expect(ficha).toMatchObject({
@@ -149,11 +152,14 @@ describe('crearDependencias', () => {
 
       await expect(
         registrarBeneficiario({
+          nivel: 'EXTENDIDO',
           nombres: 'María Elena',
           apellidos: 'Restrepo',
           documento: { tipo: 'CC', numero: '42185390' },
           fechaNacimiento: '1958-03-15',
           barrio: null,
+          telefono: null,
+          clasificacion: null,
         }),
       ).rejects.toBeInstanceOf(BeneficiarioDuplicado)
     })

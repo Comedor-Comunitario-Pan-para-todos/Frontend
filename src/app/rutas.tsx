@@ -23,7 +23,7 @@ const PAGINAS_DE_MODULO: Readonly<Record<string, RouteObject[]>> = {
       index: true,
       lazy: async () => {
         const { PaginaBeneficiarios } =
-          await import('@/modules/beneficiarios/ui/PaginaBeneficiarios.tsx')
+          await import('@/modules/beneficiarios/ui/padron/PaginaBeneficiarios.tsx')
         return { Component: PaginaBeneficiarios }
       },
       hydrateFallbackElement: <PantallaCarga />,
@@ -31,7 +31,8 @@ const PAGINAS_DE_MODULO: Readonly<Record<string, RouteObject[]>> = {
     {
       path: 'nuevo',
       lazy: async () => {
-        const { PaginaRegistro } = await import('@/modules/beneficiarios/ui/PaginaRegistro.tsx')
+        const { PaginaRegistro } =
+          await import('@/modules/beneficiarios/ui/registro/PaginaRegistro.tsx')
         return { Component: PaginaRegistro }
       },
       hydrateFallbackElement: <PantallaCarga />,
@@ -39,8 +40,17 @@ const PAGINAS_DE_MODULO: Readonly<Record<string, RouteObject[]>> = {
     {
       path: ':id',
       lazy: async () => {
-        const { PaginaFicha } = await import('@/modules/beneficiarios/ui/PaginaFicha.tsx')
+        const { PaginaFicha } = await import('@/modules/beneficiarios/ui/ficha/PaginaFicha.tsx')
         return { Component: PaginaFicha }
+      },
+      hydrateFallbackElement: <PantallaCarga />,
+    },
+    {
+      path: ':id/completar',
+      lazy: async () => {
+        const { PaginaCompletar } =
+          await import('@/modules/beneficiarios/ui/completar/PaginaCompletar.tsx')
+        return { Component: PaginaCompletar }
       },
       hydrateFallbackElement: <PantallaCarga />,
     },

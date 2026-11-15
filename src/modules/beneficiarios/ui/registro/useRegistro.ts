@@ -12,7 +12,7 @@ import {
   esquemaRegistro,
   type CamposRegistro,
 } from './esquemaRegistro.ts'
-import { useValorRetrasado } from './useValorRetrasado.ts'
+import { useValorRetrasado } from '@/modules/beneficiarios/ui/useValorRetrasado.ts'
 
 // Lo que se espera a que la persona deje de escribir antes de revisar si ya está en el padrón.
 const RETRASO_VERIFICACION_MS = 500
@@ -27,14 +27,16 @@ export function useRegistro() {
   const constancia = useConstancia()
   const formulario = useForm<CamposRegistro>({
     resolver: zodResolver(esquemaRegistro),
+    mode: 'onTouched',
     defaultValues: CAMPOS_INICIALES,
   })
 
-  const [sinDocumento, numeroDocumento, nombres, apellidos, fechaNacimiento] = useWatch({
+  const [nivel, sinDocumento, numeroDocumento, nombres, apellidos, fechaNacimiento] = useWatch({
     control: formulario.control,
-    name: ['sinDocumento', 'numeroDocumento', 'nombres', 'apellidos', 'fechaNacimiento'],
+    name: ['nivel', 'sinDocumento', 'numeroDocumento', 'nombres', 'apellidos', 'fechaNacimiento'],
   })
-  const numero = sinDocumento ? '' : numeroDocumento.trim()
+  const conDocumento = nivel === 'EXTENDIDO' && !sinDocumento
+  const numero = conDocumento ? numeroDocumento.trim() : ''
   const porVerificar = useValorRetrasado(
     {
       numeroDocumento: numero.length >= MINIMO_PARA_VERIFICAR_DOCUMENTO ? numero : '',
@@ -70,7 +72,7 @@ export function useRegistro() {
 
   return {
     formulario,
-    sinDocumento,
+    nivel,
     /** Persona del padrón que parece ser la misma que se está registrando. */
     posibleDuplicado: hayQueVerificar ? (duplicado.data ?? null) : null,
     enviar: formulario.handleSubmit((campos) => registro.mutate(campos)),

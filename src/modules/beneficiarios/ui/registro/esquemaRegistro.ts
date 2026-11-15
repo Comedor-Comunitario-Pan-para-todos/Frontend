@@ -1,14 +1,15 @@
 import { z } from 'zod'
-import type { NuevoBeneficiario } from '@/modules/beneficiarios/domain/Beneficiario.ts'
+import { NIVELES_CAPTURA } from '@/modules/beneficiarios/domain/nivelCaptura.ts'
+import type { NuevoBeneficiario } from '@/modules/beneficiarios/domain/NuevoBeneficiario.ts'
 import {
-  normalizarNumeroDocumento,
-  TIPOS_DOCUMENTO,
-  type TipoDocumento,
-} from '@/modules/beneficiarios/domain/documento.ts'
+  aDatosExtendidos,
+  CAMPOS_EXTENDIDOS_INICIALES,
+  camposExtendidos,
+  validarDatosExtendidos,
+} from '@/modules/beneficiarios/ui/datosSensibles/esquemaDatosExtendidos.ts'
 
 // Los mismos límites que valida el backend, para avisar antes de enviar.
 const MAXIMO_NOMBRE = 100
-const MAXIMO_DOCUMENTO = 50
 const MAXIMO_BARRIO = 100
 const FECHA_MAS_ANTIGUA = '1900-01-01'
 
@@ -23,61 +24,55 @@ function nombre(vacio: string, largo: string) {
 
 export const esquemaRegistro = z
   .object({
+    nivel: z.enum(NIVELES_CAPTURA),
     nombres: nombre('Escriba los nombres.', 'Los nombres son demasiado largos.'),
     apellidos: nombre('Escriba los apellidos.', 'Los apellidos son demasiado largos.'),
-    sinDocumento: z.boolean(),
-    tipoDocumento: z.string(),
-    numeroDocumento: z.string().trim().max(MAXIMO_DOCUMENTO, 'El número es demasiado largo.'),
     fechaNacimiento: z.string().min(1, 'Indique la fecha de nacimiento.'),
     barrio: z.string().trim().max(MAXIMO_BARRIO, 'El nombre del barrio es demasiado largo.'),
+    ...camposExtendidos,
     informado: z.boolean(),
   })
   .superRefine((campos, contexto) => {
-    function rechazar(campo: keyof typeof campos, mensaje: string) {
+    function marcarError(campo: keyof typeof campos, mensaje: string) {
       contexto.addIssue({ code: 'custom', path: [campo], message: mensaje })
     }
 
-    if (!campos.sinDocumento) {
-      if (!TIPOS_DOCUMENTO.includes(campos.tipoDocumento as TipoDocumento)) {
-        rechazar('tipoDocumento', 'Elija el tipo de documento.')
-      }
-      if (normalizarNumeroDocumento(campos.numeroDocumento) === '') {
-        rechazar('numeroDocumento', 'Escriba el número o marque «Sin documento».')
-      }
+    if (campos.fechaNacimiento > fechaDeHoy()) {
+      marcarError('fechaNacimiento', 'La fecha de nacimiento no puede ser futura.')
+    } else if (campos.fechaNacimiento !== '' && campos.fechaNacimiento < FECHA_MAS_ANTIGUA) {
+      marcarError('fechaNacimiento', 'Revise el año de nacimiento.')
     }
 
-    if (campos.fechaNacimiento > fechaDeHoy()) {
-      rechazar('fechaNacimiento', 'La fecha de nacimiento no puede ser futura.')
-    } else if (campos.fechaNacimiento !== '' && campos.fechaNacimiento < FECHA_MAS_ANTIGUA) {
-      rechazar('fechaNacimiento', 'Revise el año de nacimiento.')
+    if (campos.nivel === 'EXTENDIDO') {
+      validarDatosExtendidos(campos, marcarError)
     }
 
     if (!campos.informado) {
-      rechazar('informado', 'Confirme que informó a la persona antes de registrarla.')
+      marcarError('informado', 'Confirme que informó a la persona antes de registrarla.')
     }
   })
 
 export type CamposRegistro = z.infer<typeof esquemaRegistro>
 
 export const CAMPOS_INICIALES: CamposRegistro = {
+  nivel: 'BASICO',
   nombres: '',
   apellidos: '',
-  sinDocumento: false,
-  tipoDocumento: 'CC',
-  numeroDocumento: '',
   fechaNacimiento: '',
   barrio: '',
+  ...CAMPOS_EXTENDIDOS_INICIALES,
   informado: false,
 }
 
 export function aNuevoBeneficiario(campos: CamposRegistro): NuevoBeneficiario {
-  return {
+  const basicos = {
     nombres: campos.nombres,
     apellidos: campos.apellidos,
-    documento: campos.sinDocumento
-      ? null
-      : { tipo: campos.tipoDocumento, numero: campos.numeroDocumento },
     fechaNacimiento: campos.fechaNacimiento,
     barrio: campos.barrio,
   }
+  if (campos.nivel === 'BASICO') {
+    return { ...basicos, nivel: 'BASICO' }
+  }
+  return { ...basicos, ...aDatosExtendidos(campos), nivel: 'EXTENDIDO' }
 }

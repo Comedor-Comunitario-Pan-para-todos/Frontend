@@ -27,7 +27,7 @@ export function TarjetaBeneficiario({ beneficiario }: TarjetaBeneficiarioProps) 
           {iniciales(beneficiario)}
         </span>
         <div className="flex min-w-0 flex-1 flex-col items-start gap-1">
-          <h2 className="text-body-lg font-semibold break-words text-ink">
+          <h2 className="text-body-lg font-semibold wrap-break-word text-ink">
             {nombreCompleto(beneficiario)}
           </h2>
           <DocumentoBeneficiario documento={documento} />
