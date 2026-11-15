@@ -11,6 +11,10 @@ import {
   type BuscarBeneficiarios,
 } from '@/modules/beneficiarios/application/buscarBeneficiarios.ts'
 import {
+  crearCompletarDatosExtendidos,
+  type CompletarDatosExtendidos,
+} from '@/modules/beneficiarios/application/completarDatosExtendidos.ts'
+import {
   crearConsultarBeneficiario,
   type ConsultarBeneficiario,
 } from '@/modules/beneficiarios/application/consultarBeneficiario.ts'
@@ -33,6 +37,7 @@ export interface Dependencias {
   readonly suscribirExpiracion: (oyente: () => void) => () => void
   readonly suscribirCambioDeToken: (oyente: (token: string | null) => void) => () => void
   readonly registrarBeneficiario: RegistrarBeneficiario
+  readonly completarDatosExtendidos: CompletarDatosExtendidos
   readonly buscarBeneficiarios: BuscarBeneficiarios
   readonly consultarBeneficiario: ConsultarBeneficiario
   readonly verificarDuplicado: VerificarDuplicado
@@ -66,6 +71,7 @@ export function crearDependencias({ apiBaseUrl }: Pick<Entorno, 'apiBaseUrl'>): 
     },
     suscribirCambioDeToken: (oyente) => almacen.suscribirCambiosExternos(oyente),
     registrarBeneficiario: crearRegistrarBeneficiario({ repositorio: beneficiarios }),
+    completarDatosExtendidos: crearCompletarDatosExtendidos({ repositorio: beneficiarios }),
     buscarBeneficiarios: crearBuscarBeneficiarios({ repositorio: beneficiarios }),
     consultarBeneficiario: crearConsultarBeneficiario({ repositorio: beneficiarios }),
     verificarDuplicado: crearVerificarDuplicado({ repositorio: beneficiarios }),

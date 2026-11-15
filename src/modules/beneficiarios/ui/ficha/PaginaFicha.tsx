@@ -1,11 +1,11 @@
-import { ArrowLeft, ShieldCheck } from 'lucide-react'
+import { ArrowLeft, PencilLine, ShieldCheck } from 'lucide-react'
 import { Link, useParams } from 'react-router'
+import { useBeneficiario } from '@/modules/beneficiarios/ui/useBeneficiario.ts'
 import { esErrorApi } from '@/shared/application/errores/ErrorApi.ts'
 import { Alerta } from '@/shared/ui/Alerta.tsx'
 import { Boton } from '@/shared/ui/Boton.tsx'
 import { mensajeDeError } from '@/shared/ui/mensajeDeError.ts'
 import { DatosDelComensal } from './DatosDelComensal.tsx'
-import { useBeneficiario } from './useBeneficiario.ts'
 
 const CLASES_TARJETA = 'rounded-lg border border-hairline bg-surface p-4 shadow-card'
 
@@ -71,6 +71,16 @@ export function PaginaFicha() {
         ))}
 
       {ficha.data && <DatosDelComensal beneficiario={ficha.data} className={CLASES_TARJETA} />}
+
+      {ficha.data?.nivel === 'BASICO' && (
+        <Link
+          to={`/beneficiarios/${id}/completar`}
+          className="inline-flex min-h-touch w-full items-center justify-center gap-2 rounded-md border border-border-input bg-surface px-6 py-2 text-body-lg font-semibold text-primary transition duration-150 ease-press hover:bg-surface-hover active:translate-y-px active:scale-99 md:w-auto md:self-end"
+        >
+          <PencilLine aria-hidden="true" className="size-5 shrink-0" />
+          Completar datos extendidos
+        </Link>
+      )}
     </div>
   )
 }

@@ -212,6 +212,24 @@ function validarRegistro(cuerpo: Record<string, unknown>): string[] {
   return [...desconocidos, ...extendidos, ...basicos]
 }
 
+function validarCompletado(cuerpo: Record<string, unknown>): string[] {
+  if (cuerpo.nivel !== 'EXTENDIDO') return ['El nivel debe ser EXTENDIDO']
+  const desconocidos = Object.keys(cuerpo)
+    .filter((campo) => campo !== 'nivel' && !CAMPOS_EXTENDIDOS.includes(campo))
+    .map((campo) => `property ${campo} should not exist`)
+  return [...desconocidos, ...validarExtendidos(cuerpo)]
+}
+
+function documentoRepetido(numeroDocumento: string | null, id?: string) {
+  if (!numeroDocumento) return null
+  if (!padron.some((b) => b.numeroDocumento === numeroDocumento && b.id !== id)) return null
+  return errorNest(
+    409,
+    `Ya existe un beneficiario registrado con el número de documento ${numeroDocumento}`,
+    'Conflict',
+  )
+}
+
 type Identificar = (autorizacion: string | null) => { readonly rol: Rol } | undefined
 
 /**
@@ -240,13 +258,8 @@ export function crearHandlersBeneficiarios(identificar: Identificar) {
       if (errores.length > 0) return solicitudInvalida(errores)
 
       const numeroDocumento = texto(cuerpo.numeroDocumento) || null
-      if (numeroDocumento && padron.some((b) => b.numeroDocumento === numeroDocumento)) {
-        return errorNest(
-          409,
-          `Ya existe un beneficiario registrado con el número de documento ${numeroDocumento}`,
-          'Conflict',
-        )
-      }
+      const repetido = documentoRepetido(numeroDocumento)
+      if (repetido) return repetido
 
       const ahora = new Date().toISOString()
       const nuevo: BeneficiarioMock = {
@@ -339,6 +352,38 @@ export function crearHandlersBeneficiarios(identificar: Identificar) {
 
       const beneficiario = padron.find((b) => b.id === id)
       return beneficiario ? HttpResponse.json(beneficiario) : noEncontrado(id)
+    }),
+
+    http.patch('*/beneficiarios/:id', async ({ request, params }) => {
+      await delay()
+      const rechazo = rechazoDeAcceso(request)
+      if (rechazo) return rechazo
+
+      const id = String(params.id)
+      if (!UUID.test(id)) return solicitudInvalida('Validation failed (uuid is expected)')
+      const actual = padron.find((b) => b.id === id)
+      if (!actual) return noEncontrado(id)
+
+      const cuerpo = (await request.json()) as Record<string, unknown>
+      const errores = validarCompletado(cuerpo)
+      if (errores.length > 0) return solicitudInvalida(errores)
+
+      const numeroDocumento = texto(cuerpo.numeroDocumento) || null
+      const repetido = documentoRepetido(numeroDocumento, id)
+      if (repetido) return repetido
+
+      const completado: BeneficiarioMock = {
+        ...actual,
+        nivel: 'EXTENDIDO',
+        tipoDocumento: numeroDocumento ? texto(cuerpo.tipoDocumento).toUpperCase() : null,
+        numeroDocumento,
+        telefono: texto(cuerpo.telefono) || null,
+        clasificacion: aClasificacion(cuerpo.clasificacion),
+        updatedAt: new Date().toISOString(),
+      }
+      padron = padron.map((b) => (b.id === id ? completado : b))
+
+      return HttpResponse.json(completado)
     }),
   ]
 }

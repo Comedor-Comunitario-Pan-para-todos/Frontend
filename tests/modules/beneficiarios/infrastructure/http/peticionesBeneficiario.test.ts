@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { NuevoBeneficiarioExtendido } from '@/modules/beneficiarios/domain/NuevoBeneficiario.ts'
 import {
+  aCuerpoDeDatosExtendidos,
   aCuerpoDeRegistro,
   aParametrosDeBusqueda,
 } from '@/modules/beneficiarios/infrastructure/http/peticionesBeneficiario.ts'
@@ -53,6 +54,18 @@ describe('aCuerpoDeRegistro', () => {
       nombres: 'María Elena',
       apellidos: 'Restrepo',
       fechaNacimiento: '1958-03-15',
+    })
+  })
+})
+
+describe('aCuerpoDeDatosExtendidos', () => {
+  it('pasa a nivel extendido con solo los datos sensibles', () => {
+    expect(aCuerpoDeDatosExtendidos(EXTENDIDA)).toEqual({
+      nivel: 'EXTENDIDO',
+      tipoDocumento: 'CC',
+      numeroDocumento: '42185390',
+      telefono: '3151234567',
+      clasificacion: { sistema: 'RUI', grupo: 'B3' },
     })
   })
 })

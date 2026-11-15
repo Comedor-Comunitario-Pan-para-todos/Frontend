@@ -36,6 +36,7 @@ export function paginaCon(...beneficiarios: Beneficiario[]) {
 export function crearRepositorioDePrueba(): BeneficiarioRepository {
   return {
     registrar: vi.fn().mockResolvedValue(MARIA),
+    completarDatosExtendidos: vi.fn().mockResolvedValue(MARIA),
     buscar: vi.fn().mockResolvedValue(paginaCon()),
     consultarPorId: vi.fn().mockResolvedValue(MARIA),
     buscarPorDocumento: vi.fn().mockResolvedValue(null),

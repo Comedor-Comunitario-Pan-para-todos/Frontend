@@ -21,7 +21,7 @@ El backend rechaza cualquier campo que no conozca (`forbidNonWhitelisted`).
 ## 2. Propuesta para RF-02 (pendiente en Backend#30)
 
 El frontend y los mocks (`pnpm dev:mock`) ya usan esta forma. Contra el backend
-real, el registro falla con 400 hasta que se implemente.
+real, el registro falla con 400 y el `PATCH` no existe hasta que se implemente.
 
 ### Nivel de captura
 
@@ -68,6 +68,26 @@ sistema y el subgrupo:
   "clasificacion": { "sistema": "RUI", "grupo": "B3" }
 }
 ```
+
+### `PATCH /beneficiarios/:id`
+
+Completa los datos extendidos de quien se registró en nivel básico (RF-02, RF-24).
+Lleva solo `nivel` y los campos extendidos; los básicos no cambian por esta vía.
+
+```json
+{
+  "nivel": "EXTENDIDO",
+  "tipoDocumento": "TI",
+  "numeroDocumento": "1086999888",
+  "telefono": "3151234567",
+  "clasificacion": { "sistema": "SISBEN_IV", "grupo": "A2" }
+}
+```
+
+* Responde la ficha actualizada (200), con las mismas reglas de documento y
+  clasificación del registro.
+* 409 si el documento ya es de otra persona; 404 si el id no existe.
+* Lo pueden usar Voluntario y Coordinadora, igual que el registro.
 
 ### Respuesta (todas las rutas que devuelven una ficha)
 

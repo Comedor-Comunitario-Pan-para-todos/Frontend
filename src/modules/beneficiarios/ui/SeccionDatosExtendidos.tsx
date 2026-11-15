@@ -1,5 +1,5 @@
 import { IdCard, Phone } from 'lucide-react'
-import { useWatch, type UseFormReturn } from 'react-hook-form'
+import { useFormContext, useWatch } from 'react-hook-form'
 import {
   descripcionGrupo,
   etiquetaSistemaClasificacion,
@@ -8,11 +8,7 @@ import { etiquetaTipoDocumento, TIPOS_DOCUMENTO } from '@/modules/beneficiarios/
 import { CampoTexto } from '@/shared/ui/CampoTexto.tsx'
 import { CasillaVerificacion } from '@/shared/ui/CasillaVerificacion.tsx'
 import { SelectorOpciones } from '@/shared/ui/SelectorOpciones.tsx'
-import type { CamposRegistro } from './esquemaRegistro.ts'
-
-interface SeccionDatosExtendidosProps {
-  readonly formulario: UseFormReturn<CamposRegistro>
-}
+import type { CamposExtendidos } from './esquemaDatosExtendidos.ts'
 
 const OPCIONES_DE_TIPO = TIPOS_DOCUMENTO.map((tipo) => ({
   valor: tipo,
@@ -26,12 +22,13 @@ const OPCIONES_DE_SISTEMA = [
   { valor: 'SISBEN_IV', etiqueta: etiquetaSistemaClasificacion('SISBEN_IV') },
 ]
 
-export function SeccionDatosExtendidos({ formulario }: SeccionDatosExtendidosProps) {
+/** Va dentro de un `FormProvider` cuyo formulario incluye `CamposExtendidos`. */
+export function SeccionDatosExtendidos() {
   const {
     register,
     control,
     formState: { errors },
-  } = formulario
+  } = useFormContext<CamposExtendidos>()
   const [sinDocumento, sistema, grupo] = useWatch({
     control,
     name: ['sinDocumento', 'sistemaClasificacion', 'grupoClasificacion'],

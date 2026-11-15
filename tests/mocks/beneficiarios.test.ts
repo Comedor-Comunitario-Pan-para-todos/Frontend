@@ -208,6 +208,51 @@ describe('mocks de beneficiarios', () => {
     })
   })
 
+  describe('completar datos extendidos', () => {
+    const ID_CARLOS = '00000000-0000-4000-8000-000000000002'
+    const EXTENDIDOS = {
+      documento: { tipo: 'TI', numero: '1086999888' },
+      telefono: '3151234567',
+      clasificacion: { sistema: 'SISBEN_IV', grupo: 'A2' },
+    } as const
+
+    it('pasa a nivel extendido y conserva los datos básicos', async () => {
+      const repositorio = crearRepositorio()
+
+      const ficha = await repositorio.completarDatosExtendidos(ID_CARLOS, EXTENDIDOS)
+
+      expect(ficha).toMatchObject({ ...EXTENDIDOS, nivel: 'EXTENDIDO', nombres: 'Carlos Julio' })
+      await expect(repositorio.consultarPorId(ID_CARLOS)).resolves.toEqual(ficha)
+    })
+
+    it('rechaza un documento que ya es de otra persona', async () => {
+      const error = await crearRepositorio()
+        .completarDatosExtendidos(ID_CARLOS, {
+          ...EXTENDIDOS,
+          documento: { tipo: 'CC', numero: '42185390' },
+        })
+        .catch((capturado: unknown) => capturado)
+
+      expect(error).toBeInstanceOf(BeneficiarioDuplicado)
+    })
+
+    it.each([
+      ['el nivel', { telefono: '3151234567' }, ['El nivel debe ser EXTENDIDO']],
+      [
+        'un dato básico',
+        { nivel: 'EXTENDIDO', nombres: 'Otro' },
+        ['property nombres should not exist'],
+      ],
+    ])('valida %s con los mensajes del backend', async (_caso, cuerpo, mensajes) => {
+      const respuesta = crearHttp(tokenDe('VOLUNTARIO')).patch(
+        `/beneficiarios/${ID_CARLOS}`,
+        cuerpo,
+      )
+
+      await expect(respuesta).rejects.toMatchObject({ mensajesServidor: mensajes })
+    })
+  })
+
   describe('consulta de una ficha', () => {
     it('responde 404 si la persona no existe', async () => {
       const inexistente = '00000000-0000-4000-8000-999999999999'

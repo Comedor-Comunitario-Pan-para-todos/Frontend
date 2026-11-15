@@ -1,5 +1,8 @@
 import type { CriteriosBusqueda } from '@/modules/beneficiarios/application/ports/BeneficiarioRepository.ts'
-import type { NuevoBeneficiario } from '@/modules/beneficiarios/domain/NuevoBeneficiario.ts'
+import type {
+  DatosExtendidos,
+  NuevoBeneficiario,
+} from '@/modules/beneficiarios/domain/NuevoBeneficiario.ts'
 
 export function aCuerpoDeRegistro(datos: NuevoBeneficiario) {
   const basicos = {
@@ -12,8 +15,15 @@ export function aCuerpoDeRegistro(datos: NuevoBeneficiario) {
 
   if (datos.nivel === 'BASICO') return basicos
 
+  return { ...basicos, ...camposExtendidos(datos) }
+}
+
+export function aCuerpoDeDatosExtendidos(datos: DatosExtendidos) {
+  return { nivel: 'EXTENDIDO', ...camposExtendidos(datos) }
+}
+
+function camposExtendidos(datos: DatosExtendidos) {
   return {
-    ...basicos,
     tipoDocumento: datos.documento?.tipo,
     numeroDocumento: datos.documento?.numero,
     telefono: datos.telefono ?? undefined,

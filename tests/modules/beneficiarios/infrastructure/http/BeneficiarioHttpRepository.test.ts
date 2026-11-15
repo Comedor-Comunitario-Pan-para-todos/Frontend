@@ -61,6 +61,31 @@ describe('BeneficiarioHttpRepository', () => {
     expect(error).toMatchObject({ numeroDocumento: '42185390', cause: { tipo: 'conflicto' } })
   })
 
+  it('completarDatosExtendidos envía PATCH /beneficiarios/:id', async () => {
+    const recibida = responder(DTO_MARIA)
+
+    await repositorio.completarDatosExtendidos(MARIA.id, NUEVA)
+
+    expect(recibida.metodo).toBe('PATCH')
+    expect(recibida.url?.pathname).toBe(`/api/beneficiarios/${MARIA.id}`)
+    expect(recibida.cuerpo).toEqual({
+      nivel: 'EXTENDIDO',
+      tipoDocumento: 'CC',
+      numeroDocumento: '42185390',
+    })
+  })
+
+  it('un 409 al completar se convierte en BeneficiarioDuplicado', async () => {
+    responder({ statusCode: 409, message: 'Ya existe' }, 409)
+
+    const error = await repositorio
+      .completarDatosExtendidos(MARIA.id, NUEVA)
+      .catch((capturado: unknown) => capturado)
+
+    expect(error).toMatchObject({ numeroDocumento: '42185390' })
+    expect(error).toBeInstanceOf(BeneficiarioDuplicado)
+  })
+
   it('buscar envía GET /beneficiarios con los criterios', async () => {
     const recibida = responder({ data: [], meta: { total: 0, page: 1, limit: 20, totalPages: 0 } })
 

@@ -45,6 +45,15 @@ const PAGINAS_DE_MODULO: Readonly<Record<string, RouteObject[]>> = {
       },
       hydrateFallbackElement: <PantallaCarga />,
     },
+    {
+      path: ':id/completar',
+      lazy: async () => {
+        const { PaginaCompletar } =
+          await import('@/modules/beneficiarios/ui/completar/PaginaCompletar.tsx')
+        return { Component: PaginaCompletar }
+      },
+      hydrateFallbackElement: <PantallaCarga />,
+    },
   ],
 }
 
