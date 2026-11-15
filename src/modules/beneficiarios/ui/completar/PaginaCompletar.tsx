@@ -1,7 +1,7 @@
 import { ArrowLeft } from 'lucide-react'
 import { Link, useParams } from 'react-router'
 import { nombreCompleto } from '@/modules/beneficiarios/domain/Beneficiario.ts'
-import { useBeneficiario } from '@/modules/beneficiarios/ui/useBeneficiario.ts'
+import { useBeneficiario } from '@/modules/beneficiarios/ui/beneficiario/useBeneficiario.ts'
 import { Alerta } from '@/shared/ui/Alerta.tsx'
 import { Boton } from '@/shared/ui/Boton.tsx'
 import { mensajeDeError } from '@/shared/ui/mensajeDeError.ts'

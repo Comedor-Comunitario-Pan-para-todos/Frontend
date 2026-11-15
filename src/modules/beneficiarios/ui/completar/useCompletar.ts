@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router'
 import { useDependencias } from '@/app/contextoDependencias.ts'
 import { nombreCompleto } from '@/modules/beneficiarios/domain/Beneficiario.ts'
 import { esBeneficiarioDuplicado } from '@/modules/beneficiarios/domain/BeneficiarioDuplicado.ts'
-import { aDatosExtendidos } from '@/modules/beneficiarios/ui/esquemaDatosExtendidos.ts'
+import { aDatosExtendidos } from '@/modules/beneficiarios/ui/datosSensibles/esquemaDatosExtendidos.ts'
 import { useConstancia } from '@/shared/ui/constancia/contextoConstancia.ts'
 import {
   CAMPOS_COMPLETAR_INICIALES,

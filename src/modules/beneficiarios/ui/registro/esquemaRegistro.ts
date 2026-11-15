@@ -6,7 +6,7 @@ import {
   CAMPOS_EXTENDIDOS_INICIALES,
   camposExtendidos,
   validarDatosExtendidos,
-} from '@/modules/beneficiarios/ui/esquemaDatosExtendidos.ts'
+} from '@/modules/beneficiarios/ui/datosSensibles/esquemaDatosExtendidos.ts'
 
 // Los mismos límites que valida el backend, para avisar antes de enviar.
 const MAXIMO_NOMBRE = 100

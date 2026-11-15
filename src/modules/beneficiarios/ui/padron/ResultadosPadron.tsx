@@ -2,7 +2,7 @@ import { LoaderCircle } from 'lucide-react'
 import { Alerta } from '@/shared/ui/Alerta.tsx'
 import { Boton } from '@/shared/ui/Boton.tsx'
 import { mensajeDeError } from '@/shared/ui/mensajeDeError.ts'
-import { TarjetaBeneficiario } from '@/modules/beneficiarios/ui/TarjetaBeneficiario.tsx'
+import { TarjetaBeneficiario } from '@/modules/beneficiarios/ui/beneficiario/TarjetaBeneficiario.tsx'
 import type { Padron } from './usePadron.ts'
 
 interface ResultadosPadronProps {

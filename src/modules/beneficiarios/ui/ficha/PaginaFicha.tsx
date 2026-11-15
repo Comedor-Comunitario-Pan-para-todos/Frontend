@@ -1,6 +1,6 @@
 import { ArrowLeft, PencilLine, ShieldCheck } from 'lucide-react'
 import { Link, useParams } from 'react-router'
-import { useBeneficiario } from '@/modules/beneficiarios/ui/useBeneficiario.ts'
+import { useBeneficiario } from '@/modules/beneficiarios/ui/beneficiario/useBeneficiario.ts'
 import { esErrorApi } from '@/shared/application/errores/ErrorApi.ts'
 import { Alerta } from '@/shared/ui/Alerta.tsx'
 import { Boton } from '@/shared/ui/Boton.tsx'

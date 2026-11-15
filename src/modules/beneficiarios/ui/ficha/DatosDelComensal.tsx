@@ -1,7 +1,7 @@
 import { usePermiso } from '@/modules/auth/index.ts'
 import { nombreCompleto, type Beneficiario } from '@/modules/beneficiarios/domain/Beneficiario.ts'
 import { formatearFechaCalendario } from '@/modules/beneficiarios/domain/fechaCalendario.ts'
-import { DocumentoBeneficiario } from '@/modules/beneficiarios/ui/DocumentoBeneficiario.tsx'
+import { DocumentoBeneficiario } from '@/modules/beneficiarios/ui/beneficiario/DocumentoBeneficiario.tsx'
 import { ClasificacionBeneficiario } from './ClasificacionBeneficiario.tsx'
 import { Dato } from './Dato.tsx'
 import { DatoReservado } from './DatoReservado.tsx'

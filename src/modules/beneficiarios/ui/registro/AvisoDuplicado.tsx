@@ -1,6 +1,6 @@
 import type { PosibleDuplicado } from '@/modules/beneficiarios/application/verificarDuplicado.ts'
 import { Alerta } from '@/shared/ui/Alerta.tsx'
-import { TarjetaBeneficiario } from '@/modules/beneficiarios/ui/TarjetaBeneficiario.tsx'
+import { TarjetaBeneficiario } from '@/modules/beneficiarios/ui/beneficiario/TarjetaBeneficiario.tsx'
 
 interface AvisoDuplicadoProps {
   readonly duplicado: PosibleDuplicado
