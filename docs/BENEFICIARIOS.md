@@ -104,3 +104,21 @@ Voluntario y Coordinadora pueden capturar el nivel extendido. Solo la
 Coordinadora ve completos el documento, el teléfono y la clasificación. El
 frontend los oculta en pantalla, pero lo correcto es que el backend no los
 envíe a los roles que no deben verlos.
+
+---
+
+## 3. Flujo de captura en la interfaz
+
+1. **Registro** (`/beneficiarios/nuevo`): empieza en nivel básico, que basta
+   para recibir la ración. El selector «Nivel de registro» muestra los campos
+   extendidos solo si se elige «Extendido».
+2. **Ficha** (`/beneficiarios/:id`): una insignia indica el nivel. En nivel
+   básico no se muestran campos sensibles vacíos. En extendido, quien no tiene
+   el permiso `beneficiarios.verDatosSensibles` ve el documento enmascarado y
+   «Solo lo ve la coordinación» en teléfono y clasificación.
+3. **Completar** (`/beneficiarios/:id/completar`): desde la ficha básica, el
+   botón «Completar datos extendidos» pide los mismos campos del registro
+   extendido y la autorización de la Ley 1581, y envía el `PATCH`.
+
+Los formularios validan cada campo al salir de él y, desde ahí, mientras se
+escribe.

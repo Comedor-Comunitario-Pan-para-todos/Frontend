@@ -27,6 +27,7 @@ export function useRegistro() {
   const constancia = useConstancia()
   const formulario = useForm<CamposRegistro>({
     resolver: zodResolver(esquemaRegistro),
+    mode: 'onTouched',
     defaultValues: CAMPOS_INICIALES,
   })
 

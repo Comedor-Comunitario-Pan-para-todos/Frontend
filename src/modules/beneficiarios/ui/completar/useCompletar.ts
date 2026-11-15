@@ -21,6 +21,7 @@ export function useCompletar(id: string) {
   const constancia = useConstancia()
   const formulario = useForm<CamposCompletar>({
     resolver: zodResolver(esquemaCompletar),
+    mode: 'onTouched',
     defaultValues: CAMPOS_COMPLETAR_INICIALES,
   })
 

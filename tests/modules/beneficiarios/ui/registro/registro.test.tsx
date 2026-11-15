@@ -150,6 +150,24 @@ describe('registro de beneficiarios', () => {
     expect(screen.getByText('Escriba un grupo entre A1 y D21, como C12.')).toBeInTheDocument()
   })
 
+  it('valida cada campo al salir de él, sin esperar a enviar', async () => {
+    await abrirRegistro()
+    await elegir('Extendido')
+
+    await escribir('Teléfono', '12345')
+    await userEvent.tab()
+
+    expect(
+      await screen.findByText('Revise el teléfono: 7 dígitos si es fijo o 10 si es celular.'),
+    ).toBeInTheDocument()
+
+    await escribir('Teléfono', '67')
+
+    expect(
+      screen.queryByText('Revise el teléfono: 7 dígitos si es fijo o 10 si es celular.'),
+    ).not.toBeInTheDocument()
+  })
+
   it('no acepta una fecha de nacimiento futura', async () => {
     await abrirRegistro()
     await llenarIdentidad('Persona', 'De Prueba', '2999-01-01')
