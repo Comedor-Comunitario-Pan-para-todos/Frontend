@@ -87,7 +87,7 @@ sistema y el subgrupo:
 
 ### `PATCH /beneficiarios/:id`
 
-Completa los datos extendidos de quien se registró en nivel básico (RF-02, RF-24).
+Completa los datos extendidos de quien se registró en nivel básico (RF-02).
 Lleva solo `nivel` y los campos extendidos; los básicos no cambian por esta vía.
 
 ```json
