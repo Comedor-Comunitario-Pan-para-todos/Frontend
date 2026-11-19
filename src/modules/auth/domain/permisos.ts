@@ -10,6 +10,8 @@ export type Permiso =
   | 'inventario.ver'
   | 'aportes.ver'
   | 'reportes.ver'
+  /** Descargar el padrón de beneficiarios para la Alcaldía (RF-18, RNF-07). */
+  | 'reportes.exportarPadron'
 
 const MATRIZ: Record<Permiso, readonly Rol[]> = {
   'inicio.ver': ROLES,
@@ -20,6 +22,7 @@ const MATRIZ: Record<Permiso, readonly Rol[]> = {
   'inventario.ver': ['COORDINADORA', 'VOLUNTARIO'],
   'aportes.ver': ['DONANTE'],
   'reportes.ver': ['COORDINADORA', 'PRESIDENTE_JAC', 'DONANTE'],
+  'reportes.exportarPadron': ['COORDINADORA'],
 }
 
 export function tienePermiso(usuario: Usuario | null, permiso: Permiso): boolean {
