@@ -93,6 +93,26 @@ export const rutas: RouteObject[] = [
               children: paginas,
             }
           }),
+          // La guía de inducción no está en el menú: se entra desde el Inicio (RF-15).
+          {
+            path: '/induccion',
+            element: (
+              <ConPermiso permiso="induccion.ver" alternativa={<PaginaSinAcceso />}>
+                <Outlet />
+              </ConPermiso>
+            ),
+            children: [
+              {
+                index: true,
+                lazy: async () => {
+                  const { PaginaInduccion } =
+                    await import('@/modules/induccion/ui/guia/PaginaInduccion.tsx')
+                  return { Component: PaginaInduccion }
+                },
+                hydrateFallbackElement: <PantallaCarga />,
+              },
+            ],
+          },
           { path: '*', element: <PaginaNoEncontrada /> },
         ],
       },
