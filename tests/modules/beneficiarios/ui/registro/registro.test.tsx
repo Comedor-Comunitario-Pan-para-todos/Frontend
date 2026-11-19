@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { beforeEach, describe, expect, it } from 'vitest'
@@ -198,6 +198,15 @@ describe('registro de beneficiarios', () => {
     expect(
       await screen.findByText('La fecha de nacimiento no puede ser futura.'),
     ).toBeInTheDocument()
+  })
+
+  it('explica la política de datos junto a la autorización', async () => {
+    await abrirRegistro()
+
+    const autorizacion = screen.getByRole('region', { name: 'Autorización de datos' })
+
+    expect(within(autorizacion).getByText('Leer la política completa')).toBeInTheDocument()
+    expect(within(autorizacion).getByText('Política de datos · versión 1')).toBeInTheDocument()
   })
 
   it('el barrio es opcional y la autorización empieza desmarcada', async () => {

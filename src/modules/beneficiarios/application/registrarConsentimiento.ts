@@ -12,5 +12,6 @@ export type RegistrarConsentimiento = (idBeneficiario: string) => Promise<Consen
 export function crearRegistrarConsentimiento({
   repositorio,
 }: Dependencias): RegistrarConsentimiento {
-  return (idBeneficiario) => repositorio.registrar(idBeneficiario, POLITICA_VIGENTE)
+  const { version, finalidad } = POLITICA_VIGENTE
+  return (idBeneficiario) => repositorio.registrar(idBeneficiario, { version, finalidad })
 }
