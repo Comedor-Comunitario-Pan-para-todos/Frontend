@@ -1,10 +1,14 @@
-import { screen } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { reiniciarBeneficiariosMock } from '@/mocks/beneficiarios.ts'
 import { handlers } from '@/mocks/handlers.ts'
-import { iniciarSesionDePrueba, renderizarApp } from '../../../../app/renderizarApp.tsx'
+import {
+  crearClienteDePrueba,
+  iniciarSesionDePrueba,
+  renderizarApp,
+} from '../../../../app/renderizarApp.tsx'
 import { servidor } from '../../../../mocks/servidor.ts'
 
 const COORDINADORA = 'mock-token.mock-1'
@@ -22,6 +26,12 @@ async function escribir(campo: string, texto: string) {
 
 async function guardar() {
   await userEvent.click(screen.getByRole('button', { name: 'Guardar datos' }))
+}
+
+async function completarSinDocumento() {
+  await userEvent.click(screen.getByRole('checkbox', { name: 'Sin documento' }))
+  await userEvent.click(screen.getByRole('checkbox', { name: 'Informé a la persona' }))
+  await guardar()
 }
 
 describe('completar datos extendidos', () => {
@@ -48,6 +58,51 @@ describe('completar datos extendidos', () => {
     expect(dato('Documento')).toHaveTextContent('TI 1.086.999.888')
     expect(dato('Teléfono')).toHaveTextContent('3151234567')
     expect(enrutador.state.location.pathname).toBe(`/beneficiarios/${ID_CARLOS}`)
+  })
+
+  it('guarda la autorización que se pidió al completar', async () => {
+    iniciarSesionDePrueba(VOLUNTARIO)
+    const cliente = crearClienteDePrueba()
+    renderizarApp(`/beneficiarios/${ID_CARLOS}/completar`, cliente)
+    await screen.findByRole('button', { name: 'Guardar datos' })
+
+    await completarSinDocumento()
+    await screen.findByText('Registro extendido')
+    await waitFor(() => expect(cliente.isFetching()).toBe(0))
+
+    const autorizacion = screen.getByRole('region', { name: 'Autorización de datos' })
+    expect(
+      await within(autorizacion).findByText('Autorizó el uso de sus datos'),
+    ).toBeInTheDocument()
+  })
+
+  it('si no se guarda la autorización, lleva a la ficha y deja reintentar solo eso', async () => {
+    let completados = 0
+    servidor.use(
+      http.patch('*/api/beneficiarios/:id', () => {
+        completados += 1
+        return undefined
+      }),
+      http.post(
+        '*/api/beneficiarios/:id/consentimiento',
+        () => HttpResponse.json({ statusCode: 500, message: 'Error' }, { status: 500 }),
+        { once: true },
+      ),
+    )
+    iniciarSesionDePrueba(VOLUNTARIO)
+    renderizarApp(`/beneficiarios/${ID_CARLOS}/completar`)
+    await screen.findByRole('button', { name: 'Guardar datos' })
+
+    await completarSinDocumento()
+
+    expect(await screen.findByText('No se guardó la autorización')).toBeInTheDocument()
+    expect(await screen.findByText('Registro extendido')).toBeInTheDocument()
+    expect(screen.queryByText('Datos completados')).not.toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Reintentar' }))
+
+    expect(await screen.findByText('Datos completados')).toBeInTheDocument()
+    expect(completados).toBe(1)
   })
 
   it('pide el documento o «Sin documento» y la autorización', async () => {
