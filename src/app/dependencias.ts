@@ -32,6 +32,17 @@ import {
 } from '@/modules/beneficiarios/application/verificarDuplicado.ts'
 import { BeneficiarioHttpRepository } from '@/modules/beneficiarios/infrastructure/http/BeneficiarioHttpRepository.ts'
 import { ConsentimientoHttpRepository } from '@/modules/beneficiarios/infrastructure/http/ConsentimientoHttpRepository.ts'
+import { fechaDeHoy } from '@/modules/beneficiarios/ui/registro/esquemaRegistro.ts'
+import {
+  crearConsultarResumenExportacion,
+  type ConsultarResumenExportacion,
+} from '@/modules/reportes/application/consultarResumenExportacion.ts'
+import {
+  crearExportarPadron,
+  type ExportarPadron,
+} from '@/modules/reportes/application/exportarPadron.ts'
+import { DescargaNavegador } from '@/modules/reportes/infrastructure/dispositivo/DescargaNavegador.ts'
+import { ExportacionHttpRepository } from '@/modules/reportes/infrastructure/http/ExportacionHttpRepository.ts'
 import { AxiosHttpClient } from '@/shared/infrastructure/http/AxiosHttpClient.ts'
 import type { Entorno } from './entorno.ts'
 
@@ -47,6 +58,8 @@ export interface Dependencias {
   readonly consultarBeneficiario: ConsultarBeneficiario
   readonly verificarDuplicado: VerificarDuplicado
   readonly registrarConsentimiento: RegistrarConsentimiento
+  readonly consultarResumenExportacion: ConsultarResumenExportacion
+  readonly exportarPadron: ExportarPadron
 }
 
 export function crearDependencias({ apiBaseUrl }: Pick<Entorno, 'apiBaseUrl'>): Dependencias {
@@ -65,6 +78,8 @@ export function crearDependencias({ apiBaseUrl }: Pick<Entorno, 'apiBaseUrl'>): 
   const repositorio = new AuthHttpRepository(http)
   const beneficiarios = new BeneficiarioHttpRepository(http)
   const consentimientos = new ConsentimientoHttpRepository(http)
+  const exportaciones = new ExportacionHttpRepository(http)
+  const hoy = () => fechaDeHoy()
 
   return {
     iniciarSesion: crearIniciarSesion({ repositorio, almacen }),
@@ -83,5 +98,14 @@ export function crearDependencias({ apiBaseUrl }: Pick<Entorno, 'apiBaseUrl'>): 
     consultarBeneficiario: crearConsultarBeneficiario({ repositorio: beneficiarios }),
     verificarDuplicado: crearVerificarDuplicado({ repositorio: beneficiarios }),
     registrarConsentimiento: crearRegistrarConsentimiento({ repositorio: consentimientos }),
+    consultarResumenExportacion: crearConsultarResumenExportacion({
+      repositorio: exportaciones,
+      hoy,
+    }),
+    exportarPadron: crearExportarPadron({
+      repositorio: exportaciones,
+      descarga: new DescargaNavegador(),
+      hoy,
+    }),
   }
 }
