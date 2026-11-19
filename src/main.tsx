@@ -8,7 +8,7 @@ import { App } from '@/app/App.tsx'
 async function prepararMocks(): Promise<void> {
   if (import.meta.env.DEV && entorno.usarMocks) {
     const { iniciarMocks } = await import('@/mocks/browser.ts')
-    await iniciarMocks()
+    await iniciarMocks(entorno.apiBaseUrl)
   }
 }
 
