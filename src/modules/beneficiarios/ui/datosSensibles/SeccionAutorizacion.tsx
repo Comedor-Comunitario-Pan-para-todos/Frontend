@@ -2,6 +2,7 @@ import { ShieldCheck } from 'lucide-react'
 import { useFormContext } from 'react-hook-form'
 import { useAuth } from '@/modules/auth/index.ts'
 import { CasillaVerificacion } from '@/shared/ui/CasillaVerificacion.tsx'
+import { PoliticaTratamiento } from './PoliticaTratamiento.tsx'
 
 interface SeccionAutorizacionProps {
   readonly className?: string
@@ -28,9 +29,10 @@ export function SeccionAutorizacion({ className = '' }: SeccionAutorizacionProps
           <p className="text-label text-ink-secondary">Ley 1581 de 2012</p>
         </div>
       </div>
+      <PoliticaTratamiento />
       <CasillaVerificacion
         etiqueta="Informé a la persona"
-        descripcion="Le expliqué que sus datos se usan solo para la atención del comedor y estuvo de acuerdo."
+        descripcion="Le expliqué la política de datos y estuvo de acuerdo."
         error={errors.informado?.message}
         {...register('informado')}
       />

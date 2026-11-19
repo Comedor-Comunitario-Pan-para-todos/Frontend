@@ -12,10 +12,19 @@ import type { NivelCaptura } from '@/modules/beneficiarios/domain/nivelCaptura.t
 //
 // Diferencias con el backend actual, que siguen el contrato propuesto (docs/BENEFICIARIOS.md):
 // * acepta registrar a una persona sin documento (RNF-15);
-// * recibe y entrega `nivel` y `clasificacion` (RF-02), y en nivel básico rechaza datos sensibles.
+// * recibe y entrega `nivel` y `clasificacion` (RF-02), y en nivel básico rechaza datos sensibles;
+// * guarda el consentimiento informado (RF-19, docs/CONSENTIMIENTOS.md).
 
 /** Buscar este texto fuerza un error 500, para probar la pantalla de error. */
 export const BUSQUEDA_SERVIDOR_CAIDO = 'caida'
+
+interface ConsentimientoMock {
+  readonly id: string
+  readonly versionPolitica: number
+  readonly finalidad: string
+  readonly registradoPor: { readonly id: string; readonly nombreCompleto: string }
+  readonly createdAt: string
+}
 
 interface BeneficiarioMock {
   readonly id: string
@@ -31,6 +40,7 @@ interface BeneficiarioMock {
   readonly createdAt: string
   readonly updatedAt: string
   readonly deletedAt: null
+  readonly consentimiento: ConsentimientoMock | null
 }
 
 type Semilla = readonly [
@@ -78,6 +88,18 @@ const EXTENDIDOS_COMPLETOS: Record<string, Pick<BeneficiarioMock, 'telefono' | '
 const PRIMER_REGISTRO = Date.parse('2026-11-08T17:00:00.000Z')
 const UNA_HORA = 3_600_000
 
+// Quienes se registraron antes de RF-19 no tienen consentimiento; la primera persona sí.
+function consentimientoSembrado(indice: number, registro: string): ConsentimientoMock | null {
+  if (indice !== 0) return null
+  return {
+    id: '00000000-0000-4000-9000-000000000001',
+    versionPolitica: 1,
+    finalidad: 'ATENCION_ALIMENTARIA',
+    registradoPor: { id: 'mock-1', nombreCompleto: 'Coordinación de Prueba' },
+    createdAt: registro,
+  }
+}
+
 function sembrar(): BeneficiarioMock[] {
   return SEMILLAS.map(([nombres, apellidos, documento, fechaNacimiento, barrio], indice) => {
     const registro = new Date(PRIMER_REGISTRO - indice * UNA_HORA).toISOString()
@@ -96,6 +118,7 @@ function sembrar(): BeneficiarioMock[] {
       createdAt: registro,
       updatedAt: registro,
       deletedAt: null,
+      consentimiento: consentimientoSembrado(indice, registro),
     }
   })
 }
@@ -110,6 +133,7 @@ export function reiniciarBeneficiariosMock(): void {
 const ROLES_PERMITIDOS: readonly Rol[] = ['COORDINADORA', 'VOLUNTARIO']
 const CAMPOS_BASICOS = ['nivel', 'nombres', 'apellidos', 'fechaNacimiento', 'barrio']
 const CAMPOS_EXTENDIDOS = ['tipoDocumento', 'numeroDocumento', 'telefono', 'clasificacion']
+const CAMPOS_CONSENTIMIENTO = ['versionPolitica', 'finalidad']
 const PARAMETROS_DE_BUSQUEDA = ['search', 'page', 'limit', 'barrio']
 const FECHA_CALENDARIO = /^\d{4}-\d{2}-\d{2}$/
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -220,6 +244,19 @@ function validarCompletado(cuerpo: Record<string, unknown>): string[] {
   return [...desconocidos, ...validarExtendidos(cuerpo)]
 }
 
+function validarConsentimiento(cuerpo: Record<string, unknown>): string[] {
+  const desconocidos = Object.keys(cuerpo)
+    .filter((campo) => !CAMPOS_CONSENTIMIENTO.includes(campo))
+    .map((campo) => `property ${campo} should not exist`)
+  const errores: string[] = []
+  const version = cuerpo.versionPolitica
+  if (typeof version !== 'number' || !Number.isInteger(version) || version < 1) {
+    errores.push('La versión de la política debe ser un entero positivo')
+  }
+  if (texto(cuerpo.finalidad) === '') errores.push('La finalidad es requerida')
+  return [...desconocidos, ...errores]
+}
+
 function documentoRepetido(numeroDocumento: string | null, id?: string) {
   if (!numeroDocumento) return null
   if (!padron.some((b) => b.numeroDocumento === numeroDocumento && b.id !== id)) return null
@@ -230,7 +267,13 @@ function documentoRepetido(numeroDocumento: string | null, id?: string) {
   )
 }
 
-type Identificar = (autorizacion: string | null) => { readonly rol: Rol } | undefined
+interface UsuarioIdentificado {
+  readonly id: string
+  readonly nombreCompleto: string
+  readonly rol: Rol
+}
+
+type Identificar = (autorizacion: string | null) => UsuarioIdentificado | undefined
 
 /**
  * `identificar` resuelve el usuario a partir del encabezado `Authorization`. Lo entrega
@@ -276,6 +319,7 @@ export function crearHandlersBeneficiarios(identificar: Identificar) {
         createdAt: ahora,
         updatedAt: ahora,
         deletedAt: null,
+        consentimiento: null,
       }
       padron = [nuevo, ...padron]
 
@@ -352,6 +396,37 @@ export function crearHandlersBeneficiarios(identificar: Identificar) {
 
       const beneficiario = padron.find((b) => b.id === id)
       return beneficiario ? HttpResponse.json(beneficiario) : noEncontrado(id)
+    }),
+
+    http.post('*/beneficiarios/:id/consentimiento', async ({ request, params }) => {
+      await delay()
+      const rechazo = rechazoDeAcceso(request)
+      if (rechazo) return rechazo
+
+      const id = String(params.id)
+      if (!UUID.test(id)) return solicitudInvalida('Validation failed (uuid is expected)')
+      const beneficiario = padron.find((b) => b.id === id)
+      if (!beneficiario) return noEncontrado(id)
+
+      const cuerpo = (await request.json()) as Record<string, unknown>
+      const errores = validarConsentimiento(cuerpo)
+      if (errores.length > 0) return solicitudInvalida(errores)
+
+      const versionPolitica = cuerpo.versionPolitica as number
+      const existente = beneficiario.consentimiento
+      if (existente?.versionPolitica === versionPolitica) return HttpResponse.json(existente)
+
+      const { id: idUsuario, nombreCompleto } = identificar(request.headers.get('Authorization'))!
+      const nuevo: ConsentimientoMock = {
+        id: crypto.randomUUID(),
+        versionPolitica,
+        finalidad: texto(cuerpo.finalidad),
+        registradoPor: { id: idUsuario, nombreCompleto },
+        createdAt: new Date().toISOString(),
+      }
+      padron = padron.map((b) => (b.id === id ? { ...b, consentimiento: nuevo } : b))
+
+      return HttpResponse.json(nuevo, { status: 201 })
     }),
 
     http.patch('*/beneficiarios/:id', async ({ request, params }) => {

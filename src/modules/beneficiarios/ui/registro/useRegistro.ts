@@ -12,6 +12,7 @@ import {
   esquemaRegistro,
   type CamposRegistro,
 } from './esquemaRegistro.ts'
+import { useGuardarConsentimiento } from '@/modules/beneficiarios/ui/datosSensibles/useGuardarConsentimiento.ts'
 import { useValorRetrasado } from '@/modules/beneficiarios/ui/useValorRetrasado.ts'
 
 // Lo que se espera a que la persona deje de escribir antes de revisar si ya está en el padrón.
@@ -25,6 +26,7 @@ export function useRegistro() {
   const consultas = useQueryClient()
   const navegar = useNavigate()
   const constancia = useConstancia()
+  const guardarConsentimiento = useGuardarConsentimiento()
   const formulario = useForm<CamposRegistro>({
     resolver: zodResolver(esquemaRegistro),
     mode: 'onTouched',
@@ -64,7 +66,9 @@ export function useRegistro() {
     mutationFn: (campos: CamposRegistro) => registrarBeneficiario(aNuevoBeneficiario(campos)),
     onSuccess: async (ficha) => {
       const nombre = nombreCompleto(ficha)
-      constancia.confirmar({ titulo: 'Persona registrada', detalle: nombre, resumen: nombre })
+      await guardarConsentimiento(ficha, () =>
+        constancia.confirmar({ titulo: 'Persona registrada', detalle: nombre, resumen: nombre }),
+      )
       await consultas.invalidateQueries({ queryKey: ['beneficiarios'] })
       await navegar(`/beneficiarios/${ficha.id}`, { replace: true })
     },

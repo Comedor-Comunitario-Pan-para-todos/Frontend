@@ -1,13 +1,15 @@
-import { screen, waitFor } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest'
 import { reiniciarBeneficiariosMock } from '@/mocks/beneficiarios.ts'
 import { handlers } from '@/mocks/handlers.ts'
 import { iniciarSesionDePrueba, renderizarApp } from '../../../../app/renderizarApp.tsx'
 import { servidor } from '../../../../mocks/servidor.ts'
 
 const VOLUNTARIO = 'mock-token.mock-3'
+// La constancia vibra con un pulso corto solo cuando algo quedó guardado.
+const PULSO_DE_GUARDADO = 40
 
 async function abrirRegistro() {
   iniciarSesionDePrueba(VOLUNTARIO)
@@ -71,6 +73,62 @@ describe('registro de beneficiarios', () => {
       await screen.findByRole('heading', { name: 'Persona De Prueba', level: 2 }),
     ).toBeInTheDocument()
     expect(enrutador.state.location.pathname).toMatch(/^\/beneficiarios\/[0-9a-f-]{36}$/)
+  })
+
+  it('guarda la autorización de la persona que acaba de registrar', async () => {
+    const autorizadas: string[] = []
+    servidor.use(
+      http.post('*/api/beneficiarios/:id/consentimiento', ({ params }) => {
+        autorizadas.push(String(params.id))
+        return undefined
+      }),
+    )
+    const enrutador = await abrirRegistro()
+    await llenarIdentidad()
+    await marcar('Informé a la persona')
+
+    await registrar()
+
+    expect(await screen.findByText('Persona registrada')).toBeInTheDocument()
+    const idRegistrada = enrutador.state.location.pathname.split('/').at(-1)
+    expect(autorizadas).toEqual([idRegistrada])
+  })
+
+  it('si no se guarda la autorización, lleva a la ficha y deja reintentar solo eso', async () => {
+    const vibrar = vi.fn()
+    Object.defineProperty(navigator, 'vibrate', { value: vibrar, configurable: true })
+    onTestFinished(() => {
+      Reflect.deleteProperty(navigator, 'vibrate')
+    })
+    let registros = 0
+    servidor.use(
+      http.post('*/api/beneficiarios', () => {
+        registros += 1
+        return undefined
+      }),
+      http.post(
+        '*/api/beneficiarios/:id/consentimiento',
+        () => HttpResponse.json({ statusCode: 500, message: 'Error' }, { status: 500 }),
+        { once: true },
+      ),
+    )
+    await abrirRegistro()
+    await llenarIdentidad()
+    await marcar('Informé a la persona')
+
+    await registrar()
+
+    expect(await screen.findByText('No se guardó la autorización')).toBeInTheDocument()
+    expect(
+      screen.getByText('Falta guardar la autorización de datos de Persona De Prueba.'),
+    ).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Ficha del comensal' })).toBeInTheDocument()
+    expect(vibrar).not.toHaveBeenCalledWith(PULSO_DE_GUARDADO)
+
+    await userEvent.click(screen.getByRole('button', { name: 'Reintentar' }))
+
+    expect(await screen.findByText('Persona registrada')).toBeInTheDocument()
+    expect(registros).toBe(1)
   })
 
   it('en nivel extendido registra documento, teléfono y clasificación', async () => {
@@ -198,6 +256,15 @@ describe('registro de beneficiarios', () => {
     expect(
       await screen.findByText('La fecha de nacimiento no puede ser futura.'),
     ).toBeInTheDocument()
+  })
+
+  it('explica la política de datos junto a la autorización', async () => {
+    await abrirRegistro()
+
+    const autorizacion = screen.getByRole('region', { name: 'Autorización de datos' })
+
+    expect(within(autorizacion).getByText('Leer la política completa')).toBeInTheDocument()
+    expect(within(autorizacion).getByText('Política de datos · versión 1')).toBeInTheDocument()
   })
 
   it('el barrio es opcional y la autorización empieza desmarcada', async () => {

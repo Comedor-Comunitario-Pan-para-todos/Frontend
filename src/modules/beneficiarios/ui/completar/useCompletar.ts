@@ -6,6 +6,7 @@ import { useDependencias } from '@/app/contextoDependencias.ts'
 import { nombreCompleto } from '@/modules/beneficiarios/domain/Beneficiario.ts'
 import { esBeneficiarioDuplicado } from '@/modules/beneficiarios/domain/BeneficiarioDuplicado.ts'
 import { aDatosExtendidos } from '@/modules/beneficiarios/ui/datosSensibles/esquemaDatosExtendidos.ts'
+import { useGuardarConsentimiento } from '@/modules/beneficiarios/ui/datosSensibles/useGuardarConsentimiento.ts'
 import { useValorRetrasado } from '@/modules/beneficiarios/ui/useValorRetrasado.ts'
 import { useConstancia } from '@/shared/ui/constancia/contextoConstancia.ts'
 import {
@@ -24,6 +25,7 @@ export function useCompletar(id: string) {
   const consultas = useQueryClient()
   const navegar = useNavigate()
   const constancia = useConstancia()
+  const guardarConsentimiento = useGuardarConsentimiento()
   const formulario = useForm<CamposCompletar>({
     resolver: zodResolver(esquemaCompletar),
     mode: 'onTouched',
@@ -54,7 +56,9 @@ export function useCompletar(id: string) {
     mutationFn: (campos: CamposCompletar) => completarDatosExtendidos(id, aDatosExtendidos(campos)),
     onSuccess: async (ficha) => {
       const nombre = nombreCompleto(ficha)
-      constancia.confirmar({ titulo: 'Datos completados', detalle: nombre, resumen: nombre })
+      await guardarConsentimiento(ficha, () =>
+        constancia.confirmar({ titulo: 'Datos completados', detalle: nombre, resumen: nombre }),
+      )
       await consultas.invalidateQueries({ queryKey: ['beneficiarios'] })
       await navegar(`/beneficiarios/${id}`, { replace: true })
     },

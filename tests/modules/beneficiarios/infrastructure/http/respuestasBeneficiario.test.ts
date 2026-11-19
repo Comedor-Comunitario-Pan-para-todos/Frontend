@@ -56,6 +56,36 @@ describe('esquemaBeneficiario', () => {
     })
   })
 
+  it('lee el consentimiento cuando llega y lo deja pendiente cuando no', () => {
+    const ficha = esquemaBeneficiario.parse({
+      ...DTO_CARLOS,
+      consentimiento: {
+        id: 'c-1',
+        versionPolitica: 1,
+        finalidad: 'ATENCION_ALIMENTARIA',
+        registradoPor: { id: 'u-1', nombreCompleto: 'Voluntario de Prueba' },
+        createdAt: '2026-11-19T15:00:00.000Z',
+      },
+    })
+
+    expect(ficha.consentimiento).toEqual({
+      versionPolitica: 1,
+      finalidad: 'ATENCION_ALIMENTARIA',
+      registradoEn: '2026-11-19T15:00:00.000Z',
+      registradoPor: 'Voluntario de Prueba',
+    })
+    expect(esquemaBeneficiario.parse(DTO_CARLOS).consentimiento).toBeNull()
+  })
+
+  it('un consentimiento que no se puede leer cuenta como pendiente, sin rechazar la ficha', () => {
+    const ficha = esquemaBeneficiario.parse({
+      ...DTO_CARLOS,
+      consentimiento: { versionPolitica: 'uno' },
+    })
+
+    expect(ficha.consentimiento).toBeNull()
+  })
+
   it('rechaza una ficha sin fecha de nacimiento', () => {
     expect(esquemaBeneficiario.safeParse({ ...DTO_MARIA, fechaNacimiento: null }).success).toBe(
       false,

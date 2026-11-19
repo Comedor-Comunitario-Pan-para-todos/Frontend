@@ -1,4 +1,5 @@
 import type { ClasificacionSocioeconomica } from './clasificacionSocioeconomica.ts'
+import type { Consentimiento } from './Consentimiento.ts'
 import type { Documento } from './documento.ts'
 import type { NivelCaptura } from './nivelCaptura.ts'
 import { quitarEspaciosSobrantes } from './texto.ts'
@@ -17,6 +18,8 @@ export interface Beneficiario {
   readonly clasificacion: ClasificacionSocioeconomica | null
   /** Momento del registro, en formato ISO 8601. */
   readonly registradoEn: string
+  /** `null` mientras la persona no haya aceptado la política de datos (RF-19). */
+  readonly consentimiento: Consentimiento | null
 }
 
 type Nombre = Pick<Beneficiario, 'nombres' | 'apellidos'>

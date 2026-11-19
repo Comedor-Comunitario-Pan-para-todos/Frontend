@@ -168,6 +168,14 @@
     line-height: var(--text-body--line-height);
   }
 
+  /* Los desplegables usan su propio ícono: se quita el triángulo del navegador */
+  summary {
+    list-style: none;
+  }
+  summary::-webkit-details-marker {
+    display: none;
+  }
+
   /* Cifras alineadas en columnas (turnos, pesos, cantidades) */
   .font-mono,
   table {

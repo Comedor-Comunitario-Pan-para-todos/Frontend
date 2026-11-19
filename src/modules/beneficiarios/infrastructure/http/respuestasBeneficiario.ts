@@ -6,6 +6,7 @@ import {
   SISTEMAS_CLASIFICACION,
 } from '@/modules/beneficiarios/domain/clasificacionSocioeconomica.ts'
 import { NIVELES_CAPTURA, type NivelCaptura } from '@/modules/beneficiarios/domain/nivelCaptura.ts'
+import { esquemaConsentimiento } from './respuestasConsentimiento.ts'
 
 // Lo que entrega el backend y cómo se traduce al dominio. `nivel` y `clasificacion` son del
 // contrato propuesto para RF-02 (ver docs/BENEFICIARIOS.md).
@@ -33,6 +34,8 @@ const esquemaBeneficiarioDto = z.object({
   telefono: z.string().nullish(),
   clasificacion: esquemaClasificacionDto,
   createdAt: z.string(),
+  // Un consentimiento que no se puede leer cuenta como pendiente: se vuelve a pedir.
+  consentimiento: esquemaConsentimiento.nullish().catch(null),
 })
 
 type BeneficiarioDto = z.infer<typeof esquemaBeneficiarioDto>
@@ -56,6 +59,7 @@ function aBeneficiario(dto: BeneficiarioDto): Beneficiario {
     telefono: dto.telefono || null,
     clasificacion: dto.clasificacion ?? null,
     registradoEn: dto.createdAt,
+    consentimiento: dto.consentimiento ?? null,
   }
 }
 

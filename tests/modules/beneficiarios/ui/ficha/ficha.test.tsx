@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { beforeEach, describe, expect, it } from 'vitest'
@@ -95,6 +95,31 @@ describe('ficha del comensal', () => {
     expect(
       await screen.findByRole('heading', { name: 'María Elena Restrepo', level: 2 }),
     ).toBeInTheDocument()
+  })
+
+  it('muestra cuándo, quién y sobre qué política se tomó la autorización', async () => {
+    abrirFicha(ID_MARIA)
+
+    const autorizacion = await screen.findByRole('region', { name: 'Autorización de datos' })
+
+    expect(within(autorizacion).getByText('Autorizó el uso de sus datos')).toBeInTheDocument()
+    expect(within(autorizacion).getByText('Coordinación de Prueba')).toBeInTheDocument()
+    expect(within(autorizacion).getByText('Versión 1')).toBeInTheDocument()
+    expect(within(autorizacion).getByText(/08\/11\/2026/)).toBeInTheDocument()
+  })
+
+  it('si falta la autorización, deja registrarla desde la ficha', async () => {
+    abrirFicha(ID_CARLOS)
+    const autorizacion = await screen.findByRole('region', { name: 'Autorización de datos' })
+    expect(within(autorizacion).getByText('Autorización pendiente')).toBeInTheDocument()
+
+    await userEvent.click(
+      within(autorizacion).getByRole('button', { name: 'Le expliqué y aceptó' }),
+    )
+
+    expect(await screen.findByText('Autorización guardada')).toBeInTheDocument()
+    expect(await within(autorizacion).findByText('Voluntario de Prueba')).toBeInTheDocument()
+    expect(within(autorizacion).queryByText('Autorización pendiente')).not.toBeInTheDocument()
   })
 
   it('si la persona no existe lo dice y deja volver', async () => {
