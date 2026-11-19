@@ -107,7 +107,8 @@ Lleva solo `nivel` y los campos extendidos; los básicos no cambian por esta ví
 
 ### Respuesta (todas las rutas que devuelven una ficha)
 
-Los mismos campos de hoy, más `nivel` y `clasificacion` (`null` si no hay).
+Los mismos campos de hoy, más `nivel` y `clasificacion` (`null` si no hay), y
+`consentimiento` (RF-19, ver [CONSENTIMIENTOS.md](./CONSENTIMIENTOS.md)).
 
 * Un registro anterior a RF-02 puede llegar sin `nivel`: el frontend lo deduce
   (extendido si tiene documento o teléfono).

@@ -44,3 +44,16 @@ Respuesta (201 si es nuevo; 200 si la persona ya había aceptado esa versión):
 * 400 si falta la versión o la finalidad, o llega un campo que no conoce.
 * 404 si el beneficiario no existe.
 * Lo pueden usar Voluntario y Coordinadora, igual que el registro (RNF-07).
+
+---
+
+## 3. El consentimiento en la ficha
+
+Todas las respuestas que devuelven una ficha (`GET /beneficiarios/:id`, el padrón,
+el registro…) incluyen `consentimiento`: el mismo objeto de arriba, o `null` si la
+persona todavía no ha aceptado.
+
+* Quien se registró antes de RF-19 llega con `null`: la ficha muestra
+  «Autorización pendiente» y deja registrarla con el mismo `POST`.
+* Un `consentimiento` que no se puede leer cuenta como pendiente, sin rechazar la
+  ficha.

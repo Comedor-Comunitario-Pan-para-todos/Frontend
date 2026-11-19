@@ -256,14 +256,14 @@ describe('mocks de beneficiarios', () => {
   })
 
   describe('consentimiento', () => {
-    const ID_MARIA = '00000000-0000-4000-8000-000000000001'
+    const ID_CARLOS = '00000000-0000-4000-8000-000000000002'
 
     function consentimientos(rol: Rol = 'VOLUNTARIO') {
       return new ConsentimientoHttpRepository(crearHttp(tokenDe(rol)))
     }
 
     it('lo guarda con la política aceptada y el nombre de quien lo tomó', async () => {
-      const consentimiento = await consentimientos().registrar(ID_MARIA, POLITICA_VIGENTE)
+      const consentimiento = await consentimientos().registrar(ID_CARLOS, POLITICA_VIGENTE)
 
       expect(consentimiento).toMatchObject({
         versionPolitica: 1,
@@ -273,9 +273,9 @@ describe('mocks de beneficiarios', () => {
     })
 
     it('si ya aceptó esa versión, devuelve el mismo y no crea otro', async () => {
-      const primero = await consentimientos().registrar(ID_MARIA, POLITICA_VIGENTE)
+      const primero = await consentimientos().registrar(ID_CARLOS, POLITICA_VIGENTE)
 
-      const segundo = await consentimientos('COORDINADORA').registrar(ID_MARIA, POLITICA_VIGENTE)
+      const segundo = await consentimientos('COORDINADORA').registrar(ID_CARLOS, POLITICA_VIGENTE)
 
       expect(segundo).toEqual(primero)
     })
@@ -290,7 +290,7 @@ describe('mocks de beneficiarios', () => {
 
     it('valida el cuerpo con los mensajes del backend', async () => {
       const respuesta = crearHttp(tokenDe('VOLUNTARIO')).post(
-        `/beneficiarios/${ID_MARIA}/consentimiento`,
+        `/beneficiarios/${ID_CARLOS}/consentimiento`,
         { versionPolitica: 0, firma: 'x' },
       )
 
@@ -303,9 +303,20 @@ describe('mocks de beneficiarios', () => {
       })
     })
 
+    it('la ficha lo muestra después de guardarlo', async () => {
+      const antes = await crearRepositorio().consultarPorId(ID_CARLOS)
+
+      const consentimiento = await consentimientos().registrar(ID_CARLOS, POLITICA_VIGENTE)
+
+      expect(antes.consentimiento).toBeNull()
+      await expect(crearRepositorio().consultarPorId(ID_CARLOS)).resolves.toMatchObject({
+        consentimiento,
+      })
+    })
+
     it('solo lo pueden tomar Coordinadora y Voluntario', async () => {
       await expect(
-        consentimientos('DONANTE').registrar(ID_MARIA, POLITICA_VIGENTE),
+        consentimientos('DONANTE').registrar(ID_CARLOS, POLITICA_VIGENTE),
       ).rejects.toMatchObject({ tipo: 'sin-permiso' })
     })
   })

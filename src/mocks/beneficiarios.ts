@@ -18,6 +18,14 @@ import type { NivelCaptura } from '@/modules/beneficiarios/domain/nivelCaptura.t
 /** Buscar este texto fuerza un error 500, para probar la pantalla de error. */
 export const BUSQUEDA_SERVIDOR_CAIDO = 'caida'
 
+interface ConsentimientoMock {
+  readonly id: string
+  readonly versionPolitica: number
+  readonly finalidad: string
+  readonly registradoPor: { readonly id: string; readonly nombreCompleto: string }
+  readonly createdAt: string
+}
+
 interface BeneficiarioMock {
   readonly id: string
   readonly nivel: NivelCaptura
@@ -32,15 +40,7 @@ interface BeneficiarioMock {
   readonly createdAt: string
   readonly updatedAt: string
   readonly deletedAt: null
-}
-
-interface ConsentimientoMock {
-  readonly id: string
-  readonly beneficiarioId: string
-  readonly versionPolitica: number
-  readonly finalidad: string
-  readonly registradoPor: { readonly id: string; readonly nombreCompleto: string }
-  readonly createdAt: string
+  readonly consentimiento: ConsentimientoMock | null
 }
 
 type Semilla = readonly [
@@ -88,6 +88,18 @@ const EXTENDIDOS_COMPLETOS: Record<string, Pick<BeneficiarioMock, 'telefono' | '
 const PRIMER_REGISTRO = Date.parse('2026-11-08T17:00:00.000Z')
 const UNA_HORA = 3_600_000
 
+// Quienes se registraron antes de RF-19 no tienen consentimiento; la primera persona sí.
+function consentimientoSembrado(indice: number, registro: string): ConsentimientoMock | null {
+  if (indice !== 0) return null
+  return {
+    id: '00000000-0000-4000-9000-000000000001',
+    versionPolitica: 1,
+    finalidad: 'ATENCION_ALIMENTARIA',
+    registradoPor: { id: 'mock-1', nombreCompleto: 'Coordinación de Prueba' },
+    createdAt: registro,
+  }
+}
+
 function sembrar(): BeneficiarioMock[] {
   return SEMILLAS.map(([nombres, apellidos, documento, fechaNacimiento, barrio], indice) => {
     const registro = new Date(PRIMER_REGISTRO - indice * UNA_HORA).toISOString()
@@ -106,17 +118,16 @@ function sembrar(): BeneficiarioMock[] {
       createdAt: registro,
       updatedAt: registro,
       deletedAt: null,
+      consentimiento: consentimientoSembrado(indice, registro),
     }
   })
 }
 
 let padron = sembrar()
-let consentimientos: ConsentimientoMock[] = []
 
 /** Devuelve el padrón simulado a su estado inicial. Lo usan las pruebas. */
 export function reiniciarBeneficiariosMock(): void {
   padron = sembrar()
-  consentimientos = []
 }
 
 const ROLES_PERMITIDOS: readonly Rol[] = ['COORDINADORA', 'VOLUNTARIO']
@@ -308,6 +319,7 @@ export function crearHandlersBeneficiarios(identificar: Identificar) {
         createdAt: ahora,
         updatedAt: ahora,
         deletedAt: null,
+        consentimiento: null,
       }
       padron = [nuevo, ...padron]
 
@@ -393,28 +405,26 @@ export function crearHandlersBeneficiarios(identificar: Identificar) {
 
       const id = String(params.id)
       if (!UUID.test(id)) return solicitudInvalida('Validation failed (uuid is expected)')
-      if (!padron.some((b) => b.id === id)) return noEncontrado(id)
+      const beneficiario = padron.find((b) => b.id === id)
+      if (!beneficiario) return noEncontrado(id)
 
       const cuerpo = (await request.json()) as Record<string, unknown>
       const errores = validarConsentimiento(cuerpo)
       if (errores.length > 0) return solicitudInvalida(errores)
 
       const versionPolitica = cuerpo.versionPolitica as number
-      const existente = consentimientos.find(
-        (c) => c.beneficiarioId === id && c.versionPolitica === versionPolitica,
-      )
-      if (existente) return HttpResponse.json(existente)
+      const existente = beneficiario.consentimiento
+      if (existente?.versionPolitica === versionPolitica) return HttpResponse.json(existente)
 
       const { id: idUsuario, nombreCompleto } = identificar(request.headers.get('Authorization'))!
       const nuevo: ConsentimientoMock = {
         id: crypto.randomUUID(),
-        beneficiarioId: id,
         versionPolitica,
         finalidad: texto(cuerpo.finalidad),
         registradoPor: { id: idUsuario, nombreCompleto },
         createdAt: new Date().toISOString(),
       }
-      consentimientos = [...consentimientos, nuevo]
+      padron = padron.map((b) => (b.id === id ? { ...b, consentimiento: nuevo } : b))
 
       return HttpResponse.json(nuevo, { status: 201 })
     }),
