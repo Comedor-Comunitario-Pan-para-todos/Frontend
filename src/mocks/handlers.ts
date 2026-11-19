@@ -1,6 +1,7 @@
 import { delay, http, HttpResponse } from 'msw'
 import type { Rol } from '@/modules/auth/domain/Usuario.ts'
 import { crearHandlersBeneficiarios } from './beneficiarios.ts'
+import { crearHandlersReportes } from './reportes.ts'
 
 export const CLAVE_MOCK = 'Comedor123*'
 
@@ -65,5 +66,8 @@ export const handlers = [
     return encontrado ? HttpResponse.json(encontrado) : noAutorizado('Unauthorized')
   }),
 
+  // Va antes que beneficiarios: `*/beneficiarios/:id` también atraparía
+  // `/exportaciones/beneficiarios/resumen`.
+  ...crearHandlersReportes(buscarPorToken),
   ...crearHandlersBeneficiarios(buscarPorToken),
 ]

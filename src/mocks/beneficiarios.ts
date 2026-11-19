@@ -130,6 +130,20 @@ export function reiniciarBeneficiariosMock(): void {
   padron = sembrar()
 }
 
+/** Datos de las personas del padrón simulado, en orden de registro. Lo usa el mock de reportes. */
+export function personasDelPadronMock() {
+  return padron.map(
+    ({ nombres, apellidos, tipoDocumento, numeroDocumento, fechaNacimiento, barrio }) => ({
+      nombres,
+      apellidos,
+      tipoDocumento,
+      numeroDocumento,
+      fechaNacimiento,
+      barrio,
+    }),
+  )
+}
+
 const ROLES_PERMITIDOS: readonly Rol[] = ['COORDINADORA', 'VOLUNTARIO']
 const CAMPOS_BASICOS = ['nivel', 'nombres', 'apellidos', 'fechaNacimiento', 'barrio']
 const CAMPOS_EXTENDIDOS = ['tipoDocumento', 'numeroDocumento', 'telefono', 'clasificacion']
