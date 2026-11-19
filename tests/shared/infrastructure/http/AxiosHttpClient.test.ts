@@ -225,4 +225,70 @@ describe('AxiosHttpClient', () => {
       expect(alExpirarSesion).not.toHaveBeenCalled()
     })
   })
+  describe('descargar', () => {
+    const URL_ARCHIVO = '*/api/archivo.xlsx'
+
+    it('entrega el archivo como Blob, con el nombre que propone el servidor', async () => {
+      let recibida: URL | undefined
+      servidor.use(
+        http.get(URL_ARCHIVO, ({ request }) => {
+          recibida = new URL(request.url)
+          return new HttpResponse(new Uint8Array([80, 75, 3, 4]), {
+            headers: {
+              'Content-Type': 'application/octet-stream',
+              'Content-Disposition': 'attachment; filename="padron.xlsx"',
+            },
+          })
+        }),
+      )
+
+      const archivo = await crearCliente().descargar('/archivo.xlsx', {
+        params: { desde: '2026-11-01' },
+      })
+
+      expect(recibida?.searchParams.get('desde')).toBe('2026-11-01')
+      expect(archivo.nombreArchivo).toBe('padron.xlsx')
+      expect(archivo.contenido).toBeInstanceOf(Blob)
+      expect(archivo.contenido.size).toBe(4)
+    })
+
+    it('sin Content-Disposition el nombre queda en null', async () => {
+      servidor.use(http.get(URL_ARCHIVO, () => new HttpResponse(new Uint8Array([1]))))
+
+      const archivo = await crearCliente().descargar('/archivo.xlsx')
+
+      expect(archivo.nombreArchivo).toBeNull()
+    })
+
+    it('envía el token y convierte los errores en ErrorApi', async () => {
+      let autorizacion: string | null = null
+      servidor.use(
+        http.get(URL_ARCHIVO, ({ request }) => {
+          autorizacion = request.headers.get('Authorization')
+          return HttpResponse.json({ message: 'Forbidden resource' }, { status: 403 })
+        }),
+      )
+
+      await expect(crearCliente().descargar('/archivo.xlsx')).rejects.toMatchObject({
+        tipo: 'sin-permiso',
+      })
+      expect(autorizacion).toBe('Bearer token-vigente')
+    })
+
+    it('avisa el avance de la descarga', async () => {
+      const bytes = new Uint8Array(2048)
+      servidor.use(
+        http.get(
+          URL_ARCHIVO,
+          () => new HttpResponse(bytes, { headers: { 'Content-Length': String(bytes.length) } }),
+        ),
+      )
+      const alAvanzar = vi.fn()
+
+      await crearCliente().descargar('/archivo.xlsx', { alAvanzar })
+
+      expect(alAvanzar).toHaveBeenCalled()
+      expect(alAvanzar).toHaveBeenLastCalledWith(1)
+    })
+  })
 })
