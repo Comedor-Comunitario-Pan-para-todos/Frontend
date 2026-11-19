@@ -32,6 +32,15 @@ import {
 } from '@/modules/beneficiarios/application/verificarDuplicado.ts'
 import { BeneficiarioHttpRepository } from '@/modules/beneficiarios/infrastructure/http/BeneficiarioHttpRepository.ts'
 import { ConsentimientoHttpRepository } from '@/modules/beneficiarios/infrastructure/http/ConsentimientoHttpRepository.ts'
+import {
+  crearConsultarGuiaInduccion,
+  type ConsultarGuiaInduccion,
+} from '@/modules/induccion/application/consultarGuiaInduccion.ts'
+import {
+  crearRegistrarLecturaModulo,
+  type RegistrarLecturaModulo,
+} from '@/modules/induccion/application/registrarLecturaModulo.ts'
+import { InduccionHttpRepository } from '@/modules/induccion/infrastructure/http/InduccionHttpRepository.ts'
 import { AxiosHttpClient } from '@/shared/infrastructure/http/AxiosHttpClient.ts'
 import type { Entorno } from './entorno.ts'
 
@@ -47,6 +56,8 @@ export interface Dependencias {
   readonly consultarBeneficiario: ConsultarBeneficiario
   readonly verificarDuplicado: VerificarDuplicado
   readonly registrarConsentimiento: RegistrarConsentimiento
+  readonly consultarGuiaInduccion: ConsultarGuiaInduccion
+  readonly registrarLecturaModulo: RegistrarLecturaModulo
 }
 
 export function crearDependencias({ apiBaseUrl }: Pick<Entorno, 'apiBaseUrl'>): Dependencias {
@@ -65,6 +76,7 @@ export function crearDependencias({ apiBaseUrl }: Pick<Entorno, 'apiBaseUrl'>): 
   const repositorio = new AuthHttpRepository(http)
   const beneficiarios = new BeneficiarioHttpRepository(http)
   const consentimientos = new ConsentimientoHttpRepository(http)
+  const induccion = new InduccionHttpRepository(http)
 
   return {
     iniciarSesion: crearIniciarSesion({ repositorio, almacen }),
@@ -83,5 +95,7 @@ export function crearDependencias({ apiBaseUrl }: Pick<Entorno, 'apiBaseUrl'>): 
     consultarBeneficiario: crearConsultarBeneficiario({ repositorio: beneficiarios }),
     verificarDuplicado: crearVerificarDuplicado({ repositorio: beneficiarios }),
     registrarConsentimiento: crearRegistrarConsentimiento({ repositorio: consentimientos }),
+    consultarGuiaInduccion: crearConsultarGuiaInduccion({ repositorio: induccion }),
+    registrarLecturaModulo: crearRegistrarLecturaModulo({ repositorio: induccion }),
   }
 }
