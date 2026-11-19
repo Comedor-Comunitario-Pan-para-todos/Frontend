@@ -10,6 +10,8 @@ export type Permiso =
   | 'inventario.ver'
   | 'aportes.ver'
   | 'reportes.ver'
+  /** Leer la guía de inducción y marcar los temas leídos (RF-15). */
+  | 'induccion.ver'
 
 const MATRIZ: Record<Permiso, readonly Rol[]> = {
   'inicio.ver': ROLES,
@@ -20,6 +22,7 @@ const MATRIZ: Record<Permiso, readonly Rol[]> = {
   'inventario.ver': ['COORDINADORA', 'VOLUNTARIO'],
   'aportes.ver': ['DONANTE'],
   'reportes.ver': ['COORDINADORA', 'PRESIDENTE_JAC', 'DONANTE'],
+  'induccion.ver': ['COORDINADORA', 'VOLUNTARIO'],
 }
 
 export function tienePermiso(usuario: Usuario | null, permiso: Permiso): boolean {
