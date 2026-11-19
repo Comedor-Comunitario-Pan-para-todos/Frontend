@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-// Contrato propuesto para RF-18 (ver docs/EXPORTACION_PADRON.md).
+// Contrato propuesto para RF-18 en Backend#62.
 
 const cantidad = z.number().int().nonnegative()
 

@@ -3,8 +3,8 @@ import type { Rol } from '@/modules/auth/domain/Usuario.ts'
 import { personasDelPadronMock } from './beneficiarios.ts'
 import { crearXlsx } from './xlsxDePrueba.ts'
 
-// Simula el módulo `exportaciones` del backend con el contrato propuesto para RF-18
-// (docs/EXPORTACION_PADRON.md). El backend real todavía no tiene estas rutas (Backend#62).
+// Simula el módulo `exportaciones` del backend con el contrato propuesto para RF-18 en
+// Backend#62. El backend real todavía no tiene estas rutas.
 //
 // Como aún no existe el registro de asistencia (turnos, RF-03), la asistencia se inventa con
 // una regla fija sobre el padrón simulado:
