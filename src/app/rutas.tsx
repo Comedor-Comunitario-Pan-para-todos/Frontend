@@ -5,6 +5,7 @@ import { PantallaCarga } from '@/shared/ui/PantallaCarga.tsx'
 import { LayoutPrincipal } from './layout/LayoutPrincipal.tsx'
 import { MODULOS } from './modulos.ts'
 import { PaginaError } from './paginas/PaginaError.tsx'
+import { PaginaInicio } from './paginas/PaginaInicio.tsx'
 import { PaginaNoEncontrada } from './paginas/PaginaNoEncontrada.tsx'
 import { PaginaProximamente } from './paginas/PaginaProximamente.tsx'
 import { PaginaSinAcceso } from './paginas/PaginaSinAcceso.tsx'
@@ -18,6 +19,7 @@ const ERROR_SIN_LAYOUT = (
 
 // Páginas ya construidas de cada módulo. Los que no aparecen aquí muestran "Próximamente".
 const PAGINAS_DE_MODULO: Readonly<Record<string, RouteObject[]>> = {
+  '/': [{ index: true, element: <PaginaInicio /> }],
   '/beneficiarios': [
     {
       index: true,
