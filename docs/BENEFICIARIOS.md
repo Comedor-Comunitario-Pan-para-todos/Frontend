@@ -21,7 +21,7 @@ El backend rechaza cualquier campo que no conozca (`forbidNonWhitelisted`).
 ## 2. Propuesta para RF-02 (pendiente en Backend#30)
 
 El frontend y los mocks (`pnpm dev:mock`) ya usan esta forma. Contra el backend
-real, el registro falla con 400 y el `PATCH` no existe hasta que se implemente.
+real, el registro falla con 400 y el `PATCH` todavía no sabe completar el nivel.
 
 ### Nivel de captura
 
@@ -87,8 +87,10 @@ sistema y el subgrupo:
 
 ### `PATCH /beneficiarios/:id`
 
-Completa los datos extendidos de quien se registró en nivel básico (RF-02).
-Lleva solo `nivel` y los campos extendidos; los básicos no cambian por esta vía.
+Actualiza los datos de la persona: corregirlos es parte del derecho de
+rectificación (Ley 1581, RNF-11). Con `nivel: "EXTENDIDO"` y los campos
+extendidos, además completa el registro de quien está en nivel básico (RF-02);
+así lo usa la pantalla «Completar datos».
 
 ```json
 {
