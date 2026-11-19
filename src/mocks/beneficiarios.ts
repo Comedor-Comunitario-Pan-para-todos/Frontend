@@ -12,7 +12,8 @@ import type { NivelCaptura } from '@/modules/beneficiarios/domain/nivelCaptura.t
 //
 // Diferencias con el backend actual, que siguen el contrato propuesto (docs/BENEFICIARIOS.md):
 // * acepta registrar a una persona sin documento (RNF-15);
-// * recibe y entrega `nivel` y `clasificacion` (RF-02), y en nivel básico rechaza datos sensibles.
+// * recibe y entrega `nivel` y `clasificacion` (RF-02), y en nivel básico rechaza datos sensibles;
+// * guarda el consentimiento informado (RF-19, docs/CONSENTIMIENTOS.md).
 
 /** Buscar este texto fuerza un error 500, para probar la pantalla de error. */
 export const BUSQUEDA_SERVIDOR_CAIDO = 'caida'
@@ -31,6 +32,15 @@ interface BeneficiarioMock {
   readonly createdAt: string
   readonly updatedAt: string
   readonly deletedAt: null
+}
+
+interface ConsentimientoMock {
+  readonly id: string
+  readonly beneficiarioId: string
+  readonly versionPolitica: number
+  readonly finalidad: string
+  readonly registradoPor: { readonly id: string; readonly nombreCompleto: string }
+  readonly createdAt: string
 }
 
 type Semilla = readonly [
@@ -101,15 +111,18 @@ function sembrar(): BeneficiarioMock[] {
 }
 
 let padron = sembrar()
+let consentimientos: ConsentimientoMock[] = []
 
 /** Devuelve el padrón simulado a su estado inicial. Lo usan las pruebas. */
 export function reiniciarBeneficiariosMock(): void {
   padron = sembrar()
+  consentimientos = []
 }
 
 const ROLES_PERMITIDOS: readonly Rol[] = ['COORDINADORA', 'VOLUNTARIO']
 const CAMPOS_BASICOS = ['nivel', 'nombres', 'apellidos', 'fechaNacimiento', 'barrio']
 const CAMPOS_EXTENDIDOS = ['tipoDocumento', 'numeroDocumento', 'telefono', 'clasificacion']
+const CAMPOS_CONSENTIMIENTO = ['versionPolitica', 'finalidad']
 const PARAMETROS_DE_BUSQUEDA = ['search', 'page', 'limit', 'barrio']
 const FECHA_CALENDARIO = /^\d{4}-\d{2}-\d{2}$/
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -220,6 +233,19 @@ function validarCompletado(cuerpo: Record<string, unknown>): string[] {
   return [...desconocidos, ...validarExtendidos(cuerpo)]
 }
 
+function validarConsentimiento(cuerpo: Record<string, unknown>): string[] {
+  const desconocidos = Object.keys(cuerpo)
+    .filter((campo) => !CAMPOS_CONSENTIMIENTO.includes(campo))
+    .map((campo) => `property ${campo} should not exist`)
+  const errores: string[] = []
+  const version = cuerpo.versionPolitica
+  if (typeof version !== 'number' || !Number.isInteger(version) || version < 1) {
+    errores.push('La versión de la política debe ser un entero positivo')
+  }
+  if (texto(cuerpo.finalidad) === '') errores.push('La finalidad es requerida')
+  return [...desconocidos, ...errores]
+}
+
 function documentoRepetido(numeroDocumento: string | null, id?: string) {
   if (!numeroDocumento) return null
   if (!padron.some((b) => b.numeroDocumento === numeroDocumento && b.id !== id)) return null
@@ -230,7 +256,13 @@ function documentoRepetido(numeroDocumento: string | null, id?: string) {
   )
 }
 
-type Identificar = (autorizacion: string | null) => { readonly rol: Rol } | undefined
+interface UsuarioIdentificado {
+  readonly id: string
+  readonly nombreCompleto: string
+  readonly rol: Rol
+}
+
+type Identificar = (autorizacion: string | null) => UsuarioIdentificado | undefined
 
 /**
  * `identificar` resuelve el usuario a partir del encabezado `Authorization`. Lo entrega
@@ -352,6 +384,39 @@ export function crearHandlersBeneficiarios(identificar: Identificar) {
 
       const beneficiario = padron.find((b) => b.id === id)
       return beneficiario ? HttpResponse.json(beneficiario) : noEncontrado(id)
+    }),
+
+    http.post('*/beneficiarios/:id/consentimiento', async ({ request, params }) => {
+      await delay()
+      const rechazo = rechazoDeAcceso(request)
+      if (rechazo) return rechazo
+
+      const id = String(params.id)
+      if (!UUID.test(id)) return solicitudInvalida('Validation failed (uuid is expected)')
+      if (!padron.some((b) => b.id === id)) return noEncontrado(id)
+
+      const cuerpo = (await request.json()) as Record<string, unknown>
+      const errores = validarConsentimiento(cuerpo)
+      if (errores.length > 0) return solicitudInvalida(errores)
+
+      const versionPolitica = cuerpo.versionPolitica as number
+      const existente = consentimientos.find(
+        (c) => c.beneficiarioId === id && c.versionPolitica === versionPolitica,
+      )
+      if (existente) return HttpResponse.json(existente)
+
+      const { id: idUsuario, nombreCompleto } = identificar(request.headers.get('Authorization'))!
+      const nuevo: ConsentimientoMock = {
+        id: crypto.randomUUID(),
+        beneficiarioId: id,
+        versionPolitica,
+        finalidad: texto(cuerpo.finalidad),
+        registradoPor: { id: idUsuario, nombreCompleto },
+        createdAt: new Date().toISOString(),
+      }
+      consentimientos = [...consentimientos, nuevo]
+
+      return HttpResponse.json(nuevo, { status: 201 })
     }),
 
     http.patch('*/beneficiarios/:id', async ({ request, params }) => {

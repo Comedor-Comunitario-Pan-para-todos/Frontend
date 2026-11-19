@@ -19,6 +19,10 @@ import {
   type ConsultarBeneficiario,
 } from '@/modules/beneficiarios/application/consultarBeneficiario.ts'
 import {
+  crearRegistrarConsentimiento,
+  type RegistrarConsentimiento,
+} from '@/modules/beneficiarios/application/registrarConsentimiento.ts'
+import {
   crearRegistrarBeneficiario,
   type RegistrarBeneficiario,
 } from '@/modules/beneficiarios/application/registrarBeneficiario.ts'
@@ -27,6 +31,7 @@ import {
   type VerificarDuplicado,
 } from '@/modules/beneficiarios/application/verificarDuplicado.ts'
 import { BeneficiarioHttpRepository } from '@/modules/beneficiarios/infrastructure/http/BeneficiarioHttpRepository.ts'
+import { ConsentimientoHttpRepository } from '@/modules/beneficiarios/infrastructure/http/ConsentimientoHttpRepository.ts'
 import { AxiosHttpClient } from '@/shared/infrastructure/http/AxiosHttpClient.ts'
 import type { Entorno } from './entorno.ts'
 
@@ -41,6 +46,7 @@ export interface Dependencias {
   readonly buscarBeneficiarios: BuscarBeneficiarios
   readonly consultarBeneficiario: ConsultarBeneficiario
   readonly verificarDuplicado: VerificarDuplicado
+  readonly registrarConsentimiento: RegistrarConsentimiento
 }
 
 export function crearDependencias({ apiBaseUrl }: Pick<Entorno, 'apiBaseUrl'>): Dependencias {
@@ -58,6 +64,7 @@ export function crearDependencias({ apiBaseUrl }: Pick<Entorno, 'apiBaseUrl'>): 
   })
   const repositorio = new AuthHttpRepository(http)
   const beneficiarios = new BeneficiarioHttpRepository(http)
+  const consentimientos = new ConsentimientoHttpRepository(http)
 
   return {
     iniciarSesion: crearIniciarSesion({ repositorio, almacen }),
@@ -75,5 +82,6 @@ export function crearDependencias({ apiBaseUrl }: Pick<Entorno, 'apiBaseUrl'>): 
     buscarBeneficiarios: crearBuscarBeneficiarios({ repositorio: beneficiarios }),
     consultarBeneficiario: crearConsultarBeneficiario({ repositorio: beneficiarios }),
     verificarDuplicado: crearVerificarDuplicado({ repositorio: beneficiarios }),
+    registrarConsentimiento: crearRegistrarConsentimiento({ repositorio: consentimientos }),
   }
 }
