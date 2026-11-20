@@ -3,6 +3,7 @@ import type { PoliticaVigente } from './politicaVigente.ts'
 export const FINALIDAD_USO_IMAGEN = 'USO_IMAGEN'
 
 export const POLITICA_IMAGEN: PoliticaVigente = {
+  nombre: 'Política de uso de imagen',
   version: 1,
   finalidad: FINALIDAD_USO_IMAGEN,
   resumen:

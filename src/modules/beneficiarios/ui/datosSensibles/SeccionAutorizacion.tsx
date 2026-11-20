@@ -3,6 +3,7 @@ import { useFormContext } from 'react-hook-form'
 import { useAuth } from '@/modules/auth/index.ts'
 import { CasillaVerificacion } from '@/shared/ui/CasillaVerificacion.tsx'
 import { PoliticaTratamiento } from './PoliticaTratamiento.tsx'
+import { POLITICA_VIGENTE } from '@/modules/beneficiarios/domain/politicaVigente.ts'
 
 interface SeccionAutorizacionProps {
   readonly className?: string
@@ -29,7 +30,7 @@ export function SeccionAutorizacion({ className = '' }: SeccionAutorizacionProps
           <p className="text-label text-ink-secondary">Ley 1581 de 2012</p>
         </div>
       </div>
-      <PoliticaTratamiento />
+      <PoliticaTratamiento politica={POLITICA_VIGENTE} />
       <CasillaVerificacion
         etiqueta="Informé a la persona"
         descripcion="Le expliqué la política de datos y estuvo de acuerdo."

@@ -14,6 +14,7 @@ const COORDINADORA = 'mock-token.mock-1'
 const VOLUNTARIO = 'mock-token.mock-3'
 const ID_MARIA = '00000000-0000-4000-8000-000000000001'
 const ID_CARLOS = '00000000-0000-4000-8000-000000000002'
+const AUTORIZAR_FOTOS = 'Le expliqué y autorizó las fotos'
 const ID_ROSA = '00000000-0000-4000-8000-000000000003'
 
 function abrirFicha(id: string, token = VOLUNTARIO) {
@@ -164,6 +165,63 @@ describe('ficha del comensal', () => {
       const imagen = await screen.findByRole('region', { name: 'Uso de imagen' })
 
       expect(within(imagen).getByText('Rostro no fotografiable')).toBeInTheDocument()
+    })
+
+    it('deja registrar la autorización después de explicar la política de imagen', async () => {
+      abrirFicha(ID_ROSA)
+      const imagen = await screen.findByRole('region', { name: 'Uso de imagen' })
+      expect(within(imagen).getByText('Política de uso de imagen · versión 1')).toBeInTheDocument()
+
+      await userEvent.click(within(imagen).getByRole('button', { name: AUTORIZAR_FOTOS }))
+
+      expect(await screen.findByText('Autorización de imagen guardada')).toBeInTheDocument()
+      expect(await within(imagen).findByText('Foto autorizada')).toBeInTheDocument()
+      expect(within(imagen).getByText('Voluntario de Prueba')).toBeInTheDocument()
+      expect(
+        within(imagen).queryByRole('button', { name: AUTORIZAR_FOTOS }),
+      ).not.toBeInTheDocument()
+    })
+
+    it('la insignia cambia con la respuesta, sin esperar a que se recargue la ficha', async () => {
+      abrirFicha(ID_ROSA)
+      const imagen = await screen.findByRole('region', { name: 'Uso de imagen' })
+      servidor.use(http.get(`*/api/beneficiarios/${ID_ROSA}`, () => new Promise(() => {})))
+
+      await userEvent.click(within(imagen).getByRole('button', { name: AUTORIZAR_FOTOS }))
+
+      expect(await within(imagen).findByText('Foto autorizada')).toBeInTheDocument()
+    })
+
+    it('si no se guarda, lo avisa y deja reintentar', async () => {
+      servidor.use(
+        http.post(
+          `*/api/beneficiarios/${ID_ROSA}/consentimiento`,
+          () => HttpResponse.json({ statusCode: 500, message: 'Error' }, { status: 500 }),
+          { once: true },
+        ),
+      )
+      abrirFicha(ID_ROSA)
+      const imagen = await screen.findByRole('region', { name: 'Uso de imagen' })
+
+      await userEvent.click(within(imagen).getByRole('button', { name: AUTORIZAR_FOTOS }))
+
+      expect(await screen.findByText('No se guardó la autorización de imagen')).toBeInTheDocument()
+      expect(within(imagen).getByText('Rostro no fotografiable')).toBeInTheDocument()
+
+      await userEvent.click(screen.getByRole('button', { name: 'Reintentar' }))
+
+      expect(await within(imagen).findByText('Foto autorizada')).toBeInTheDocument()
+    })
+
+    it('a un menor no deja autorizarla y explica por qué', async () => {
+      abrirFicha(ID_CARLOS)
+      const imagen = await screen.findByRole('region', { name: 'Uso de imagen' })
+
+      const boton = within(imagen).getByRole('button', { name: AUTORIZAR_FOTOS })
+
+      expect(boton).toBeDisabled()
+      expect(boton).toHaveAccessibleDescription(/es menor de edad/i)
+      expect(within(imagen).queryByText(/Política de uso de imagen/)).not.toBeInTheDocument()
     })
   })
 
