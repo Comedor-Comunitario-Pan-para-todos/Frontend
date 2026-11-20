@@ -9,7 +9,7 @@ const fallos = vi.hoisted(() => ({ falloEnMenu: false }))
 
 vi.mock('@/app/paginas/PaginaProximamente.tsx', () => ({
   PaginaProximamente: ({ modulo }: { readonly modulo: string }) => {
-    if (modulo === 'Reportes') throw new Error('Fallo de prueba')
+    if (modulo === 'Inventario') throw new Error('Fallo de prueba')
     return <h1>{modulo}</h1>
   },
 }))
@@ -39,7 +39,7 @@ describe('errores de ruta', () => {
   })
 
   it('si falla una pantalla conserva el menú y permite salir a otro módulo', async () => {
-    renderizarEn('/reportes')
+    renderizarEn('/inventario')
 
     expect(
       await screen.findByRole('heading', { name: 'No pudimos mostrar esta pantalla' }),

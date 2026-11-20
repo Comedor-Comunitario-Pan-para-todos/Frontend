@@ -45,6 +45,10 @@ describe('tienePermiso', () => {
     ['VOLUNTARIO', 'beneficiarios.verDatosSensibles', false],
     ['DONANTE', 'beneficiarios.registrar', false],
     ['DONANTE', 'beneficiarios.verDatosSensibles', false],
+    ['COORDINADORA', 'reportes.exportarPadron', false],
+    ['PRESIDENTE_JAC', 'reportes.exportarPadron', true],
+    ['VOLUNTARIO', 'reportes.exportarPadron', false],
+    ['DONANTE', 'reportes.exportarPadron', false],
   ])('%s con %s: %s', (rol, permiso, esperado) => {
     expect(tienePermiso(usuarioConRol(rol), permiso)).toBe(esperado)
   })

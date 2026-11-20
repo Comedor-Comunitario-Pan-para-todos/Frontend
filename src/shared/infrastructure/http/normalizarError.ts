@@ -17,7 +17,7 @@ export function tipoPorEstado(estado: number): TipoErrorApi {
   return 'desconocido'
 }
 
-function mensajesDelCuerpo(cuerpo: unknown): string[] {
+export function mensajesDelCuerpo(cuerpo: unknown): string[] {
   const resultado = cuerpoErrorNest.safeParse(cuerpo)
   if (!resultado.success) return []
 

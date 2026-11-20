@@ -99,7 +99,8 @@ Vive en `src/shared/infrastructure/http/`:
 
 | Archivo | Responsabilidad |
 | :--- | :--- |
-| `HttpClient.ts` | Contrato que usan los adaptadores: `get`, `post`, `patch` y `delete`. |
+| `HttpClient.ts` | Contrato que usan los adaptadores: `get`, `post`, `patch`, `delete` y `descargar`. |
+| `nombreDeArchivo.ts` | Lee el nombre del archivo del encabezado `Content-Disposition`. |
 | `AxiosHttpClient.ts` | Implementación con Axios: URL base, tiempo límite (15 s), envío y validación. |
 | `interceptoresSesion.ts` | Agrega el token y decide si un 401 cierra la sesión. |
 | `normalizarError.ts` | Convierte cualquier falla en un `ErrorApi`. |
@@ -137,6 +138,14 @@ class UsuarioHttpRepository implements UsuarioRepository {
 | `params` | Arma la query string. Los valores `undefined` se descartan. |
 | `signal` | Cancela la petición. TanStack Query entrega el suyo. |
 | `omitirSesion` | La petición no pertenece a la sesión: no envía el token y su 401 no cierra la sesión. La usa el login. |
+
+### Descargar archivos
+
+`descargar(ruta, { params, signal, alAvanzar })` hace un `GET` que recibe el cuerpo como
+`Blob` (PDF, Excel…) en vez de leerlo como JSON. Devuelve `{ contenido, nombreArchivo }`,
+donde `nombreArchivo` sale de `Content-Disposition` (o `null`). `alAvanzar` recibe el
+avance entre 0 y 1, o `null` si el servidor no envía `Content-Length`. Los errores llegan
+como cualquier otro `ErrorApi`.
 
 Las escrituras no se reintentan automáticamente: reenviar un `POST /turnos`
 podría emitir dos turnos. La interfaz ofrece un botón para reintentar.
