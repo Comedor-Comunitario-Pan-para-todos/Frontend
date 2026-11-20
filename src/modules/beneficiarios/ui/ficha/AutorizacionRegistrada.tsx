@@ -1,20 +1,10 @@
 import { CircleCheck } from 'lucide-react'
 import type { Consentimiento } from '@/modules/beneficiarios/domain/Consentimiento.ts'
 import { Dato } from './Dato.tsx'
+import { formatearFechaYHora } from './formatearFechaYHora.ts'
 
 interface AutorizacionRegistradaProps {
   readonly consentimiento: Consentimiento
-}
-
-function formatearFechaYHora(momento: string): string {
-  return new Date(momento).toLocaleString('es-CO', {
-    timeZone: 'America/Bogota',
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  })
 }
 
 /** Lo que se necesita para auditar la autorización: cuándo, quién la tomó y qué texto (RNF-09). */
