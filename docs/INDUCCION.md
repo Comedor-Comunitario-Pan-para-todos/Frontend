@@ -34,8 +34,8 @@ Devuelve los temas y el avance de quien tiene la sesión abierta.
       "titulo": "Higiene antes de servir",
       "minutosLectura": 2,
       "puntos": [
-        "Lávate las manos con agua y jabón por 40 segundos al llegar…",
-        "Ponte gorro y delantal, y ven con zapatos cerrados."
+        "Lávese las manos con agua y jabón por 40 segundos al llegar…",
+        "Póngase gorro y delantal, y venga con zapatos cerrados."
       ]
     }
   ],
@@ -48,7 +48,7 @@ Devuelve los temas y el avance de quien tiene la sesión abierta.
 | `id` | Texto estable que no cambia aunque se edite el título: el avance se guarda con él. |
 | `orden` | Entero. El frontend muestra los temas ordenados por este número. |
 | `minutosLectura` | Entero ≥ 0. Con la suma se arma «unos 9 minutos». |
-| `puntos` | Lista de frases cortas, en lenguaje cotidiano y tuteando al voluntario. |
+| `puntos` | Lista de frases cortas, en lenguaje cotidiano y en trato de usted, como el resto de la app. |
 | `modulosLeidos` | `id` de los temas que la persona marcó. Lista vacía si no ha leído ninguno. |
 
 * Si la guía no tiene temas, `modulos` llega vacío y la pantalla muestra
@@ -91,8 +91,8 @@ Respuesta 200 con el avance tal como quedó guardado:
 
 * Al entrar se abre el primer tema, en orden, que falta por leer.
 * La casilla se marca en pantalla apenas se toca y luego se guarda. Si el guardado
-  falla, vuelve a como estaba y el tema muestra un aviso con «Reintentar»: nunca se
-  ve como guardado algo que no lo está.
+  falla, vuelve a como estaba, el tema sigue abierto y aparece la Constancia de fallo
+  con «Reintentar» (`DESIGN.md`, 6.1): nunca se ve como guardado algo que no lo está.
 * Cuando se guarda un tema, se abre solo el siguiente que falta.
 * Los temas `higiene`, `trato-digno`, `alimentos` y `emergencias` tienen ícono
   propio. Un tema nuevo con otro `id` se muestra con un libro abierto.
