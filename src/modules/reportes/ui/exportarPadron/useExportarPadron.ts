@@ -16,7 +16,7 @@ export interface ExportacionPadron {
 
 /**
  * Pide el padrón al servidor y lo descarga. El resultado se avisa con la Constancia: si falla,
- * «Reintentar» vuelve a pedir el mismo rango, que la coordinadora ya confirmó.
+ * «Reintentar» vuelve a pedir el mismo rango, que el Presidente de la JAC ya confirmó.
  */
 export function useExportarPadron(): ExportacionPadron {
   const { exportarPadron } = useDependencias()

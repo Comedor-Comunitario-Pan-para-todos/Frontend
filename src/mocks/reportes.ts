@@ -19,7 +19,8 @@ const INICIO_ATENCION = '2026-01-13'
 const DIAS_DE_ATENCION: ReadonlySet<number> = new Set([2, 4, 6])
 const UN_DIA_MS = 86_400_000
 const FECHA_CALENDARIO = /^\d{4}-\d{2}-\d{2}$/
-const ROLES_PERMITIDOS: readonly Rol[] = ['COORDINADORA']
+// Solo el Presidente de la JAC exporta el padrón (HU-22).
+const ROLES_PERMITIDOS: readonly Rol[] = ['PRESIDENTE_JAC']
 
 interface UsuarioIdentificado {
   readonly rol: Rol

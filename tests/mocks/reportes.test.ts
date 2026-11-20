@@ -31,13 +31,13 @@ describe('mock de exportaciones', () => {
   })
 
   it('cuenta a quienes asistieron en el rango y a quienes no autorizaron', async () => {
-    const resumen = await repositorioDe('COORDINADORA').consultarResumen(NOVIEMBRE)
+    const resumen = await repositorioDe('PRESIDENTE_JAC').consultarResumen(NOVIEMBRE)
 
     expect(resumen).toEqual({ asistieron: 24, incluidas: 20, excluidas: 4 })
   })
 
   it('antes de que el comedor empezara a atender no hay nadie', async () => {
-    const resumen = await repositorioDe('COORDINADORA').consultarResumen({
+    const resumen = await repositorioDe('PRESIDENTE_JAC').consultarResumen({
       desde: '2026-01-01',
       hasta: '2026-01-05',
     })
@@ -45,7 +45,7 @@ describe('mock de exportaciones', () => {
     expect(resumen).toEqual({ asistieron: 0, incluidas: 0, excluidas: 0 })
   })
 
-  it.each<Rol>(['VOLUNTARIO', 'PRESIDENTE_JAC', 'DONANTE'])('responde 403 a %s', async (rol) => {
+  it.each<Rol>(['COORDINADORA', 'VOLUNTARIO', 'DONANTE'])('responde 403 a %s', async (rol) => {
     await expect(repositorioDe(rol).consultarResumen(NOVIEMBRE)).rejects.toMatchObject({
       tipo: 'sin-permiso',
     })
@@ -56,12 +56,15 @@ describe('mock de exportaciones', () => {
 
   it('rechaza un rango al revés como lo haría la validación del backend', async () => {
     await expect(
-      repositorioDe('COORDINADORA').consultarResumen({ desde: '2026-11-19', hasta: '2026-11-01' }),
+      repositorioDe('PRESIDENTE_JAC').consultarResumen({
+        desde: '2026-11-19',
+        hasta: '2026-11-01',
+      }),
     ).rejects.toMatchObject({ tipo: 'validacion' })
   })
 
   it('entrega un .xlsx con una fila por persona incluida', async () => {
-    const archivo = await repositorioDe('COORDINADORA').generarPadron(NOVIEMBRE)
+    const archivo = await repositorioDe('PRESIDENTE_JAC').generarPadron(NOVIEMBRE)
     const contenido = await texto(archivo.contenido)
 
     expect(archivo.nombre).toBe('padron-beneficiarios_2026-11-01_a_2026-11-19.xlsx')
@@ -73,7 +76,7 @@ describe('mock de exportaciones', () => {
 
   it(`con inicio ${DESDE_SERVIDOR_CAIDO} simula un servidor caído`, async () => {
     await expect(
-      repositorioDe('COORDINADORA').generarPadron({
+      repositorioDe('PRESIDENTE_JAC').generarPadron({
         desde: DESDE_SERVIDOR_CAIDO,
         hasta: '2026-11-19',
       }),
@@ -82,7 +85,10 @@ describe('mock de exportaciones', () => {
 
   it('no genera un archivo vacío', async () => {
     await expect(
-      repositorioDe('COORDINADORA').generarPadron({ desde: '2026-01-01', hasta: '2026-01-05' }),
-    ).rejects.toMatchObject({ tipo: 'conflicto' })
+      repositorioDe('PRESIDENTE_JAC').generarPadron({ desde: '2026-01-01', hasta: '2026-01-05' }),
+    ).rejects.toMatchObject({
+      tipo: 'conflicto',
+      mensajesServidor: ['Nadie del rango autorizó el reporte a la Alcaldía'],
+    })
   })
 })

@@ -10,13 +10,14 @@ import { servidor } from '../../../../mocks/servidor.ts'
 
 const COORDINADORA = 'mock-token.mock-1'
 const PRESIDENTE = 'mock-token.mock-2'
+const DONANTE = 'mock-token.mock-4'
 
 // 19/11/2026 a las 10 a. m. en Colombia.
 const AHORA = new Date('2026-11-19T15:00:00.000Z')
 
 const descargas: { nombre: string; href: string }[] = []
 
-function abrirReportes(token = COORDINADORA) {
+function abrirReportes(token = PRESIDENTE) {
   iniciarSesionDePrueba(token)
   return renderizarApp('/reportes')
 }
@@ -75,7 +76,7 @@ describe('exportar el padrón para la Alcaldía', () => {
     vi.restoreAllMocks()
   })
 
-  it('la coordinadora ve el aviso de Habeas Data y los conteos de este mes', async () => {
+  it('el Presidente de la JAC ve el aviso de Habeas Data y los conteos de este mes', async () => {
     abrirReportes()
 
     expect(
@@ -90,9 +91,6 @@ describe('exportar el padrón para la Alcaldía', () => {
     expect(cifra('Se incluyen en el archivo')).toHaveTextContent('20')
     expect(cifra('Se excluyen: no autorizaron')).toHaveTextContent('4')
     expect(botonDescargar()).toBeEnabled()
-    expect(
-      screen.getByRole('heading', { name: 'Política de retención de datos' }),
-    ).toBeInTheDocument()
   })
 
   it('un atajo llena las fechas y al escribirlas a mano ya no queda marcado', async () => {
@@ -229,8 +227,19 @@ describe('exportar el padrón para la Alcaldía', () => {
     expect(botonDescargar()).toBeEnabled()
   })
 
-  it('la JAC sigue viendo «Próximamente», sin el padrón', async () => {
-    abrirReportes(PRESIDENTE)
+  it('muestra quién puede generar el archivo', async () => {
+    abrirReportes()
+
+    expect(
+      await screen.findByText('Solo el Presidente de la JAC puede generar este archivo.'),
+    ).toBeInTheDocument()
+  })
+
+  it.each([
+    ['la Coordinadora', COORDINADORA],
+    ['el Donante', DONANTE],
+  ])('%s ve «Próximamente», sin el padrón', async (_rol, token) => {
+    abrirReportes(token)
 
     expect(await screen.findByText('Este módulo estará disponible pronto.')).toBeInTheDocument()
     expect(

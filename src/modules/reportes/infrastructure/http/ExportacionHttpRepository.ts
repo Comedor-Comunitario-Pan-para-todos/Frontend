@@ -37,7 +37,7 @@ export class ExportacionHttpRepository implements ExportacionRepository {
     opciones: OpcionesGeneracion = {},
   ): Promise<ArchivoGenerado> {
     const { contenido, nombreArchivo } = await this.#http.descargar(RUTA_PADRON, {
-      // El caso de uso solo llega aquí si la coordinadora aceptó la responsabilidad (RNF-08):
+      // El caso de uso solo llega aquí si el Presidente de la JAC aceptó la responsabilidad (RNF-08):
       // se envía para que quede en la auditoría de la descarga.
       params: { desde: rango.desde, hasta: rango.hasta, responsabilidadAceptada: true },
       signal: opciones.signal,

@@ -92,7 +92,7 @@ function Contenido({ idTitulo, rango, resumen, alConfirmar, alCancelar }: Conten
 
 /**
  * Última revisión antes de bajar datos personales (RNF-08): resume el archivo y pide que la
- * coordinadora acepte ser responsable de él. En teléfono es una hoja inferior; desde tablet,
+ * el Presidente de la JAC acepte ser responsable de él. En teléfono es una hoja inferior; desde tablet,
  * una ventana centrada.
  */
 export function ConfirmacionDescargaDialog({ abierto, ...resto }: ConfirmacionDescargaDialogProps) {

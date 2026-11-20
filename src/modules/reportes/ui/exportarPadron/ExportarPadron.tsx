@@ -19,7 +19,8 @@ import { useResumenExportacion } from './useResumenExportacion.ts'
 
 /**
  * Padrón de beneficiarios para la Alcaldía (RF-18): quienes asistieron en un rango de fechas y
- * autorizaron el reporte, una fila por persona. Solo la Coordinadora llega a esta tarjeta.
+ * autorizaron el reporte, una fila por persona. Solo el Presidente de la JAC llega a esta tarjeta
+ * (HU-22): es quien entrega el archivo a la Alcaldía.
  */
 export function ExportarPadron() {
   const idTitulo = useId()
@@ -78,7 +79,7 @@ export function ExportarPadron() {
         )}
         <p className="flex items-center justify-center gap-2 text-label text-ink-muted">
           <Lock aria-hidden="true" className="size-4 shrink-0" />
-          Solo la Coordinadora puede generar este archivo.
+          Solo el Presidente de la JAC puede generar este archivo.
         </p>
       </div>
 

@@ -13,7 +13,7 @@ interface Dependencias {
 export interface SolicitudExportacion extends OpcionesGeneracion {
   readonly rango: RangoFechas
   /**
-   * La coordinadora aceptó ser responsable del archivo (RNF-08). Es `true` y nada más: sin
+   * El Presidente de la JAC aceptó ser responsable del archivo (RNF-08). Es `true` y nada más: sin
    * esa aceptación no hay forma de pedir el padrón.
    */
   readonly responsabilidadAceptada: true
