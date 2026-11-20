@@ -86,6 +86,37 @@ describe('esquemaBeneficiario', () => {
     expect(ficha.consentimiento).toBeNull()
   })
 
+  it('lee la autorización de imagen cuando llega y la deja bloqueada cuando no', () => {
+    const ficha = esquemaBeneficiario.parse({
+      ...DTO_CARLOS,
+      consentimientoImagen: {
+        id: 'c-2',
+        versionPolitica: 1,
+        finalidad: 'USO_IMAGEN',
+        registradoPor: { id: 'u-1', nombreCompleto: 'Voluntario de Prueba' },
+        createdAt: '2026-11-20T15:00:00.000Z',
+      },
+    })
+
+    expect(ficha.consentimientoImagen).toEqual({
+      versionPolitica: 1,
+      finalidad: 'USO_IMAGEN',
+      registradoEn: '2026-11-20T15:00:00.000Z',
+      registradoPor: 'Voluntario de Prueba',
+    })
+    expect(ficha.consentimiento).toBeNull()
+    expect(esquemaBeneficiario.parse(DTO_CARLOS).consentimientoImagen).toBeNull()
+  })
+
+  it('una autorización de imagen que no se puede leer deja la imagen bloqueada', () => {
+    const ficha = esquemaBeneficiario.parse({
+      ...DTO_CARLOS,
+      consentimientoImagen: { finalidad: 'USO_IMAGEN' },
+    })
+
+    expect(ficha.consentimientoImagen).toBeNull()
+  })
+
   it('rechaza una ficha sin fecha de nacimiento', () => {
     expect(esquemaBeneficiario.safeParse({ ...DTO_MARIA, fechaNacimiento: null }).success).toBe(
       false,

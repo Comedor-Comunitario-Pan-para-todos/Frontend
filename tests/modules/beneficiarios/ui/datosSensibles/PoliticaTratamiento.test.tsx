@@ -1,20 +1,21 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
+import { POLITICA_VIGENTE } from '@/modules/beneficiarios/domain/politicaVigente.ts'
 import { PoliticaTratamiento } from '@/modules/beneficiarios/ui/datosSensibles/PoliticaTratamiento.tsx'
 
 const DERECHOS = /Puede conocer, corregir o pedir que se borren sus datos/
 
 describe('PoliticaTratamiento', () => {
   it('muestra el resumen y la versión de la política', () => {
-    render(<PoliticaTratamiento />)
+    render(<PoliticaTratamiento politica={POLITICA_VIGENTE} />)
 
     expect(screen.getByText(/Sus datos se usan solo para darle la ración/)).toBeInTheDocument()
     expect(screen.getByText('Política de datos · versión 1')).toBeInTheDocument()
   })
 
   it('el texto completo aparece al tocar «Leer la política completa»', async () => {
-    render(<PoliticaTratamiento />)
+    render(<PoliticaTratamiento politica={POLITICA_VIGENTE} />)
 
     expect(screen.getByText(DERECHOS)).not.toBeVisible()
 
