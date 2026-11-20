@@ -275,6 +275,32 @@ describe('AxiosHttpClient', () => {
       expect(autorizacion).toBe('Bearer token-vigente')
     })
 
+    it('si falla, conserva el mensaje del servidor aunque el cuerpo llegue como Blob', async () => {
+      servidor.use(
+        http.get(URL_ARCHIVO, () =>
+          HttpResponse.json(
+            { statusCode: 409, message: 'Nadie autorizó el reporte', error: 'Conflict' },
+            { status: 409 },
+          ),
+        ),
+      )
+
+      await expect(crearCliente().descargar('/archivo.xlsx')).rejects.toMatchObject({
+        tipo: 'conflicto',
+        estado: 409,
+        mensajesServidor: ['Nadie autorizó el reporte'],
+      })
+    })
+
+    it('si el cuerpo del error no es JSON, deja el error sin mensajes del servidor', async () => {
+      servidor.use(http.get(URL_ARCHIVO, () => new HttpResponse('Bad Gateway', { status: 502 })))
+
+      await expect(crearCliente().descargar('/archivo.xlsx')).rejects.toMatchObject({
+        tipo: 'servidor',
+        mensajesServidor: [],
+      })
+    })
+
     it('avisa el avance de la descarga', async () => {
       const bytes = new Uint8Array(2048)
       servidor.use(
