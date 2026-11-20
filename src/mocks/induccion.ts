@@ -22,10 +22,10 @@ export const MODULOS_INDUCCION: readonly ModuloMock[] = [
     titulo: 'Higiene antes de servir',
     minutosLectura: 2,
     puntos: [
-      'Lávate las manos con agua y jabón por 40 segundos al llegar, después de ir al baño y cada vez que toques plata o el celular.',
-      'Ponte gorro y delantal, y ven con zapatos cerrados.',
-      'Uñas cortas y sin anillos, pulseras ni reloj mientras sirves.',
-      'Si tienes gripa o estás mal del estómago, avísale a la coordinadora y ayuda en una tarea lejos de la comida.',
+      'Lávese las manos con agua y jabón por 40 segundos al llegar, después de ir al baño y cada vez que toque plata o el celular.',
+      'Póngase gorro y delantal, y venga con zapatos cerrados.',
+      'Uñas cortas y sin anillos, pulseras ni reloj mientras sirve.',
+      'Si tiene gripa o está mal del estómago, avísele a la coordinadora y ayude en una tarea lejos de la comida.',
     ],
   },
   {
@@ -34,10 +34,10 @@ export const MODULOS_INDUCCION: readonly ModuloMock[] = [
     titulo: 'Trato digno a las personas',
     minutosLectura: 2,
     puntos: [
-      'Saluda a cada persona y, si la conoces, llámala por su nombre.',
-      'Sirve la misma porción a todos, sin preferencias.',
-      'No preguntes por qué viene ni de qué barrio es: aquí se atiende a todo el que llegue.',
-      'Nunca tomes fotos de las personas, y menos de los niños.',
+      'Salude a cada persona y, si la conoce, llámela por su nombre.',
+      'Sirva la misma porción a todos, sin preferencias.',
+      'No pregunte por qué viene ni de qué barrio es: aquí se atiende a todo el que llegue.',
+      'Nunca tome fotos de las personas, y menos de los niños.',
     ],
   },
   {
@@ -46,8 +46,8 @@ export const MODULOS_INDUCCION: readonly ModuloMock[] = [
     titulo: 'Manejo seguro de los alimentos',
     minutosLectura: 2,
     puntos: [
-      'Antes de usar un alimento, mira la fecha de vencimiento.',
-      'Si algo huele raro, cambió de color o el empaque está roto, apártalo y avísale a la coordinadora.',
+      'Antes de usar un alimento, mire la fecha de vencimiento.',
+      'Si algo huele raro, cambió de color o el empaque está roto, apártelo y avísele a la coordinadora.',
       'Lo crudo y lo cocido van en tablas y recipientes distintos.',
       'Lo que sobra va a la nevera apenas se enfríe, tapado y con la fecha del día.',
     ],
@@ -58,10 +58,10 @@ export const MODULOS_INDUCCION: readonly ModuloMock[] = [
     titulo: 'Qué hacer en una emergencia',
     minutosLectura: 3,
     puntos: [
-      'El primer día pregúntale a la coordinadora dónde está el botiquín y el extintor.',
-      'Si alguien se quema o se corta, avísale de inmediato a la coordinadora.',
-      'Si huele a gas, cierra la llave del cilindro, abre puertas y ventanas, y no prendas nada.',
-      'Si alguien se desmaya o hay un incendio, saca a las personas y llama al 123.',
+      'El primer día pregúntele a la coordinadora dónde están el botiquín y el extintor.',
+      'Si alguien se quema o se corta, avísele de inmediato a la coordinadora.',
+      'Si huele a gas, cierre la llave del cilindro, abra puertas y ventanas, y no prenda nada.',
+      'Si alguien se desmaya o hay un incendio, saque a las personas y llame al 123.',
     ],
   },
 ]

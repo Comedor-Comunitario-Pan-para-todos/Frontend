@@ -1,4 +1,4 @@
-import { Check, ChevronDown, RotateCw, WifiOff } from 'lucide-react'
+import { Check, ChevronDown } from 'lucide-react'
 import { useId } from 'react'
 import type { ModuloInduccion } from '@/modules/induccion/domain/GuiaInduccion.ts'
 import { CasillaLeido } from './CasillaLeido.tsx'
@@ -9,10 +9,8 @@ interface ModuloLecturaCardProps {
   readonly leido: boolean
   readonly abierto: boolean
   readonly guardando: boolean
-  readonly falloAlGuardar: boolean
   readonly alAlternar: () => void
   readonly alMarcar: (leido: boolean) => void
-  readonly alReintentar: () => void
 }
 
 function Indicador({ leido, abierto }: Pick<ModuloLecturaCardProps, 'leido' | 'abierto'>) {
@@ -37,10 +35,8 @@ export function ModuloLecturaCard({
   leido,
   abierto,
   guardando,
-  falloAlGuardar,
   alAlternar,
   alMarcar,
-  alReintentar,
 }: ModuloLecturaCardProps) {
   const idContenido = useId()
   const borde = abierto ? 'border-2 border-primary' : 'border border-hairline'
@@ -89,32 +85,6 @@ export function ModuloLecturaCard({
           </ul>
 
           <CasillaLeido marcada={leido} deshabilitada={guardando} alCambiar={alMarcar} />
-
-          {falloAlGuardar && (
-            <div
-              role="alert"
-              className="flex items-start gap-3 rounded-md border border-danger bg-danger-soft p-3"
-            >
-              <WifiOff aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-danger" />
-              <div className="flex min-w-0 flex-col items-start gap-2">
-                <p className="text-body font-semibold text-danger">
-                  No se guardó lo que marcaste en este tema
-                </p>
-                <p className="text-label text-ink-secondary">
-                  Revisa tu conexión a internet e inténtalo otra vez. Lo que ya habías marcado sigue
-                  guardado.
-                </p>
-                <button
-                  type="button"
-                  onClick={alReintentar}
-                  className="inline-flex min-h-touch items-center gap-2 rounded-md border border-danger bg-surface px-4 text-body font-semibold text-danger transition duration-150 ease-press hover:bg-surface-hover active:translate-y-px"
-                >
-                  <RotateCw aria-hidden="true" className="size-5" />
-                  Reintentar
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       )}
     </li>

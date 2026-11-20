@@ -1,7 +1,7 @@
 import { ArrowLeft, BookOpen, CircleCheckBig, RotateCw, WifiOff } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router'
-import type { GuiaInduccion } from '@/modules/induccion/domain/GuiaInduccion.ts'
+import type { GuiaInduccion, ModuloInduccion } from '@/modules/induccion/domain/GuiaInduccion.ts'
 import {
   calcularAvance,
   estaLeido,
@@ -10,6 +10,7 @@ import {
 import { textoDeMinutos, textoDeTemas } from '@/modules/induccion/ui/avance/textos.ts'
 import { useGuiaInduccion } from '@/modules/induccion/ui/avance/useGuiaInduccion.ts'
 import { Boton } from '@/shared/ui/Boton.tsx'
+import { useConstancia } from '@/shared/ui/constancia/contextoConstancia.ts'
 import { AvisoGuia } from './AvisoGuia.tsx'
 import { EsperaDeLaGuia } from './EsperaDeLaGuia.tsx'
 import { ModuloLecturaCard } from './ModuloLecturaCard.tsx'
@@ -26,10 +27,10 @@ function Felicitacion() {
       className="flex flex-col items-center gap-3 rounded-lg border border-success bg-success-soft p-5 text-center"
     >
       <CircleCheckBig aria-hidden="true" className="size-10 text-success" />
-      <p className="text-body-lg font-semibold text-ink">¡Terminaste la inducción!</p>
+      <p className="text-body-lg font-semibold text-ink">¡Terminó la inducción!</p>
       <p className="text-body text-ink-secondary">
-        Ya puedes empezar tu primer turno. Si lo necesitas, vuelve a leer cualquier tema cuando
-        quieras.
+        Ya puede empezar su primer turno. Si lo necesita, vuelva a leer cualquier tema cuando
+        quiera.
       </p>
       <Link to="/" className={CLASES_ENLACE_PRIMARIO}>
         Ir al inicio
@@ -40,13 +41,14 @@ function Felicitacion() {
 
 function ContenidoGuia({ guia }: { readonly guia: GuiaInduccion }) {
   const marcar = useMarcarLectura()
+  const constancia = useConstancia()
   // `undefined`: abrir el tema que toca leer. `null`: el voluntario cerró todos.
   const [seleccion, setSeleccion] = useState<string | null>()
 
   if (guia.modulos.length === 0) {
     return (
       <AvisoGuia icono={BookOpen} tono="neutro" titulo="Todavía no hay temas">
-        La coordinadora aún no ha cargado la guía. Mientras tanto, pídele que te explique lo básico
+        La coordinadora aún no ha cargado la guía. Mientras tanto, pídale que le explique lo básico
         antes de empezar.
       </AvisoGuia>
     )
@@ -54,17 +56,24 @@ function ContenidoGuia({ guia }: { readonly guia: GuiaInduccion }) {
 
   const avance = calcularAvance(guia)
   const abierto = seleccion === undefined ? (primerTemaPendiente(guia)?.id ?? null) : seleccion
-  const fallido = marcar.isError ? marcar.variables : undefined
 
-  function marcarTema(idModulo: string, leido: boolean) {
-    // El tema queda abierto mientras se guarda: si falla, el aviso se ve ahí mismo.
-    setSeleccion(idModulo)
+  function marcarTema(modulo: ModuloInduccion, leido: boolean) {
+    // El tema queda abierto mientras se guarda, para que la persona vea lo que marcó.
+    setSeleccion(modulo.id)
     marcar.mutate(
-      { idModulo, leido },
+      { idModulo: modulo.id, leido },
       {
         // Ya guardado, se pasa solo al siguiente tema que falta.
         onSuccess: () => {
           if (leido) setSeleccion(undefined)
+        },
+        onError: () => {
+          const estado = leido ? 'sigue sin marcar' : 'sigue marcado como leído'
+          constancia.avisarFallo({
+            titulo: 'No se guardó la lectura del tema',
+            detalle: `«${modulo.titulo}» ${estado}. Revise su conexión e inténtelo de nuevo.`,
+            reintentar: () => marcarTema(modulo, leido),
+          })
         },
       },
     )
@@ -76,7 +85,7 @@ function ContenidoGuia({ guia }: { readonly guia: GuiaInduccion }) {
         <Felicitacion />
       ) : (
         <p className="text-body text-ink-secondary">
-          Lee cada tema y marca la casilla al terminar. Si te queda una duda, pregúntale a la
+          Lea cada tema y marque la casilla al terminar. Si le queda una duda, pregúntele a la
           coordinadora.
         </p>
       )}
@@ -91,10 +100,8 @@ function ContenidoGuia({ guia }: { readonly guia: GuiaInduccion }) {
             leido={estaLeido(guia.progreso, modulo.id)}
             abierto={abierto === modulo.id}
             guardando={marcar.isPending}
-            falloAlGuardar={fallido?.idModulo === modulo.id}
             alAlternar={() => setSeleccion(abierto === modulo.id ? null : modulo.id)}
-            alMarcar={(leido) => marcarTema(modulo.id, leido)}
-            alReintentar={() => fallido && marcarTema(fallido.idModulo, fallido.leido)}
+            alMarcar={(leido) => marcarTema(modulo, leido)}
           />
         ))}
       </ol>
@@ -122,7 +129,7 @@ export function PaginaInduccion() {
         <h1 className="text-heading font-semibold text-ink">Guía de inducción</h1>
         {modulos.length > 0 && (
           <p className="text-body text-ink-secondary">
-            {textoDeTemas(modulos.length)} cortos para tu primer turno · unos{' '}
+            {textoDeTemas(modulos.length)} cortos para su primer turno · unos{' '}
             {textoDeMinutos(minutosTotales)}
           </p>
         )}
@@ -154,7 +161,7 @@ export function PaginaInduccion() {
             </Boton>
           }
         >
-          Revisa tu conexión a internet e inténtalo otra vez.
+          Revise su conexión a internet e inténtelo de nuevo.
         </AvisoGuia>
       )}
 

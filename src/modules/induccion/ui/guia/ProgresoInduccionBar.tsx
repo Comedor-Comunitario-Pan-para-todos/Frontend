@@ -12,11 +12,11 @@ export function ProgresoInduccionBar({ avance }: ProgresoInduccionBarProps) {
 
   return (
     <section
-      aria-label="Tu avance"
+      aria-label="Su avance"
       className="flex flex-col gap-3 rounded-lg border border-hairline bg-surface p-4 shadow-card"
     >
       <p className="flex items-baseline justify-between gap-3">
-        <span className="text-body font-semibold text-ink">Tu avance</span>
+        <span className="text-body font-semibold text-ink">Su avance</span>
         <span className={`font-mono text-label ${completa ? 'text-success' : 'text-primary'}`}>
           {leidos} de {textoDeTemas(total)}
         </span>
@@ -25,12 +25,12 @@ export function ProgresoInduccionBar({ avance }: ProgresoInduccionBarProps) {
       {completa ? (
         <p className="flex items-center gap-2 text-label text-success">
           <CircleCheckBig aria-hidden="true" className="size-4 shrink-0" />
-          Completaste {textoDeTemas(total)}
+          Completó {textoDeTemas(total)}
         </p>
       ) : (
         <p className="flex items-center gap-2 text-label text-ink-secondary">
           <CloudCheck aria-hidden="true" className="size-4 shrink-0" />
-          Tu avance se guarda solo. Puedes seguir otro día.
+          Su avance se guarda solo. Puede seguir otro día.
         </p>
       )}
     </section>

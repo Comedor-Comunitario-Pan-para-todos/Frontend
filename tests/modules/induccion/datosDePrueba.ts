@@ -5,7 +5,7 @@ export const HIGIENE: ModuloInduccion = {
   orden: 1,
   titulo: 'Higiene antes de servir',
   minutosLectura: 2,
-  puntos: ['Lávate las manos con agua y jabón al llegar.'],
+  puntos: ['Lávese las manos con agua y jabón al llegar.'],
 }
 
 export const TRATO_DIGNO: ModuloInduccion = {
@@ -13,7 +13,7 @@ export const TRATO_DIGNO: ModuloInduccion = {
   orden: 2,
   titulo: 'Trato digno a las personas',
   minutosLectura: 2,
-  puntos: ['Sirve la misma porción a todos, sin preferencias.'],
+  puntos: ['Sirva la misma porción a todos, sin preferencias.'],
 }
 
 export const EMERGENCIAS: ModuloInduccion = {
@@ -21,7 +21,7 @@ export const EMERGENCIAS: ModuloInduccion = {
   orden: 3,
   titulo: 'Qué hacer en una emergencia',
   minutosLectura: 3,
-  puntos: ['Si alguien se desmaya, no lo muevas y llama al 123.'],
+  puntos: ['Si alguien se desmaya, no lo mueva y llame al 123.'],
 }
 
 export function guiaCon(modulosLeidos: string[] = []): GuiaInduccion {

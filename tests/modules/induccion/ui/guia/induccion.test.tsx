@@ -20,7 +20,7 @@ function tema(nombre: RegExp) {
 }
 
 function avance() {
-  return screen.getByRole('region', { name: 'Tu avance' })
+  return screen.getByRole('region', { name: 'Su avance' })
 }
 
 describe('guía de inducción', () => {
@@ -37,14 +37,14 @@ describe('guía de inducción', () => {
       await screen.findByRole('heading', { name: 'Guía de inducción', level: 1 }),
     ).toBeVisible()
     expect(
-      await screen.findByText(/4 temas cortos para tu primer turno · unos 9 minutos/),
+      await screen.findByText(/4 temas cortos para su primer turno · unos 9 minutos/),
     ).toBeVisible()
     expect(within(avance()).getByText('1 de 4 temas')).toBeVisible()
     expect(within(avance()).getByRole('progressbar')).toHaveAttribute('value', '1')
 
     expect(tema(/Higiene antes de servir/)).toHaveAttribute('aria-expanded', 'false')
     expect(tema(/Trato digno a las personas/)).toHaveAttribute('aria-expanded', 'true')
-    expect(screen.getByText(/Sirve la misma porción a todos/)).toBeVisible()
+    expect(screen.getByText(/Sirva la misma porción a todos/)).toBeVisible()
     expect(screen.getByRole('checkbox', { name: 'Ya leí este tema' })).not.toBeChecked()
   })
 
@@ -59,7 +59,7 @@ describe('guía de inducción', () => {
     expect(tema(/Manejo seguro de los alimentos/)).toHaveAttribute('aria-expanded', 'true')
   })
 
-  it('si el guardado falla, desmarca el tema, avisa y permite reintentar', async () => {
+  it('si el guardado falla, desmarca el tema, avisa con la Constancia y permite reintentar', async () => {
     const usuario = userEvent.setup()
     abrirGuia()
 
@@ -68,15 +68,20 @@ describe('guía de inducción', () => {
     )
     await usuario.click(screen.getByRole('checkbox', { name: 'Ya leí este tema' }))
 
-    const aviso = await screen.findByRole('alert')
-    expect(aviso).toHaveTextContent('No se guardó lo que marcaste en este tema')
+    expect(await screen.findByText('No se guardó la lectura del tema')).toBeVisible()
+    expect(
+      screen.getByText(
+        '«Manejo seguro de los alimentos» sigue sin marcar. Revise su conexión e inténtelo de nuevo.',
+      ),
+    ).toBeVisible()
     expect(screen.getByRole('checkbox', { name: 'Ya leí este tema' })).not.toBeChecked()
+    expect(tema(/Manejo seguro de los alimentos/)).toHaveAttribute('aria-expanded', 'true')
     expect(within(avance()).getByText('1 de 4 temas')).toBeVisible()
 
-    await usuario.click(within(aviso).getByRole('button', { name: 'Reintentar' }))
+    await usuario.click(screen.getByRole('button', { name: 'Reintentar' }))
 
     expect(await within(avance()).findByText('2 de 4 temas')).toBeVisible()
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(screen.queryByText('No se guardó la lectura del tema')).not.toBeInTheDocument()
     expect(tema(/Qué hacer en una emergencia/)).toHaveAttribute('aria-expanded', 'false')
     expect(tema(/Trato digno a las personas/)).toHaveAttribute('aria-expanded', 'true')
   })
@@ -92,8 +97,8 @@ describe('guía de inducción', () => {
     )
     abrirGuia()
 
-    expect(await screen.findByText('¡Terminaste la inducción!')).toBeVisible()
-    expect(within(avance()).getByText('Completaste 4 temas')).toBeVisible()
+    expect(await screen.findByText('¡Terminó la inducción!')).toBeVisible()
+    expect(within(avance()).getByText('Completó 4 temas')).toBeVisible()
     expect(screen.getByRole('link', { name: 'Ir al inicio' })).toHaveAttribute('href', '/')
     expect(screen.queryByRole('checkbox')).not.toBeInTheDocument()
   })
@@ -135,7 +140,7 @@ describe('guía de inducción', () => {
     abrirGuia()
 
     expect(await screen.findByText('Todavía no hay temas')).toBeVisible()
-    expect(screen.queryByRole('region', { name: 'Tu avance' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'Su avance' })).not.toBeInTheDocument()
   })
 
   it('un donante no puede entrar a la guía', async () => {

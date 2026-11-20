@@ -20,7 +20,7 @@ export function InduccionPendienteCard() {
 
   const empezo = avance.leidos > 0
   const faltan = empezo
-    ? `Te faltan ${avance.total - avance.leidos} de ${textoDeTemas(avance.total)}`
+    ? `Le faltan ${avance.total - avance.leidos} de ${textoDeTemas(avance.total)}`
     : `${textoDeTemas(avance.total)} cortos`
 
   return (
@@ -34,7 +34,7 @@ export function InduccionPendienteCard() {
         </span>
         <div className="flex min-w-0 flex-col">
           <h2 id={idTitulo} className="text-body font-semibold text-ink">
-            Tu guía de inducción
+            Su guía de inducción
           </h2>
           <p className="text-label text-ink-secondary">
             {faltan} · unos {textoDeMinutos(avance.minutosRestantes)}

@@ -30,8 +30,8 @@ describe('acceso a la guía desde el Inicio', () => {
     iniciarSesionDePrueba(VOLUNTARIO)
     const enrutador = renderizarApp('/')
 
-    const tarjeta = await screen.findByRole('region', { name: 'Tu guía de inducción' })
-    expect(tarjeta).toHaveTextContent('Te faltan 3 de 4 temas · unos 7 minutos')
+    const tarjeta = await screen.findByRole('region', { name: 'Su guía de inducción' })
+    expect(tarjeta).toHaveTextContent('Le faltan 3 de 4 temas · unos 7 minutos')
 
     await usuario.click(within(tarjeta).getByRole('link', { name: 'Continuar la guía' }))
 
@@ -44,7 +44,7 @@ describe('acceso a la guía desde el Inicio', () => {
     iniciarSesionDePrueba(VOLUNTARIO)
     renderizarApp('/')
 
-    const tarjeta = await screen.findByRole('region', { name: 'Tu guía de inducción' })
+    const tarjeta = await screen.findByRole('region', { name: 'Su guía de inducción' })
     expect(tarjeta).toHaveTextContent('4 temas cortos · unos 9 minutos')
     expect(within(tarjeta).getByRole('link', { name: 'Empezar la guía' })).toBeVisible()
   })
@@ -56,7 +56,7 @@ describe('acceso a la guía desde el Inicio', () => {
 
     expect(await screen.findByRole('heading', { name: 'Inicio' })).toBeVisible()
     await new Promise((resolver) => setTimeout(resolver, 50))
-    expect(screen.queryByRole('region', { name: 'Tu guía de inducción' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'Su guía de inducción' })).not.toBeInTheDocument()
   })
 
   it('no aparece para quien no tiene la guía', async () => {
@@ -64,6 +64,6 @@ describe('acceso a la guía desde el Inicio', () => {
     renderizarApp('/')
 
     expect(await screen.findByRole('heading', { name: 'Inicio' })).toBeVisible()
-    expect(screen.queryByRole('region', { name: 'Tu guía de inducción' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'Su guía de inducción' })).not.toBeInTheDocument()
   })
 })
