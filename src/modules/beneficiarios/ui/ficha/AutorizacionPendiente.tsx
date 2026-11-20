@@ -5,6 +5,7 @@ import { PoliticaTratamiento } from '@/modules/beneficiarios/ui/datosSensibles/P
 import { useGuardarConsentimiento } from '@/modules/beneficiarios/ui/datosSensibles/useGuardarConsentimiento.ts'
 import { Boton } from '@/shared/ui/Boton.tsx'
 import { useConstancia } from '@/shared/ui/constancia/contextoConstancia.ts'
+import { POLITICA_VIGENTE } from '@/modules/beneficiarios/domain/politicaVigente.ts'
 
 interface AutorizacionPendienteProps {
   readonly beneficiario: Beneficiario
@@ -34,7 +35,7 @@ export function AutorizacionPendiente({ beneficiario }: AutorizacionPendientePro
       <p className="text-body text-ink-secondary">
         Explíquele la política de datos. Si está de acuerdo, registre su autorización.
       </p>
-      <PoliticaTratamiento />
+      <PoliticaTratamiento politica={POLITICA_VIGENTE} />
       <Boton
         cargando={guardando}
         onClick={() => void registrarAutorizacion()}

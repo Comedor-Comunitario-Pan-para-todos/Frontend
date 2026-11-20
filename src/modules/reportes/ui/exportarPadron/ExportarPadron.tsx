@@ -1,6 +1,6 @@
 import { FileSpreadsheet, Lock } from 'lucide-react'
 import { useId, useState } from 'react'
-import { fechaDeHoy } from '@/modules/beneficiarios/index.ts'
+import { fechaDeHoy } from '@/shared/domain/fechaDeHoy.ts'
 import { rangoDeAtajo } from '@/modules/reportes/domain/atajosDeRango.ts'
 import {
   erroresDeRango,

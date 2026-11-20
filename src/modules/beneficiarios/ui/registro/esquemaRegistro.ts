@@ -7,16 +7,12 @@ import {
   camposExtendidos,
   validarDatosExtendidos,
 } from '@/modules/beneficiarios/ui/datosSensibles/esquemaDatosExtendidos.ts'
+import { fechaDeHoy } from '@/shared/domain/fechaDeHoy.ts'
 
 // Los mismos límites que valida el backend, para avisar antes de enviar.
 const MAXIMO_NOMBRE = 100
 const MAXIMO_BARRIO = 100
 const FECHA_MAS_ANTIGUA = '1900-01-01'
-
-/** La fecha de hoy en Colombia, sin importar cómo esté configurado el teléfono. */
-export function fechaDeHoy(ahora: Date = new Date()): string {
-  return ahora.toLocaleDateString('en-CA', { timeZone: 'America/Bogota' })
-}
 
 function nombre(vacio: string, largo: string) {
   return z.string().trim().min(1, vacio).max(MAXIMO_NOMBRE, largo)
