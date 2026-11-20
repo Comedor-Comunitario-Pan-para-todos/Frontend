@@ -8,6 +8,7 @@ import { AutorizarUsoDeImagen } from './AutorizarUsoDeImagen.tsx'
 import { Dato } from './Dato.tsx'
 import { formatearFechaYHora } from './formatearFechaYHora.ts'
 import { InsigniaUsoImagen } from './InsigniaUsoImagen.tsx'
+import { RetirarUsoDeImagen } from './RetirarUsoDeImagen.tsx'
 
 interface UsoDeImagenProps {
   readonly beneficiario: Beneficiario
@@ -36,15 +37,18 @@ export function UsoDeImagen({ beneficiario, className = '' }: UsoDeImagenProps) 
         {EXPLICACION[estado]}
       </p>
       {autorizacion ? (
-        <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
-          <Dato nombre="Fecha" ancho>
-            <span className="font-mono">{formatearFechaYHora(autorizacion.registradoEn)}</span>
-          </Dato>
-          <Dato nombre="Tomada por">{autorizacion.registradoPor}</Dato>
-          <Dato nombre="Política">
-            <span className="font-mono">Versión {autorizacion.versionPolitica}</span>
-          </Dato>
-        </dl>
+        <>
+          <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
+            <Dato nombre="Fecha" ancho>
+              <span className="font-mono">{formatearFechaYHora(autorizacion.registradoEn)}</span>
+            </Dato>
+            <Dato nombre="Tomada por">{autorizacion.registradoPor}</Dato>
+            <Dato nombre="Política">
+              <span className="font-mono">Versión {autorizacion.versionPolitica}</span>
+            </Dato>
+          </dl>
+          <RetirarUsoDeImagen beneficiario={beneficiario} />
+        </>
       ) : (
         <AutorizarUsoDeImagen
           beneficiario={beneficiario}

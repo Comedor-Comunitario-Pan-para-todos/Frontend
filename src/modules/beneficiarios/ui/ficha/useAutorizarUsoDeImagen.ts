@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useDependencias } from '@/app/contextoDependencias.ts'
 import { nombreCompleto, type Beneficiario } from '@/modules/beneficiarios/domain/Beneficiario.ts'
+import { claveDeLaFicha } from '@/modules/beneficiarios/ui/beneficiario/useBeneficiario.ts'
 import { useConstancia } from '@/shared/ui/constancia/contextoConstancia.ts'
 
 /**
@@ -16,7 +17,7 @@ export function useAutorizarUsoDeImagen() {
     mutationFn: (ficha: Beneficiario) => autorizarUsoDeImagen(ficha.id),
     onSuccess: (autorizacion, ficha) => {
       consultas.setQueryData<Beneficiario>(
-        ['beneficiarios', 'ficha', ficha.id],
+        claveDeLaFicha(ficha.id),
         (actual) => actual && { ...actual, consentimientoImagen: autorizacion },
       )
       const nombre = nombreCompleto(ficha)

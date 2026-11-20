@@ -4,7 +4,10 @@ import { http, HttpResponse } from 'msw'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { reiniciarBeneficiariosMock } from '@/mocks/beneficiarios.ts'
 import { handlers } from '@/mocks/handlers.ts'
-import { POLITICA_IMAGEN } from '@/modules/beneficiarios/domain/politicaImagen.ts'
+import {
+  FINALIDAD_USO_IMAGEN,
+  POLITICA_IMAGEN,
+} from '@/modules/beneficiarios/domain/politicaImagen.ts'
 import { ConsentimientoHttpRepository } from '@/modules/beneficiarios/infrastructure/http/ConsentimientoHttpRepository.ts'
 import { iniciarSesionDePrueba, renderizarApp } from '../../../../app/renderizarApp.tsx'
 import { crearHttp } from '../../../../mocks/clienteDePrueba.ts'
@@ -20,6 +23,18 @@ const ID_ROSA = '00000000-0000-4000-8000-000000000003'
 function abrirFicha(id: string, token = VOLUNTARIO) {
   iniciarSesionDePrueba(token)
   return renderizarApp(`/beneficiarios/${id}`)
+}
+
+function consentimientos() {
+  return new ConsentimientoHttpRepository(crearHttp(VOLUNTARIO))
+}
+
+function autorizarFotos(id: string) {
+  return consentimientos().registrar(id, POLITICA_IMAGEN)
+}
+
+function historialDeFotos(id: string) {
+  return consentimientos().consultarHistorial(id, FINALIDAD_USO_IMAGEN)
 }
 
 function dato(nombre: string) {
@@ -146,10 +161,7 @@ describe('ficha del comensal', () => {
     })
 
     it('con autorización, muestra cuándo, quién y sobre qué política se tomó', async () => {
-      await new ConsentimientoHttpRepository(crearHttp(VOLUNTARIO)).registrar(
-        ID_ROSA,
-        POLITICA_IMAGEN,
-      )
+      await autorizarFotos(ID_ROSA)
       abrirFicha(ID_ROSA)
 
       const imagen = await screen.findByRole('region', { name: 'Uso de imagen' })
@@ -222,6 +234,76 @@ describe('ficha del comensal', () => {
       expect(boton).toBeDisabled()
       expect(boton).toHaveAccessibleDescription(/es menor de edad/i)
       expect(within(imagen).queryByText(/Política de uso de imagen/)).not.toBeInTheDocument()
+    })
+
+    it('deja retirar la autorización después de confirmarlo', async () => {
+      await autorizarFotos(ID_ROSA)
+      abrirFicha(ID_ROSA)
+      const imagen = await screen.findByRole('region', { name: 'Uso de imagen' })
+
+      await userEvent.click(within(imagen).getByRole('button', { name: 'Retirar autorización' }))
+
+      expect(await screen.findByText('¿Retirar la autorización de imagen?')).toBeInTheDocument()
+      expect(
+        screen.getByText(/no se le podrán tomar fotos a Rosa Martínez de Osorio/),
+      ).toBeInTheDocument()
+      expect(within(imagen).getByText('Foto autorizada')).toBeInTheDocument()
+
+      await userEvent.click(screen.getByRole('button', { name: 'Sí, retirarla' }))
+
+      expect(await screen.findByText('Autorización de imagen retirada')).toBeInTheDocument()
+      expect(await within(imagen).findByText('Rostro no fotografiable')).toBeInTheDocument()
+      expect(within(imagen).getByRole('button', { name: AUTORIZAR_FOTOS })).toBeEnabled()
+      expect(within(imagen).queryByText('Tomada por')).not.toBeInTheDocument()
+    })
+
+    it('si no confirma, la autorización sigue vigente', async () => {
+      await autorizarFotos(ID_ROSA)
+      abrirFicha(ID_ROSA)
+      const imagen = await screen.findByRole('region', { name: 'Uso de imagen' })
+
+      await userEvent.click(within(imagen).getByRole('button', { name: 'Retirar autorización' }))
+      await userEvent.click(await screen.findByRole('button', { name: 'Cerrar' }))
+
+      expect(within(imagen).getByText('Foto autorizada')).toBeInTheDocument()
+      await expect(historialDeFotos(ID_ROSA)).resolves.toEqual([
+        expect.objectContaining({ revocadoEn: null }),
+      ])
+    })
+
+    it('al retirarla, la insignia cambia sin esperar a que se recargue la ficha', async () => {
+      await autorizarFotos(ID_ROSA)
+      abrirFicha(ID_ROSA)
+      const imagen = await screen.findByRole('region', { name: 'Uso de imagen' })
+      servidor.use(http.get(`*/api/beneficiarios/${ID_ROSA}`, () => new Promise(() => {})))
+
+      await userEvent.click(within(imagen).getByRole('button', { name: 'Retirar autorización' }))
+      await userEvent.click(await screen.findByRole('button', { name: 'Sí, retirarla' }))
+
+      expect(await within(imagen).findByText('Rostro no fotografiable')).toBeInTheDocument()
+    })
+
+    it('si no se retira, lo avisa, la deja vigente y permite reintentar', async () => {
+      await autorizarFotos(ID_ROSA)
+      servidor.use(
+        http.post(
+          `*/api/beneficiarios/${ID_ROSA}/consentimiento/revocacion`,
+          () => HttpResponse.json({ statusCode: 500, message: 'Error' }, { status: 500 }),
+          { once: true },
+        ),
+      )
+      abrirFicha(ID_ROSA)
+      const imagen = await screen.findByRole('region', { name: 'Uso de imagen' })
+
+      await userEvent.click(within(imagen).getByRole('button', { name: 'Retirar autorización' }))
+      await userEvent.click(await screen.findByRole('button', { name: 'Sí, retirarla' }))
+
+      expect(await screen.findByText('No se retiró la autorización de imagen')).toBeInTheDocument()
+      expect(within(imagen).getByText('Foto autorizada')).toBeInTheDocument()
+
+      await userEvent.click(screen.getByRole('button', { name: 'Reintentar' }))
+
+      expect(await within(imagen).findByText('Rostro no fotografiable')).toBeInTheDocument()
     })
   })
 
