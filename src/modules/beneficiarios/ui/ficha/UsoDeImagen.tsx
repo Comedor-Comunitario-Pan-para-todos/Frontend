@@ -7,6 +7,7 @@ import { fechaDeHoy } from '@/shared/domain/fechaDeHoy.ts'
 import { AutorizarUsoDeImagen } from './AutorizarUsoDeImagen.tsx'
 import { Dato } from './Dato.tsx'
 import { formatearFechaYHora } from './formatearFechaYHora.ts'
+import { HistorialDeImagen } from './HistorialDeImagen.tsx'
 import { InsigniaUsoImagen } from './InsigniaUsoImagen.tsx'
 import { RetirarUsoDeImagen } from './RetirarUsoDeImagen.tsx'
 
@@ -56,6 +57,7 @@ export function UsoDeImagen({ beneficiario, className = '' }: UsoDeImagenProps) 
           idExplicacion="explicacion-uso-imagen"
         />
       )}
+      <HistorialDeImagen idBeneficiario={beneficiario.id} />
     </section>
   )
 }

@@ -3,6 +3,7 @@ import { useDependencias } from '@/app/contextoDependencias.ts'
 import { nombreCompleto, type Beneficiario } from '@/modules/beneficiarios/domain/Beneficiario.ts'
 import { claveDeLaFicha } from '@/modules/beneficiarios/ui/beneficiario/useBeneficiario.ts'
 import { useConstancia } from '@/shared/ui/constancia/contextoConstancia.ts'
+import { claveDelHistorialDeImagen } from './useHistorialDeImagen.ts'
 
 /**
  * Guarda la autorización de imagen y la pone de una vez en la ficha, sin esperar a que se
@@ -20,6 +21,7 @@ export function useAutorizarUsoDeImagen() {
         claveDeLaFicha(ficha.id),
         (actual) => actual && { ...actual, consentimientoImagen: autorizacion },
       )
+      void consultas.invalidateQueries({ queryKey: claveDelHistorialDeImagen(ficha.id) })
       const nombre = nombreCompleto(ficha)
       constancia.confirmar({
         titulo: 'Autorización de imagen guardada',

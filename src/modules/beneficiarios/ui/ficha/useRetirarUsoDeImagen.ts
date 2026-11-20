@@ -3,6 +3,7 @@ import { useDependencias } from '@/app/contextoDependencias.ts'
 import { nombreCompleto, type Beneficiario } from '@/modules/beneficiarios/domain/Beneficiario.ts'
 import { claveDeLaFicha } from '@/modules/beneficiarios/ui/beneficiario/useBeneficiario.ts'
 import { useConstancia } from '@/shared/ui/constancia/contextoConstancia.ts'
+import { claveDelHistorialDeImagen } from './useHistorialDeImagen.ts'
 
 /**
  * Pide confirmar antes de retirar la autorización de imagen. Al retirarla, la quita de la ficha
@@ -20,6 +21,7 @@ export function useRetirarUsoDeImagen() {
         claveDeLaFicha(ficha.id),
         (actual) => actual && { ...actual, consentimientoImagen: null },
       )
+      void consultas.invalidateQueries({ queryKey: claveDelHistorialDeImagen(ficha.id) })
       const nombre = nombreCompleto(ficha)
       constancia.confirmar({
         titulo: 'Autorización de imagen retirada',
