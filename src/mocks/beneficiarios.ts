@@ -41,6 +41,7 @@ interface BeneficiarioMock {
   readonly updatedAt: string
   readonly deletedAt: null
   readonly consentimiento: ConsentimientoMock | null
+  readonly consentimientoImagen: ConsentimientoMock | null
 }
 
 type Semilla = readonly [
@@ -119,6 +120,7 @@ function sembrar(): BeneficiarioMock[] {
       updatedAt: registro,
       deletedAt: null,
       consentimiento: consentimientoSembrado(indice, registro),
+      consentimientoImagen: null,
     }
   })
 }
@@ -320,6 +322,7 @@ export function crearHandlersBeneficiarios(identificar: Identificar) {
         updatedAt: ahora,
         deletedAt: null,
         consentimiento: null,
+        consentimientoImagen: null,
       }
       padron = [nuevo, ...padron]
 
