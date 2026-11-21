@@ -1,5 +1,6 @@
 import { delay, http, HttpResponse } from 'msw'
 import type { Rol } from '@/modules/auth/domain/Usuario.ts'
+import { esCargaDePagina } from './lecturaDePeticion.ts'
 
 // Simula el módulo `induccion` del backend con el contrato propuesto (docs/INDUCCION.md).
 // El avance vive en memoria por usuario; al recargar vuelve al estado inicial.
@@ -81,11 +82,6 @@ reiniciarInduccionMock()
 
 function errorNest(estado: number, mensaje: string | string[], error: string) {
   return HttpResponse.json({ statusCode: estado, message: mensaje, error }, { status: estado })
-}
-
-/** La pantalla de la app vive en `/induccion`: abrirla o recargarla no es llamar a la API. */
-function esCargaDePagina(request: Request): boolean {
-  return request.headers.get('Accept')?.includes('text/html') ?? false
 }
 
 function validarProgreso(cuerpo: Record<string, unknown>): string[] {
