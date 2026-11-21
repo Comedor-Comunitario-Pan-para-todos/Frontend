@@ -24,8 +24,8 @@ function cambiarTokenEnOtraPestana(token: string | null) {
 }
 
 async function ingresar(email: string, clave: string) {
-  await userEvent.type(await screen.findByLabelText('Correo electrónico'), email)
-  await userEvent.type(screen.getByLabelText('Contraseña'), clave)
+  await userEvent.type(await screen.findByLabelText('Correo electrónico'), email, { delay: null })
+  await userEvent.type(screen.getByLabelText('Contraseña'), clave, { delay: null })
   await userEvent.click(screen.getByRole('button', { name: 'Ingresar' }))
 }
 
