@@ -16,6 +16,7 @@ describe('rutas', () => {
     renderizarEn('/')
 
     expect(await screen.findByRole('heading', { name: 'Inicio' })).toBeInTheDocument()
+    expect(await screen.findByText('Su guía de inducción')).toBeInTheDocument()
   })
 
   it.each([
