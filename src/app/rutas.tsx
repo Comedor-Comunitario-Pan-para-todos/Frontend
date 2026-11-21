@@ -5,6 +5,7 @@ import { PantallaCarga } from '@/shared/ui/PantallaCarga.tsx'
 import { LayoutPrincipal } from './layout/LayoutPrincipal.tsx'
 import { MODULOS } from './modulos.ts'
 import { PaginaError } from './paginas/PaginaError.tsx'
+import { PaginaInicio } from './paginas/PaginaInicio.tsx'
 import { PaginaNoEncontrada } from './paginas/PaginaNoEncontrada.tsx'
 import { PaginaProximamente } from './paginas/PaginaProximamente.tsx'
 import { PaginaSinAcceso } from './paginas/PaginaSinAcceso.tsx'
@@ -18,6 +19,7 @@ const ERROR_SIN_LAYOUT = (
 
 // Páginas ya construidas de cada módulo. Los que no aparecen aquí muestran "Próximamente".
 const PAGINAS_DE_MODULO: Readonly<Record<string, RouteObject[]>> = {
+  '/': [{ index: true, element: <PaginaInicio /> }],
   '/beneficiarios': [
     {
       index: true,
@@ -103,6 +105,26 @@ export const rutas: RouteObject[] = [
               children: paginas,
             }
           }),
+          // La guía de inducción no está en el menú: se entra desde el Inicio (RF-15).
+          {
+            path: '/induccion',
+            element: (
+              <ConPermiso permiso="induccion.ver" alternativa={<PaginaSinAcceso />}>
+                <Outlet />
+              </ConPermiso>
+            ),
+            children: [
+              {
+                index: true,
+                lazy: async () => {
+                  const { PaginaInduccion } =
+                    await import('@/modules/induccion/ui/guia/PaginaInduccion.tsx')
+                  return { Component: PaginaInduccion }
+                },
+                hydrateFallbackElement: <PantallaCarga />,
+              },
+            ],
+          },
           { path: '*', element: <PaginaNoEncontrada /> },
         ],
       },

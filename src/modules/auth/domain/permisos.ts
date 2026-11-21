@@ -10,6 +10,8 @@ export type Permiso =
   | 'inventario.ver'
   | 'aportes.ver'
   | 'reportes.ver'
+  /** Leer la guía de inducción y marcar los temas leídos (RF-15). */
+  | 'induccion.ver'
   /** Descargar el padrón de beneficiarios para la Alcaldía: lo entrega el Presidente de la JAC (RF-18, HU-22). */
   | 'reportes.exportarPadron'
 
@@ -22,6 +24,7 @@ const MATRIZ: Record<Permiso, readonly Rol[]> = {
   'inventario.ver': ['COORDINADORA', 'VOLUNTARIO'],
   'aportes.ver': ['DONANTE'],
   'reportes.ver': ['COORDINADORA', 'PRESIDENTE_JAC', 'DONANTE'],
+  'induccion.ver': ['COORDINADORA', 'VOLUNTARIO'],
   'reportes.exportarPadron': ['PRESIDENTE_JAC'],
 }
 

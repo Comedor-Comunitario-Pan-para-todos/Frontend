@@ -1,6 +1,7 @@
 import { delay, http, HttpResponse } from 'msw'
 import type { Rol } from '@/modules/auth/domain/Usuario.ts'
 import { crearHandlersBeneficiarios } from './beneficiarios.ts'
+import { crearHandlersInduccion } from './induccion.ts'
 import { crearHandlersReportes } from './reportes.ts'
 
 export const CLAVE_MOCK = 'Comedor123*'
@@ -70,4 +71,5 @@ export const handlers = [
   // `/exportaciones/beneficiarios/resumen`.
   ...crearHandlersReportes(buscarPorToken),
   ...crearHandlersBeneficiarios(buscarPorToken),
+  ...crearHandlersInduccion(buscarPorToken),
 ]

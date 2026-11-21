@@ -36,6 +36,15 @@ describe('tienePermiso', () => {
     expect(tienePermiso(usuarioConRol(rol), permiso)).toBe(esperado)
   })
 
+  it.each<[Rol, boolean]>([
+    ['COORDINADORA', true],
+    ['VOLUNTARIO', true],
+    ['PRESIDENTE_JAC', false],
+    ['DONANTE', false],
+  ])('%s puede leer la guía de inducción: %s', (rol, esperado) => {
+    expect(tienePermiso(usuarioConRol(rol), 'induccion.ver')).toBe(esperado)
+  })
+
   it.each<[Rol, Permiso, boolean]>([
     ['COORDINADORA', 'beneficiarios.registrar', true],
     ['COORDINADORA', 'beneficiarios.verDatosSensibles', true],
