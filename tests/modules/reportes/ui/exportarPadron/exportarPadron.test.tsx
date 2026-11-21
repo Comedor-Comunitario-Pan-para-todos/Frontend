@@ -42,6 +42,18 @@ function botonDescargar() {
   return screen.getByRole('button', { name: 'Descargar Excel (.xlsx)' })
 }
 
+// Sin respuesta propia, MSW pasa la petición al mock real.
+function retenerArchivo(): () => void {
+  let soltar!: () => void
+  const retenido = new Promise<void>((resolver) => (soltar = resolver))
+  servidor.use(
+    http.get('*/exportaciones/beneficiarios.xlsx', async () => {
+      await retenido
+    }),
+  )
+  return soltar
+}
+
 async function confirmarDescarga() {
   await userEvent.click(botonDescargar())
   const dialogo = await screen.findByRole('dialog', { name: 'Confirmar descarga' })
@@ -162,10 +174,13 @@ describe('exportar el padrón para la Alcaldía', () => {
         name: 'Entiendo que soy responsable del manejo de estos datos',
       }),
     )
+    const soltarArchivo = retenerArchivo()
     await userEvent.click(within(dialogo).getByRole('button', { name: 'Confirmar y descargar' }))
 
     expect(screen.getByRole('button', { name: 'Generando archivo…' })).toBeDisabled()
     expect(screen.getByRole('progressbar', { name: 'Avance de la descarga' })).toBeInTheDocument()
+
+    soltarArchivo()
 
     expect(await screen.findByText('Archivo descargado')).toBeInTheDocument()
     expect(descargas).toEqual([

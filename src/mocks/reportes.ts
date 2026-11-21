@@ -18,6 +18,8 @@ export const DESDE_SERVIDOR_CAIDO = '2026-02-14'
 const INICIO_ATENCION = '2026-01-13'
 const DIAS_DE_ATENCION: ReadonlySet<number> = new Set([2, 4, 6])
 const UN_DIA_MS = 86_400_000
+// Para que en `dev:mock` se vea «Generando archivo…».
+const RETRASO_DEL_ARCHIVO_MS = import.meta.env.MODE === 'test' ? 0 : 1200
 const FECHA_CALENDARIO = /^\d{4}-\d{2}-\d{2}$/
 // Solo el Presidente de la JAC exporta el padrón (HU-22).
 const ROLES_PERMITIDOS: readonly Rol[] = ['PRESIDENTE_JAC']
@@ -109,8 +111,7 @@ export function crearHandlersReportes(identificar: Identificar) {
     }),
 
     http.get('*/exportaciones/beneficiarios.xlsx', async ({ request }) => {
-      // Un poco más lento que una consulta, para ver el estado «Generando archivo…».
-      await delay(1200)
+      await delay(RETRASO_DEL_ARCHIVO_MS)
       const rechazo = rechazoDeAcceso(request)
       if (rechazo) return rechazo
 
