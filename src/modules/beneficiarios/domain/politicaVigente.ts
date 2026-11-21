@@ -8,11 +8,13 @@ export interface PuntoDePolitica {
   readonly texto: string
 }
 export interface PoliticaVigente extends PoliticaDeDatos {
+  readonly nombre: string
   readonly resumen: string
   readonly puntos: readonly PuntoDePolitica[]
 }
 
 export const POLITICA_VIGENTE: PoliticaVigente = {
+  nombre: 'Política de datos',
   version: 1,
   finalidad: 'ATENCION_ALIMENTARIA',
   resumen:

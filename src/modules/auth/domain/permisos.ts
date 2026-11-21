@@ -12,6 +12,8 @@ export type Permiso =
   | 'reportes.ver'
   /** Leer la guía de inducción y marcar los temas leídos (RF-15). */
   | 'induccion.ver'
+  /** Descargar el padrón de beneficiarios para la Alcaldía: lo entrega el Presidente de la JAC (RF-18, HU-22). */
+  | 'reportes.exportarPadron'
 
 const MATRIZ: Record<Permiso, readonly Rol[]> = {
   'inicio.ver': ROLES,
@@ -23,6 +25,7 @@ const MATRIZ: Record<Permiso, readonly Rol[]> = {
   'aportes.ver': ['DONANTE'],
   'reportes.ver': ['COORDINADORA', 'PRESIDENTE_JAC', 'DONANTE'],
   'induccion.ver': ['COORDINADORA', 'VOLUNTARIO'],
+  'reportes.exportarPadron': ['PRESIDENTE_JAC'],
 }
 
 export function tienePermiso(usuario: Usuario | null, permiso: Permiso): boolean {

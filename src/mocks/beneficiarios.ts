@@ -6,6 +6,20 @@ import {
   type ClasificacionSocioeconomica,
 } from '@/modules/beneficiarios/domain/clasificacionSocioeconomica.ts'
 import type { NivelCaptura } from '@/modules/beneficiarios/domain/nivelCaptura.ts'
+import {
+  consentimientoVigente,
+  crearHandlersConsentimientos,
+  reiniciarConsentimientosMock,
+  type RegistroConsentimientoMock,
+} from './consentimientos.ts'
+import { esCargaDePagina, esUuid, texto } from './lecturaDePeticion.ts'
+import {
+  beneficiarioNoEncontrado,
+  camposDesconocidos,
+  errorNest,
+  idInvalido,
+  solicitudInvalida,
+} from './respuestasNest.ts'
 
 // Simula el módulo `beneficiarios` del backend (NestJS) con un padrón en memoria:
 // mismas rutas, mismos nombres de campo y mismos mensajes. Al recargar vuelve al estado inicial.
@@ -13,18 +27,10 @@ import type { NivelCaptura } from '@/modules/beneficiarios/domain/nivelCaptura.t
 // Diferencias con el backend actual, que siguen el contrato propuesto (docs/BENEFICIARIOS.md):
 // * acepta registrar a una persona sin documento (RNF-15);
 // * recibe y entrega `nivel` y `clasificacion` (RF-02), y en nivel básico rechaza datos sensibles;
-// * guarda el consentimiento informado (RF-19, docs/CONSENTIMIENTOS.md).
+// * guarda el consentimiento informado y la autorización de imagen (RF-19 y RF-20, consentimientos.ts).
 
 /** Buscar este texto fuerza un error 500, para probar la pantalla de error. */
 export const BUSQUEDA_SERVIDOR_CAIDO = 'caida'
-
-interface ConsentimientoMock {
-  readonly id: string
-  readonly versionPolitica: number
-  readonly finalidad: string
-  readonly registradoPor: { readonly id: string; readonly nombreCompleto: string }
-  readonly createdAt: string
-}
 
 interface BeneficiarioMock {
   readonly id: string
@@ -40,7 +46,6 @@ interface BeneficiarioMock {
   readonly createdAt: string
   readonly updatedAt: string
   readonly deletedAt: null
-  readonly consentimiento: ConsentimientoMock | null
 }
 
 type Semilla = readonly [
@@ -89,15 +94,19 @@ const PRIMER_REGISTRO = Date.parse('2026-11-08T17:00:00.000Z')
 const UNA_HORA = 3_600_000
 
 // Quienes se registraron antes de RF-19 no tienen consentimiento; la primera persona sí.
-function consentimientoSembrado(indice: number, registro: string): ConsentimientoMock | null {
-  if (indice !== 0) return null
-  return {
-    id: '00000000-0000-4000-9000-000000000001',
-    versionPolitica: 1,
-    finalidad: 'ATENCION_ALIMENTARIA',
-    registradoPor: { id: 'mock-1', nombreCompleto: 'Coordinación de Prueba' },
-    createdAt: registro,
-  }
+function consentimientosSembrados([primera]: BeneficiarioMock[]): RegistroConsentimientoMock[] {
+  return [
+    {
+      id: '00000000-0000-4000-9000-000000000001',
+      beneficiarioId: primera.id,
+      versionPolitica: 1,
+      finalidad: 'ATENCION_ALIMENTARIA',
+      registradoPor: { id: 'mock-1', nombreCompleto: 'Coordinación de Prueba' },
+      createdAt: primera.createdAt,
+      revocadoEn: null,
+      revocadoPor: null,
+    },
+  ]
 }
 
 function sembrar(): BeneficiarioMock[] {
@@ -118,55 +127,53 @@ function sembrar(): BeneficiarioMock[] {
       createdAt: registro,
       updatedAt: registro,
       deletedAt: null,
-      consentimiento: consentimientoSembrado(indice, registro),
     }
   })
 }
 
 let padron = sembrar()
+reiniciarConsentimientosMock(consentimientosSembrados(padron))
 
-/** Devuelve el padrón simulado a su estado inicial. Lo usan las pruebas. */
+/** Devuelve el padrón simulado y sus consentimientos al estado inicial. Lo usan las pruebas. */
 export function reiniciarBeneficiariosMock(): void {
   padron = sembrar()
+  reiniciarConsentimientosMock(consentimientosSembrados(padron))
+}
+
+/** La ficha que entrega el backend: los datos de la persona y sus autorizaciones vigentes. */
+function aFicha(beneficiario: BeneficiarioMock) {
+  return {
+    ...beneficiario,
+    consentimiento: consentimientoVigente(beneficiario.id, 'ATENCION_ALIMENTARIA'),
+    consentimientoImagen: consentimientoVigente(beneficiario.id, 'USO_IMAGEN'),
+  }
+}
+
+/** Datos de las personas del padrón simulado, en orden de registro. Lo usa el mock de reportes. */
+export function personasDelPadronMock() {
+  return padron.map(
+    ({ nombres, apellidos, tipoDocumento, numeroDocumento, fechaNacimiento, barrio }) => ({
+      nombres,
+      apellidos,
+      tipoDocumento,
+      numeroDocumento,
+      fechaNacimiento,
+      barrio,
+    }),
+  )
 }
 
 const ROLES_PERMITIDOS: readonly Rol[] = ['COORDINADORA', 'VOLUNTARIO']
 const CAMPOS_BASICOS = ['nivel', 'nombres', 'apellidos', 'fechaNacimiento', 'barrio']
 const CAMPOS_EXTENDIDOS = ['tipoDocumento', 'numeroDocumento', 'telefono', 'clasificacion']
-const CAMPOS_CONSENTIMIENTO = ['versionPolitica', 'finalidad']
 const PARAMETROS_DE_BUSQUEDA = ['search', 'page', 'limit', 'barrio']
 const FECHA_CALENDARIO = /^\d{4}-\d{2}-\d{2}$/
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const LIMITE_POR_DEFECTO = 10
 const LIMITE_MAXIMO = 100
-
-function errorNest(estado: number, mensaje: string | string[], error: string) {
-  return HttpResponse.json({ statusCode: estado, message: mensaje, error }, { status: estado })
-}
-
-function solicitudInvalida(mensajes: string | string[]) {
-  return errorNest(400, mensajes, 'Bad Request')
-}
-
-function noEncontrado(id: string) {
-  return errorNest(404, `Beneficiario con ID ${id} no encontrado`, 'Not Found')
-}
 
 /** Igual que la comparación de MySQL: sin distinguir mayúsculas ni tildes. */
 function comparable(texto: string): string {
   return texto.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
-}
-
-/**
- * La app tiene pantallas en estas mismas direcciones (`/beneficiarios`, `/beneficiarios/:id`).
- * Abrir o recargar una de ellas no es llamar a la API: se deja pasar para que cargue la página.
- */
-function esCargaDePagina(request: Request): boolean {
-  return request.headers.get('Accept')?.includes('text/html') ?? false
-}
-
-function texto(valor: unknown): string {
-  return typeof valor === 'string' ? valor.trim() : ''
 }
 
 function entero(valor: string | null, porDefecto: number): number {
@@ -238,23 +245,8 @@ function validarRegistro(cuerpo: Record<string, unknown>): string[] {
 
 function validarCompletado(cuerpo: Record<string, unknown>): string[] {
   if (cuerpo.nivel !== 'EXTENDIDO') return ['El nivel debe ser EXTENDIDO']
-  const desconocidos = Object.keys(cuerpo)
-    .filter((campo) => campo !== 'nivel' && !CAMPOS_EXTENDIDOS.includes(campo))
-    .map((campo) => `property ${campo} should not exist`)
+  const desconocidos = camposDesconocidos(cuerpo, ['nivel', ...CAMPOS_EXTENDIDOS])
   return [...desconocidos, ...validarExtendidos(cuerpo)]
-}
-
-function validarConsentimiento(cuerpo: Record<string, unknown>): string[] {
-  const desconocidos = Object.keys(cuerpo)
-    .filter((campo) => !CAMPOS_CONSENTIMIENTO.includes(campo))
-    .map((campo) => `property ${campo} should not exist`)
-  const errores: string[] = []
-  const version = cuerpo.versionPolitica
-  if (typeof version !== 'number' || !Number.isInteger(version) || version < 1) {
-    errores.push('La versión de la política debe ser un entero positivo')
-  }
-  if (texto(cuerpo.finalidad) === '') errores.push('La finalidad es requerida')
-  return [...desconocidos, ...errores]
 }
 
 function documentoRepetido(numeroDocumento: string | null, id?: string) {
@@ -319,11 +311,10 @@ export function crearHandlersBeneficiarios(identificar: Identificar) {
         createdAt: ahora,
         updatedAt: ahora,
         deletedAt: null,
-        consentimiento: null,
       }
       padron = [nuevo, ...padron]
 
-      return HttpResponse.json(nuevo, { status: 201 })
+      return HttpResponse.json(aFicha(nuevo), { status: 201 })
     }),
 
     http.get('*/beneficiarios', async ({ request }) => {
@@ -363,7 +354,7 @@ export function crearHandlersBeneficiarios(identificar: Identificar) {
       )
 
       return HttpResponse.json({
-        data: encontrados.slice((page - 1) * limit, page * limit),
+        data: encontrados.slice((page - 1) * limit, page * limit).map(aFicha),
         meta: {
           total: encontrados.length,
           page,
@@ -382,7 +373,10 @@ export function crearHandlersBeneficiarios(identificar: Identificar) {
       const numero = String(params.numero).trim()
       const beneficiario = padron.find((b) => b.numeroDocumento === numero) ?? null
 
-      return HttpResponse.json({ existe: beneficiario !== null, beneficiario })
+      return HttpResponse.json({
+        existe: beneficiario !== null,
+        beneficiario: beneficiario && aFicha(beneficiario),
+      })
     }),
 
     http.get('*/beneficiarios/:id', async ({ request, params }) => {
@@ -392,41 +386,10 @@ export function crearHandlersBeneficiarios(identificar: Identificar) {
       if (rechazo) return rechazo
 
       const id = String(params.id)
-      if (!UUID.test(id)) return solicitudInvalida('Validation failed (uuid is expected)')
+      if (!esUuid(id)) return idInvalido()
 
       const beneficiario = padron.find((b) => b.id === id)
-      return beneficiario ? HttpResponse.json(beneficiario) : noEncontrado(id)
-    }),
-
-    http.post('*/beneficiarios/:id/consentimiento', async ({ request, params }) => {
-      await delay()
-      const rechazo = rechazoDeAcceso(request)
-      if (rechazo) return rechazo
-
-      const id = String(params.id)
-      if (!UUID.test(id)) return solicitudInvalida('Validation failed (uuid is expected)')
-      const beneficiario = padron.find((b) => b.id === id)
-      if (!beneficiario) return noEncontrado(id)
-
-      const cuerpo = (await request.json()) as Record<string, unknown>
-      const errores = validarConsentimiento(cuerpo)
-      if (errores.length > 0) return solicitudInvalida(errores)
-
-      const versionPolitica = cuerpo.versionPolitica as number
-      const existente = beneficiario.consentimiento
-      if (existente?.versionPolitica === versionPolitica) return HttpResponse.json(existente)
-
-      const { id: idUsuario, nombreCompleto } = identificar(request.headers.get('Authorization'))!
-      const nuevo: ConsentimientoMock = {
-        id: crypto.randomUUID(),
-        versionPolitica,
-        finalidad: texto(cuerpo.finalidad),
-        registradoPor: { id: idUsuario, nombreCompleto },
-        createdAt: new Date().toISOString(),
-      }
-      padron = padron.map((b) => (b.id === id ? { ...b, consentimiento: nuevo } : b))
-
-      return HttpResponse.json(nuevo, { status: 201 })
+      return beneficiario ? HttpResponse.json(aFicha(beneficiario)) : beneficiarioNoEncontrado(id)
     }),
 
     http.patch('*/beneficiarios/:id', async ({ request, params }) => {
@@ -435,9 +398,9 @@ export function crearHandlersBeneficiarios(identificar: Identificar) {
       if (rechazo) return rechazo
 
       const id = String(params.id)
-      if (!UUID.test(id)) return solicitudInvalida('Validation failed (uuid is expected)')
+      if (!esUuid(id)) return idInvalido()
       const actual = padron.find((b) => b.id === id)
-      if (!actual) return noEncontrado(id)
+      if (!actual) return beneficiarioNoEncontrado(id)
 
       const cuerpo = (await request.json()) as Record<string, unknown>
       const errores = validarCompletado(cuerpo)
@@ -458,7 +421,16 @@ export function crearHandlersBeneficiarios(identificar: Identificar) {
       }
       padron = padron.map((b) => (b.id === id ? completado : b))
 
-      return HttpResponse.json(completado)
+      return HttpResponse.json(aFicha(completado))
+    }),
+
+    ...crearHandlersConsentimientos({
+      rechazoDeAcceso,
+      usuarioDe: (request) => {
+        const { id, nombreCompleto } = identificar(request.headers.get('Authorization'))!
+        return { id, nombreCompleto }
+      },
+      buscarBeneficiario: (id) => padron.find((b) => b.id === id),
     }),
   ]
 }

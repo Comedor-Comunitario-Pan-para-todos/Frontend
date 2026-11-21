@@ -7,6 +7,10 @@ import {
 import { SesionLocalStorage } from '@/modules/auth/infrastructure/dispositivo/SesionLocalStorage.ts'
 import { AuthHttpRepository } from '@/modules/auth/infrastructure/http/AuthHttpRepository.ts'
 import {
+  crearAutorizarUsoDeImagen,
+  type AutorizarUsoDeImagen,
+} from '@/modules/beneficiarios/application/autorizarUsoDeImagen.ts'
+import {
   crearBuscarBeneficiarios,
   type BuscarBeneficiarios,
 } from '@/modules/beneficiarios/application/buscarBeneficiarios.ts'
@@ -19,6 +23,10 @@ import {
   type ConsultarBeneficiario,
 } from '@/modules/beneficiarios/application/consultarBeneficiario.ts'
 import {
+  crearConsultarHistorialDeImagen,
+  type ConsultarHistorialDeImagen,
+} from '@/modules/beneficiarios/application/consultarHistorialDeImagen.ts'
+import {
   crearRegistrarConsentimiento,
   type RegistrarConsentimiento,
 } from '@/modules/beneficiarios/application/registrarConsentimiento.ts'
@@ -26,6 +34,10 @@ import {
   crearRegistrarBeneficiario,
   type RegistrarBeneficiario,
 } from '@/modules/beneficiarios/application/registrarBeneficiario.ts'
+import {
+  crearRetirarUsoDeImagen,
+  type RetirarUsoDeImagen,
+} from '@/modules/beneficiarios/application/retirarUsoDeImagen.ts'
 import {
   crearVerificarDuplicado,
   type VerificarDuplicado,
@@ -41,6 +53,17 @@ import {
   type RegistrarLecturaModulo,
 } from '@/modules/induccion/application/registrarLecturaModulo.ts'
 import { InduccionHttpRepository } from '@/modules/induccion/infrastructure/http/InduccionHttpRepository.ts'
+import { fechaDeHoy } from '@/shared/domain/fechaDeHoy.ts'
+import {
+  crearConsultarResumenExportacion,
+  type ConsultarResumenExportacion,
+} from '@/modules/reportes/application/consultarResumenExportacion.ts'
+import {
+  crearExportarPadron,
+  type ExportarPadron,
+} from '@/modules/reportes/application/exportarPadron.ts'
+import { DescargaNavegador } from '@/modules/reportes/infrastructure/dispositivo/DescargaNavegador.ts'
+import { ExportacionHttpRepository } from '@/modules/reportes/infrastructure/http/ExportacionHttpRepository.ts'
 import { AxiosHttpClient } from '@/shared/infrastructure/http/AxiosHttpClient.ts'
 import type { Entorno } from './entorno.ts'
 
@@ -58,6 +81,11 @@ export interface Dependencias {
   readonly registrarConsentimiento: RegistrarConsentimiento
   readonly consultarGuiaInduccion: ConsultarGuiaInduccion
   readonly registrarLecturaModulo: RegistrarLecturaModulo
+  readonly consultarResumenExportacion: ConsultarResumenExportacion
+  readonly exportarPadron: ExportarPadron
+  readonly autorizarUsoDeImagen: AutorizarUsoDeImagen
+  readonly retirarUsoDeImagen: RetirarUsoDeImagen
+  readonly consultarHistorialDeImagen: ConsultarHistorialDeImagen
 }
 
 export function crearDependencias({ apiBaseUrl }: Pick<Entorno, 'apiBaseUrl'>): Dependencias {
@@ -77,6 +105,8 @@ export function crearDependencias({ apiBaseUrl }: Pick<Entorno, 'apiBaseUrl'>): 
   const beneficiarios = new BeneficiarioHttpRepository(http)
   const consentimientos = new ConsentimientoHttpRepository(http)
   const induccion = new InduccionHttpRepository(http)
+  const exportaciones = new ExportacionHttpRepository(http)
+  const hoy = () => fechaDeHoy()
 
   return {
     iniciarSesion: crearIniciarSesion({ repositorio, almacen }),
@@ -97,5 +127,17 @@ export function crearDependencias({ apiBaseUrl }: Pick<Entorno, 'apiBaseUrl'>): 
     registrarConsentimiento: crearRegistrarConsentimiento({ repositorio: consentimientos }),
     consultarGuiaInduccion: crearConsultarGuiaInduccion({ repositorio: induccion }),
     registrarLecturaModulo: crearRegistrarLecturaModulo({ repositorio: induccion }),
+    consultarResumenExportacion: crearConsultarResumenExportacion({
+      repositorio: exportaciones,
+      hoy,
+    }),
+    exportarPadron: crearExportarPadron({
+      repositorio: exportaciones,
+      descarga: new DescargaNavegador(),
+      hoy,
+    }),
+    autorizarUsoDeImagen: crearAutorizarUsoDeImagen({ repositorio: consentimientos }),
+    retirarUsoDeImagen: crearRetirarUsoDeImagen({ repositorio: consentimientos }),
+    consultarHistorialDeImagen: crearConsultarHistorialDeImagen({ repositorio: consentimientos }),
   }
 }

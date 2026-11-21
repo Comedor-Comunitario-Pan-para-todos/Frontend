@@ -7,6 +7,7 @@ import { Boton } from '@/shared/ui/Boton.tsx'
 import { mensajeDeError } from '@/shared/ui/mensajeDeError.ts'
 import { AutorizacionDeDatos } from './AutorizacionDeDatos.tsx'
 import { DatosDelComensal } from './DatosDelComensal.tsx'
+import { UsoDeImagen } from './UsoDeImagen.tsx'
 
 const CLASES_TARJETA = 'rounded-lg border border-hairline bg-surface p-4 shadow-card'
 
@@ -84,6 +85,8 @@ export function PaginaFicha() {
       )}
 
       {ficha.data && <AutorizacionDeDatos beneficiario={ficha.data} className={CLASES_TARJETA} />}
+
+      {ficha.data && <UsoDeImagen beneficiario={ficha.data} className={CLASES_TARJETA} />}
     </div>
   )
 }

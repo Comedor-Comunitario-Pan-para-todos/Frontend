@@ -1,14 +1,12 @@
 import { http, HttpResponse } from 'msw'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { BUSQUEDA_SERVIDOR_CAIDO, reiniciarBeneficiariosMock } from '@/mocks/beneficiarios.ts'
-import { handlers, USUARIOS_MOCK } from '@/mocks/handlers.ts'
+import { handlers } from '@/mocks/handlers.ts'
 import type { Rol } from '@/modules/auth/domain/Usuario.ts'
 import { BeneficiarioDuplicado } from '@/modules/beneficiarios/domain/BeneficiarioDuplicado.ts'
 import type { NuevoBeneficiarioExtendido } from '@/modules/beneficiarios/domain/NuevoBeneficiario.ts'
-import { POLITICA_VIGENTE } from '@/modules/beneficiarios/domain/politicaVigente.ts'
 import { BeneficiarioHttpRepository } from '@/modules/beneficiarios/infrastructure/http/BeneficiarioHttpRepository.ts'
-import { ConsentimientoHttpRepository } from '@/modules/beneficiarios/infrastructure/http/ConsentimientoHttpRepository.ts'
-import { AxiosHttpClient } from '@/shared/infrastructure/http/AxiosHttpClient.ts'
+import { crearHttp, tokenDe } from './clienteDePrueba.ts'
 import { servidor } from './servidor.ts'
 
 const TOTAL_INICIAL = 24
@@ -28,17 +26,6 @@ const BASICOS = {
   nombres: 'Persona',
   apellidos: 'De Prueba',
   fechaNacimiento: '1990-01-31',
-}
-
-function tokenDe(rol: Rol): string {
-  return `mock-token.${USUARIOS_MOCK.find((u) => u.rol === rol && u.activo)!.id}`
-}
-
-function crearHttp(token: string | null) {
-  return new AxiosHttpClient({
-    baseUrl: '/api',
-    sesion: { obtenerToken: () => token, alExpirarSesion: vi.fn() },
-  })
 }
 
 function crearRepositorio(rol: Rol = 'VOLUNTARIO') {
@@ -252,72 +239,6 @@ describe('mocks de beneficiarios', () => {
       )
 
       await expect(respuesta).rejects.toMatchObject({ mensajesServidor: mensajes })
-    })
-  })
-
-  describe('consentimiento', () => {
-    const ID_CARLOS = '00000000-0000-4000-8000-000000000002'
-
-    function consentimientos(rol: Rol = 'VOLUNTARIO') {
-      return new ConsentimientoHttpRepository(crearHttp(tokenDe(rol)))
-    }
-
-    it('lo guarda con la política aceptada y el nombre de quien lo tomó', async () => {
-      const consentimiento = await consentimientos().registrar(ID_CARLOS, POLITICA_VIGENTE)
-
-      expect(consentimiento).toMatchObject({
-        versionPolitica: 1,
-        finalidad: 'ATENCION_ALIMENTARIA',
-        registradoPor: 'Voluntario de Prueba',
-      })
-    })
-
-    it('si ya aceptó esa versión, devuelve el mismo y no crea otro', async () => {
-      const primero = await consentimientos().registrar(ID_CARLOS, POLITICA_VIGENTE)
-
-      const segundo = await consentimientos('COORDINADORA').registrar(ID_CARLOS, POLITICA_VIGENTE)
-
-      expect(segundo).toEqual(primero)
-    })
-
-    it('responde 404 si la persona no existe', async () => {
-      const inexistente = '00000000-0000-4000-8000-999999999999'
-
-      await expect(
-        consentimientos().registrar(inexistente, POLITICA_VIGENTE),
-      ).rejects.toMatchObject({ tipo: 'no-encontrado' })
-    })
-
-    it('valida el cuerpo con los mensajes del backend', async () => {
-      const respuesta = crearHttp(tokenDe('VOLUNTARIO')).post(
-        `/beneficiarios/${ID_CARLOS}/consentimiento`,
-        { versionPolitica: 0, firma: 'x' },
-      )
-
-      await expect(respuesta).rejects.toMatchObject({
-        mensajesServidor: [
-          'property firma should not exist',
-          'La versión de la política debe ser un entero positivo',
-          'La finalidad es requerida',
-        ],
-      })
-    })
-
-    it('la ficha lo muestra después de guardarlo', async () => {
-      const antes = await crearRepositorio().consultarPorId(ID_CARLOS)
-
-      const consentimiento = await consentimientos().registrar(ID_CARLOS, POLITICA_VIGENTE)
-
-      expect(antes.consentimiento).toBeNull()
-      await expect(crearRepositorio().consultarPorId(ID_CARLOS)).resolves.toMatchObject({
-        consentimiento,
-      })
-    })
-
-    it('solo lo pueden tomar Coordinadora y Voluntario', async () => {
-      await expect(
-        consentimientos('DONANTE').registrar(ID_CARLOS, POLITICA_VIGENTE),
-      ).rejects.toMatchObject({ tipo: 'sin-permiso' })
     })
   })
 

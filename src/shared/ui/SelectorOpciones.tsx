@@ -21,10 +21,15 @@ interface SelectorOpcionesProps extends Omit<
   readonly defaultValue?: string
   readonly ayuda?: string
   readonly error?: string
+  /**
+   * Las opciones con texto largo pasan a otra fila en vez de partir su texto en dos líneas.
+   * Para etiquetas cortas como "CC" o "TI" no hace falta.
+   */
+  readonly envolver?: boolean
 }
 
 const CLASES_OPCION =
-  'flex min-h-touch flex-1 cursor-pointer items-center justify-center gap-1 rounded-md border border-border-input bg-surface px-2 text-body font-medium text-ink-secondary transition duration-150 ease-press hover:bg-surface-hover active:scale-99 has-checked:border-primary has-checked:bg-primary-soft has-checked:font-semibold has-checked:text-primary has-focus-visible:outline-3 has-focus-visible:outline-offset-2 has-focus-visible:outline-focus has-disabled:cursor-not-allowed has-disabled:bg-surface-subtle has-disabled:text-ink-muted'
+  'flex min-h-touch flex-1 cursor-pointer items-center justify-center gap-1 rounded-md border border-border-input bg-surface text-body font-medium text-ink-secondary transition duration-150 ease-press hover:bg-surface-hover active:scale-99 has-checked:border-primary has-checked:bg-primary-soft has-checked:font-semibold has-checked:text-primary has-focus-visible:outline-3 has-focus-visible:outline-offset-2 has-focus-visible:outline-focus has-disabled:cursor-not-allowed has-disabled:bg-surface-subtle has-disabled:text-ink-muted'
 
 /** Pocas opciones excluyentes a un toque: cada una es un botón táctil, no una lista desplegable. */
 export function SelectorOpciones({
@@ -34,6 +39,7 @@ export function SelectorOpciones({
   defaultValue,
   ayuda,
   error,
+  envolver = false,
   ...resto
 }: SelectorOpcionesProps) {
   const idGrupo = useId()
@@ -47,9 +53,12 @@ export function SelectorOpciones({
       className="flex min-w-0 flex-col gap-1"
     >
       <legend className="mb-1 text-label font-medium text-ink">{etiqueta}</legend>
-      <div className="flex gap-2">
+      <div className={`flex gap-2 ${envolver ? 'flex-wrap' : ''}`}>
         {opciones.map((opcion) => (
-          <label key={opcion.valor} className={CLASES_OPCION}>
+          <label
+            key={opcion.valor}
+            className={`${CLASES_OPCION} ${envolver ? 'px-4 whitespace-nowrap' : 'px-2'}`}
+          >
             <input
               {...resto}
               type="radio"

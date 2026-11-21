@@ -57,6 +57,16 @@ const PAGINAS_DE_MODULO: Readonly<Record<string, RouteObject[]>> = {
       hydrateFallbackElement: <PantallaCarga />,
     },
   ],
+  '/reportes': [
+    {
+      index: true,
+      lazy: async () => {
+        const { PaginaReportesSegunRol } = await import('./paginas/PaginaReportesSegunRol.tsx')
+        return { Component: PaginaReportesSegunRol }
+      },
+      hydrateFallbackElement: <PantallaCarga />,
+    },
+  ],
 }
 
 export const rutas: RouteObject[] = [

@@ -136,4 +136,16 @@ describe('SelectorOpciones', () => {
 
     expect(screen.getByRole('radio', { name: 'Tarjeta de identidad' })).not.toBeChecked()
   })
+  it('con envolver, las opciones largas pasan a otra fila sin partir su texto', () => {
+    const opciones = [
+      { valor: 'ESTE_MES', etiqueta: 'Este mes' },
+      { valor: 'ULTIMOS_3_MESES', etiqueta: 'Últimos 3 meses' },
+    ]
+    render(<SelectorOpciones etiqueta="Rango" name="rango" opciones={opciones} envolver />)
+
+    const opcion = screen.getByText('Últimos 3 meses').closest('label')!
+
+    expect(opcion).toHaveClass('whitespace-nowrap')
+    expect(opcion.parentElement).toHaveClass('flex-wrap')
+  })
 })

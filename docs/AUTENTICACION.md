@@ -105,6 +105,7 @@ tocar para cambiar quién ve qué.
 | Inventario | Sí | No | Sí | No |
 | Aportes | No | No | No | Sí |
 | Reportes | Sí | Sí | No | Sí |
+| Exportar el padrón (RF-18) | No | Sí | No | No |
 
 Aportes es la vista del donante. La recepción de donaciones de la Coordinadora
 se ubicará cuando se construya ese módulo.

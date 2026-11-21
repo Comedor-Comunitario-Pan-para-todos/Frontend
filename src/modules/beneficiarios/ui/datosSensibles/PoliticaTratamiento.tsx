@@ -1,9 +1,13 @@
 import { ChevronDown } from 'lucide-react'
-import { POLITICA_VIGENTE } from '@/modules/beneficiarios/domain/politicaVigente.ts'
+import type { PoliticaVigente } from '@/modules/beneficiarios/domain/politicaVigente.ts'
 
-/** La política de datos en lenguaje claro: un resumen y, al tocar, el texto completo. */
-export function PoliticaTratamiento() {
-  const { version, resumen, puntos } = POLITICA_VIGENTE
+interface PoliticaTratamientoProps {
+  readonly politica: PoliticaVigente
+}
+
+/** Una política en lenguaje claro: un resumen y, al tocar, el texto completo. */
+export function PoliticaTratamiento({ politica }: PoliticaTratamientoProps) {
+  const { nombre, version, resumen, puntos } = politica
 
   return (
     <div className="flex flex-col gap-2 rounded-md bg-surface-subtle px-3 py-2">
@@ -25,7 +29,9 @@ export function PoliticaTratamiento() {
           ))}
         </dl>
       </details>
-      <p className="font-mono text-caption text-ink-muted">Política de datos · versión {version}</p>
+      <p className="font-mono text-caption text-ink-muted">
+        {nombre} · versión {version}
+      </p>
     </div>
   )
 }

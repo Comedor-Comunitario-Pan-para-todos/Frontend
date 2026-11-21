@@ -34,8 +34,8 @@ const esquemaBeneficiarioDto = z.object({
   telefono: z.string().nullish(),
   clasificacion: esquemaClasificacionDto,
   createdAt: z.string(),
-  // Un consentimiento que no se puede leer cuenta como pendiente: se vuelve a pedir.
   consentimiento: esquemaConsentimiento.nullish().catch(null),
+  consentimientoImagen: esquemaConsentimiento.nullish().catch(null),
 })
 
 type BeneficiarioDto = z.infer<typeof esquemaBeneficiarioDto>
@@ -60,6 +60,7 @@ function aBeneficiario(dto: BeneficiarioDto): Beneficiario {
     clasificacion: dto.clasificacion ?? null,
     registradoEn: dto.createdAt,
     consentimiento: dto.consentimiento ?? null,
+    consentimientoImagen: dto.consentimientoImagen ?? null,
   }
 }
 

@@ -9,17 +9,14 @@ export interface Beneficiario {
   readonly nivel: NivelCaptura
   readonly nombres: string
   readonly apellidos: string
-  /** `null` cuando la persona no tiene documento: no es motivo para negarle la atención. */
   readonly documento: Documento | null
-  /** Fecha de calendario `AAAA-MM-DD`, sin hora ni zona horaria. */
   readonly fechaNacimiento: string
   readonly barrio: string | null
   readonly telefono: string | null
   readonly clasificacion: ClasificacionSocioeconomica | null
-  /** Momento del registro, en formato ISO 8601. */
   readonly registradoEn: string
-  /** `null` mientras la persona no haya aceptado la política de datos (RF-19). */
   readonly consentimiento: Consentimiento | null
+  readonly consentimientoImagen: Consentimiento | null
 }
 
 type Nombre = Pick<Beneficiario, 'nombres' | 'apellidos'>
