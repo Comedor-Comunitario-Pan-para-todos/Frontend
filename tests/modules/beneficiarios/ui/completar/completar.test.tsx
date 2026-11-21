@@ -21,7 +21,7 @@ function dato(nombre: string) {
 }
 
 async function escribir(campo: string, texto: string) {
-  await userEvent.type(screen.getByLabelText(campo), texto)
+  await userEvent.type(screen.getByLabelText(campo), texto, { delay: null })
 }
 
 async function guardar() {

@@ -19,7 +19,7 @@ async function abrirRegistro() {
 }
 
 async function escribir(campo: string, texto: string) {
-  await userEvent.type(screen.getByLabelText(campo), texto)
+  await userEvent.type(screen.getByLabelText(campo), texto, { delay: null })
 }
 
 async function llenarIdentidad(nombres = 'Persona', apellidos = 'De Prueba', fecha = '1990-01-31') {

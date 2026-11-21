@@ -21,7 +21,9 @@ async function abrirPadron(token = VOLUNTARIO) {
 }
 
 async function buscar(texto: string) {
-  await userEvent.type(screen.getByRole('searchbox', { name: 'Buscar persona' }), texto)
+  await userEvent.type(screen.getByRole('searchbox', { name: 'Buscar persona' }), texto, {
+    delay: null,
+  })
 }
 
 function estadoDelPadron() {
