@@ -77,6 +77,12 @@ export function FormularioRegistro({ registro }: FormularioRegistroProps) {
             error={errors.fechaNacimiento?.message}
             {...register('fechaNacimiento')}
           />
+          {registro.esMenor && (
+            <Alerta tipo="privacidad" titulo="Es menor de edad">
+              Recibe la ración como cualquier persona. Su imagen queda protegida: no se le toman
+              fotos sin la autorización escrita de su madre, padre o tutor.
+            </Alerta>
+          )}
 
           <CampoTexto
             etiqueta="Barrio o sector"

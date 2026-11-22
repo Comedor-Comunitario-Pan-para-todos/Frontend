@@ -258,6 +258,27 @@ describe('registro de beneficiarios', () => {
     ).toBeInTheDocument()
   })
 
+  it('avisa que es menor de edad apenas se escribe la fecha de nacimiento', async () => {
+    await abrirRegistro()
+
+    await escribir('Fecha de nacimiento', '2015-06-01')
+
+    expect(screen.getByText('Es menor de edad')).toBeInTheDocument()
+    expect(screen.getByText(/recibe la ración como cualquier persona/i)).toBeInTheDocument()
+  })
+
+  it('no avisa de menor sin fecha, con un adulto ni con una fecha futura', async () => {
+    await abrirRegistro()
+    expect(screen.queryByText('Es menor de edad')).not.toBeInTheDocument()
+
+    await escribir('Fecha de nacimiento', '1990-01-31')
+    expect(screen.queryByText('Es menor de edad')).not.toBeInTheDocument()
+
+    await userEvent.clear(screen.getByLabelText('Fecha de nacimiento'))
+    await escribir('Fecha de nacimiento', '2999-01-01')
+    expect(screen.queryByText('Es menor de edad')).not.toBeInTheDocument()
+  })
+
   it('explica la política de datos junto a la autorización', async () => {
     await abrirRegistro()
 
