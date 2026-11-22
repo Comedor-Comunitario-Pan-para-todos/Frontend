@@ -4,6 +4,7 @@ import {
   esquemaPagina,
   esquemaValidacionDocumento,
 } from '@/modules/beneficiarios/infrastructure/http/respuestasBeneficiario.ts'
+import { TUTOR_ACTIVO, TUTOR_REVOCADO } from '../../consentimientosDePrueba.ts'
 import { CARLOS, MARIA } from '../../datosDePrueba.ts'
 import { DTO_CARLOS, DTO_MARIA } from './dtosDePrueba.ts'
 
@@ -115,6 +116,73 @@ describe('esquemaBeneficiario', () => {
     })
 
     expect(ficha.consentimientoImagen).toBeNull()
+  })
+
+  describe('autorización del tutor', () => {
+    const DTO_TUTOR = {
+      id: 'at-1',
+      estado: 'ACTIVA',
+      tutor: {
+        nombre: 'Luz Marina Díaz',
+        tipoDocumento: 'CC',
+        numeroDocumento: '52123456',
+        parentesco: 'MADRE',
+        telefono: '3101234567',
+      },
+      aprobadaPor: { id: 'u-2', nombreCompleto: 'Coordinación de Prueba' },
+      fechaAprobacion: '2026-11-18T15:00:00.000Z',
+      revocadaEn: null,
+      revocadaPor: null,
+      motivoRevocacion: null,
+    }
+
+    it('la lee cuando llega y la deja en null cuando no', () => {
+      expect(
+        esquemaBeneficiario.parse({ ...DTO_CARLOS, autorizacionTutor: DTO_TUTOR })
+          .autorizacionTutor,
+      ).toEqual(TUTOR_ACTIVO)
+      expect(esquemaBeneficiario.parse(DTO_CARLOS).autorizacionTutor).toBeNull()
+    })
+
+    it('lee quién la revocó, cuándo y por qué', () => {
+      const ficha = esquemaBeneficiario.parse({
+        ...DTO_CARLOS,
+        autorizacionTutor: {
+          ...DTO_TUTOR,
+          estado: 'REVOCADA',
+          revocadaEn: '2026-11-19T10:00:00.000Z',
+          revocadaPor: { id: 'u-2', nombreCompleto: 'Coordinación de Prueba' },
+          motivoRevocacion: 'El acudiente ya no está a cargo.',
+        },
+      })
+
+      expect(ficha.autorizacionTutor).toEqual(TUTOR_REVOCADO)
+    })
+
+    it('al voluntario le llegan sin documento ni teléfono del tutor', () => {
+      const { tipoDocumento: _, numeroDocumento: __, telefono: ___, ...tutor } = DTO_TUTOR.tutor
+      const ficha = esquemaBeneficiario.parse({
+        ...DTO_CARLOS,
+        autorizacionTutor: { ...DTO_TUTOR, tutor },
+      })
+
+      expect(ficha.autorizacionTutor?.tutor).toEqual({
+        nombre: 'Luz Marina Díaz',
+        parentesco: 'MADRE',
+        tipoDocumento: null,
+        numeroDocumento: null,
+        telefono: null,
+      })
+    })
+
+    it('una que no se puede leer cuenta como que no hay tutor, sin rechazar la ficha', () => {
+      const ficha = esquemaBeneficiario.parse({
+        ...DTO_CARLOS,
+        autorizacionTutor: { ...DTO_TUTOR, estado: 'PENDIENTE' },
+      })
+
+      expect(ficha.autorizacionTutor).toBeNull()
+    })
   })
 
   it('rechaza una ficha sin fecha de nacimiento', () => {
