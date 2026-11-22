@@ -2,6 +2,7 @@ import { usePermiso } from '@/modules/auth/index.ts'
 import { nombreCompleto, type Beneficiario } from '@/modules/beneficiarios/domain/Beneficiario.ts'
 import { formatearFechaCalendario } from '@/modules/beneficiarios/domain/fechaCalendario.ts'
 import { DocumentoBeneficiario } from '@/modules/beneficiarios/ui/beneficiario/DocumentoBeneficiario.tsx'
+import { InsigniaMenorDeEdad } from '@/modules/beneficiarios/ui/beneficiario/InsigniaMenorDeEdad.tsx'
 import { ClasificacionBeneficiario } from './ClasificacionBeneficiario.tsx'
 import { Dato } from './Dato.tsx'
 import { DatoReservado } from './DatoReservado.tsx'
@@ -32,7 +33,10 @@ export function DatosDelComensal({ beneficiario, className = '' }: DatosDelComen
         <h2 className="text-title font-semibold wrap-break-word text-ink">
           {nombreCompleto(beneficiario)}
         </h2>
-        <InsigniaNivel nivel={nivel} />
+        <div className="flex flex-wrap gap-2">
+          <InsigniaNivel nivel={nivel} />
+          <InsigniaMenorDeEdad fechaNacimiento={fechaNacimiento} />
+        </div>
       </div>
       <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
         <Dato nombre="Nacimiento">

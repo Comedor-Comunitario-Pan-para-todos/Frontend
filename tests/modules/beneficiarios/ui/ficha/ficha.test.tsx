@@ -60,6 +60,22 @@ describe('ficha del comensal', () => {
     expect(dato('En el padrón desde')).toHaveTextContent('08/11/2026')
   })
 
+  it('marca a un menor de edad junto a su nombre', async () => {
+    abrirFicha(ID_CARLOS)
+
+    const datos = await screen.findByRole('article')
+
+    expect(within(datos).getByText('Menor de edad')).toBeInTheDocument()
+  })
+
+  it('no marca como menor a un adulto', async () => {
+    abrirFicha(ID_MARIA)
+
+    const datos = await screen.findByRole('article')
+
+    expect(within(datos).queryByText('Menor de edad')).not.toBeInTheDocument()
+  })
+
   it('el voluntario ve el documento enmascarado y no ve los demás datos sensibles', async () => {
     abrirFicha(ID_ROSA, VOLUNTARIO)
     await screen.findByRole('heading', { name: 'Rosa Martínez de Osorio' })
