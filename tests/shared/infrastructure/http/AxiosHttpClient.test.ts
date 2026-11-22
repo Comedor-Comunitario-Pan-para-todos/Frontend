@@ -87,6 +87,30 @@ describe('AxiosHttpClient', () => {
       expect(recibido).toEqual({ nombre: 'Ana' })
     })
 
+    it('envía un FormData como multipart, con sus campos y el archivo', async () => {
+      let tipo: string | null = null
+      let recibido = ''
+      servidor.use(
+        http.post(URL_RECURSO, async ({ request }) => {
+          tipo = request.headers.get('Content-Type')
+          // En jsdom, request.formData() no lee lo que arma su XHR: se revisa el cuerpo crudo.
+          recibido = await request.text()
+          return HttpResponse.json({})
+        }),
+      )
+      const cuerpo = new FormData()
+      cuerpo.append('nombre', 'Ana')
+      cuerpo.append('soporte', new File(['firma'], 'firma.png', { type: 'image/png' }))
+
+      await crearCliente().post('/recurso', cuerpo)
+
+      expect(tipo).toMatch(/^multipart\/form-data; boundary=/)
+      expect(recibido).toContain('name="nombre"\r\n\r\nAna\r\n')
+      expect(recibido).toContain(
+        'name="soporte"; filename="firma.png"\r\nContent-Type: image/png\r\n\r\nfirma\r\n',
+      )
+    })
+
     it('arma la query string y descarta los valores sin definir', async () => {
       let consulta = ''
       servidor.use(
@@ -153,6 +177,35 @@ describe('AxiosHttpClient', () => {
 
       await expect(crearCliente(20).get('/recurso')).rejects.toMatchObject({
         tipo: 'tiempo-agotado',
+      })
+    })
+
+    describe('con un tiempo límite propio en la petición', () => {
+      beforeEach(() => {
+        servidor.use(
+          http.post(URL_RECURSO, async () => {
+            await delay(200)
+            return HttpResponse.json({})
+          }),
+        )
+      })
+
+      it('espera más que el tiempo general', async () => {
+        await expect(
+          crearCliente(20).post('/recurso', {}, { tiempoLimiteMs: 2_000 }),
+        ).resolves.toBeDefined()
+      })
+
+      it('se agota si lo pasa', async () => {
+        await expect(
+          crearCliente(2_000).post('/recurso', {}, { tiempoLimiteMs: 20 }),
+        ).rejects.toMatchObject({ tipo: 'tiempo-agotado' })
+      })
+
+      it('sin él, sigue mandando el tiempo general', async () => {
+        await expect(crearCliente(20).post('/recurso', {})).rejects.toMatchObject({
+          tipo: 'tiempo-agotado',
+        })
       })
     })
 

@@ -9,6 +9,7 @@ export interface OpcionesPeticion<T> {
   readonly params?: ParametrosConsulta
   readonly signal?: AbortSignal
   readonly omitirSesion?: boolean
+  readonly tiempoLimiteMs?: number
 }
 
 export interface OpcionesDescarga {
