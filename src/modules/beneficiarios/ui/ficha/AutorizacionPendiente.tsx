@@ -1,6 +1,8 @@
 import { TriangleAlert } from 'lucide-react'
 import { useState } from 'react'
 import { nombreCompleto, type Beneficiario } from '@/modules/beneficiarios/domain/Beneficiario.ts'
+import { esMenorDeEdad } from '@/modules/beneficiarios/domain/edad.ts'
+import { fechaDeHoy } from '@/shared/domain/fechaDeHoy.ts'
 import { PoliticaTratamiento } from '@/modules/beneficiarios/ui/datosSensibles/PoliticaTratamiento.tsx'
 import { useGuardarConsentimiento } from '@/modules/beneficiarios/ui/datosSensibles/useGuardarConsentimiento.ts'
 import { Boton } from '@/shared/ui/Boton.tsx'
@@ -16,6 +18,7 @@ export function AutorizacionPendiente({ beneficiario }: AutorizacionPendientePro
   const guardarConsentimiento = useGuardarConsentimiento()
   const constancia = useConstancia()
   const [guardando, setGuardando] = useState(false)
+  const esMenor = esMenorDeEdad(beneficiario.fechaNacimiento, fechaDeHoy())
 
   async function registrarAutorizacion() {
     const nombre = nombreCompleto(beneficiario)
@@ -33,7 +36,9 @@ export function AutorizacionPendiente({ beneficiario }: AutorizacionPendientePro
         Autorización pendiente
       </span>
       <p className="text-body text-ink-secondary">
-        Explíquele la política de datos. Si está de acuerdo, registre su autorización.
+        {esMenor
+          ? 'Es menor de edad: explíquele la política de datos al adulto que lo acompaña. Si está de acuerdo, registre la autorización.'
+          : 'Explíquele la política de datos. Si está de acuerdo, registre su autorización.'}
       </p>
       <PoliticaTratamiento politica={POLITICA_VIGENTE} />
       <Boton
@@ -41,7 +46,7 @@ export function AutorizacionPendiente({ beneficiario }: AutorizacionPendientePro
         onClick={() => void registrarAutorizacion()}
         className="w-full md:w-auto md:self-end"
       >
-        Le expliqué y aceptó
+        {esMenor ? 'Le expliqué al adulto y aceptó' : 'Le expliqué y aceptó'}
       </Boton>
     </>
   )

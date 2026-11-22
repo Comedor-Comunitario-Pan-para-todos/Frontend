@@ -11,7 +11,12 @@ export const POLITICA_IMAGEN: PoliticaVigente = {
   puntos: [
     {
       titulo: 'Para qué',
-      texto: 'Para mostrar a la Junta de Acción Comunal y a los donantes cómo funciona el comedor.',
+      texto:
+        'Para que la Junta de Acción Comunal muestre a los vecinos del barrio la actividad del comedor.',
+    },
+    {
+      titulo: 'Para qué no',
+      texto: 'Sus fotos no se entregan a donantes ni a empresas, y no se usan para publicidad.',
     },
     {
       titulo: 'Es voluntario',
@@ -24,7 +29,8 @@ export const POLITICA_IMAGEN: PoliticaVigente = {
     },
     {
       titulo: 'Niños, niñas y adolescentes',
-      texto: 'Para una persona menor de edad se necesita además la autorización de su tutor.',
+      texto:
+        'A una persona menor de edad solo se le toman fotos si además lo autoriza por escrito su madre, padre o tutor, y la coordinación lo aprueba.',
     },
   ],
 }

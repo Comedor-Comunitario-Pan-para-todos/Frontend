@@ -60,6 +60,22 @@ describe('ficha del comensal', () => {
     expect(dato('En el padrón desde')).toHaveTextContent('08/11/2026')
   })
 
+  it('marca a un menor de edad junto a su nombre', async () => {
+    abrirFicha(ID_CARLOS)
+
+    const datos = await screen.findByRole('article')
+
+    expect(within(datos).getByText('Menor de edad')).toBeInTheDocument()
+  })
+
+  it('no marca como menor a un adulto', async () => {
+    abrirFicha(ID_MARIA)
+
+    const datos = await screen.findByRole('article')
+
+    expect(within(datos).queryByText('Menor de edad')).not.toBeInTheDocument()
+  })
+
   it('el voluntario ve el documento enmascarado y no ve los demás datos sensibles', async () => {
     abrirFicha(ID_ROSA, VOLUNTARIO)
     await screen.findByRole('heading', { name: 'Rosa Martínez de Osorio' })
@@ -127,13 +143,22 @@ describe('ficha del comensal', () => {
     expect(within(autorizacion).getByText(/08\/11\/2026/)).toBeInTheDocument()
   })
 
+  it('a un adulto sin autorización le pide la suya, no la de un acompañante', async () => {
+    abrirFicha(ID_ROSA)
+    const autorizacion = await screen.findByRole('region', { name: 'Autorización de datos' })
+
+    expect(
+      within(autorizacion).getByRole('button', { name: 'Le expliqué y aceptó' }),
+    ).toBeInTheDocument()
+  })
+
   it('si falta la autorización, deja registrarla desde la ficha', async () => {
     abrirFicha(ID_CARLOS)
     const autorizacion = await screen.findByRole('region', { name: 'Autorización de datos' })
     expect(within(autorizacion).getByText('Autorización pendiente')).toBeInTheDocument()
 
     await userEvent.click(
-      within(autorizacion).getByRole('button', { name: 'Le expliqué y aceptó' }),
+      within(autorizacion).getByRole('button', { name: 'Le expliqué al adulto y aceptó' }),
     )
 
     expect(await screen.findByText('Autorización guardada')).toBeInTheDocument()

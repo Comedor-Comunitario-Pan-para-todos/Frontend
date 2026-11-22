@@ -15,6 +15,7 @@ const COORDINADORA = 'mock-token.mock-1'
 const VOLUNTARIO = 'mock-token.mock-3'
 const ID_MARIA = '00000000-0000-4000-8000-000000000001'
 const ID_CARLOS = '00000000-0000-4000-8000-000000000002'
+const ID_PEDRO = '00000000-0000-4000-8000-000000000008'
 
 function dato(nombre: string) {
   return screen.getByText(nombre, { selector: 'dt' }).nextElementSibling!
@@ -30,7 +31,7 @@ async function guardar() {
 
 async function completarSinDocumento() {
   await userEvent.click(screen.getByRole('checkbox', { name: 'Sin documento' }))
-  await userEvent.click(screen.getByRole('checkbox', { name: 'Informé a la persona' }))
+  await userEvent.click(screen.getByRole('checkbox', { name: 'Informé al adulto que lo acompaña' }))
   await guardar()
 }
 
@@ -50,7 +51,9 @@ describe('completar datos extendidos', () => {
     await userEvent.click(screen.getByRole('radio', { name: 'Tarjeta de identidad' }))
     await escribir('Número de documento', '1086999888')
     await escribir('Teléfono', '3151234567')
-    await userEvent.click(screen.getByRole('checkbox', { name: 'Informé a la persona' }))
+    await userEvent.click(
+      screen.getByRole('checkbox', { name: 'Informé al adulto que lo acompaña' }),
+    )
     await guardar()
 
     expect(await screen.findByText('Datos completados')).toBeInTheDocument()
@@ -58,6 +61,14 @@ describe('completar datos extendidos', () => {
     expect(dato('Documento')).toHaveTextContent('TI 1.086.999.888')
     expect(dato('Teléfono')).toHaveTextContent('3151234567')
     expect(enrutador.state.location.pathname).toBe(`/beneficiarios/${ID_CARLOS}`)
+  })
+
+  it('a un adulto le pide su propia autorización', async () => {
+    iniciarSesionDePrueba(VOLUNTARIO)
+    renderizarApp(`/beneficiarios/${ID_PEDRO}/completar`)
+    expect(
+      await screen.findByRole('checkbox', { name: 'Informé a la persona' }),
+    ).toBeInTheDocument()
   })
 
   it('guarda la autorización que se pidió al completar', async () => {
@@ -116,7 +127,7 @@ describe('completar datos extendidos', () => {
       await screen.findByText('Escriba el número o marque «Sin documento».'),
     ).toBeInTheDocument()
     expect(
-      screen.getByText('Confirme que informó a la persona antes de guardar sus datos.'),
+      screen.getByText('Marque la casilla después de explicar la política de datos.'),
     ).toBeInTheDocument()
   })
 
@@ -144,7 +155,9 @@ describe('completar datos extendidos', () => {
     await screen.findByRole('button', { name: 'Guardar datos' })
 
     await escribir('Número de documento', '42185390')
-    await userEvent.click(screen.getByRole('checkbox', { name: 'Informé a la persona' }))
+    await userEvent.click(
+      screen.getByRole('checkbox', { name: 'Informé al adulto que lo acompaña' }),
+    )
     await guardar()
 
     expect(await screen.findByText('Ese documento ya es de otra persona')).toBeInTheDocument()

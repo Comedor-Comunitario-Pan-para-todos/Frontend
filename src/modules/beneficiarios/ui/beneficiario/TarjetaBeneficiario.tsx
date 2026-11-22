@@ -6,13 +6,14 @@ import {
   type Beneficiario,
 } from '@/modules/beneficiarios/domain/Beneficiario.ts'
 import { DocumentoBeneficiario } from './DocumentoBeneficiario.tsx'
+import { InsigniaMenorDeEdad } from './InsigniaMenorDeEdad.tsx'
 
 interface TarjetaBeneficiarioProps {
   readonly beneficiario: Beneficiario
 }
 
 export function TarjetaBeneficiario({ beneficiario }: TarjetaBeneficiarioProps) {
-  const { documento, barrio } = beneficiario
+  const { documento, barrio, fechaNacimiento } = beneficiario
 
   return (
     <Link
@@ -31,13 +32,16 @@ export function TarjetaBeneficiario({ beneficiario }: TarjetaBeneficiarioProps) 
             {nombreCompleto(beneficiario)}
           </h2>
           <DocumentoBeneficiario documento={documento} />
-          {barrio && (
-            <span className="mt-1 inline-flex max-w-full items-center gap-1 rounded-sm border border-hairline bg-surface-subtle px-3 py-1 text-label font-medium text-ink-secondary">
-              <MapPin aria-hidden="true" className="size-4 shrink-0" />
-              <span className="sr-only">Barrio:</span>
-              <span className="truncate">{barrio}</span>
-            </span>
-          )}
+          <div className="mt-1 flex max-w-full flex-wrap gap-2 empty:hidden">
+            {barrio && (
+              <span className="inline-flex max-w-full items-center gap-1 rounded-sm border border-hairline bg-surface-subtle px-3 py-1 text-label font-medium text-ink-secondary">
+                <MapPin aria-hidden="true" className="size-4 shrink-0" />
+                <span className="sr-only">Barrio:</span>
+                <span className="truncate">{barrio}</span>
+              </span>
+            )}
+            <InsigniaMenorDeEdad fechaNacimiento={fechaNacimiento} />
+          </div>
         </div>
         <ChevronRight aria-hidden="true" className="size-5 shrink-0 self-center text-ink-muted" />
       </article>
