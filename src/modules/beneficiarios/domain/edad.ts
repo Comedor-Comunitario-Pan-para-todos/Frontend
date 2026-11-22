@@ -1,4 +1,4 @@
-const MAYORIA_DE_EDAD = 18
+export const MAYORIA_DE_EDAD = 18
 
 type Fecha = readonly [anio: number, mes: number, dia: number]
 
