@@ -107,8 +107,12 @@ Un valor que no se puede leer cuenta como `null`, sin rechazar la ficha.
 `consentimiento: null`: la ficha muestra «Autorización pendiente» y deja
 registrarla.
 
-**Uso de imagen.** Sin autorización vigente no hay fotos (opt-in, RNF-11). La
-sección muestra uno de tres estados, siempre con color, ícono y texto:
+**Uso de imagen.** Sin autorización vigente no hay fotos (opt-in, RNF-11). Las
+fotos solo sirven para que la Junta muestre en el barrio la actividad del
+comedor; nunca se entregan a donantes ni a empresas, ni se usan para publicidad.
+Un menor de edad que no tiene autorización, o que no está en el padrón, no se
+fotografía. La sección muestra uno de tres estados, siempre con color, ícono y
+texto:
 
 | Estado | Cuándo | Qué se puede hacer |
 | :--- | :--- | :--- |
