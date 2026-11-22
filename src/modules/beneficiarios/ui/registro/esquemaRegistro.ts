@@ -44,7 +44,7 @@ export const esquemaRegistro = z
     }
 
     if (!campos.informado) {
-      marcarError('informado', 'Confirme que informó a la persona antes de registrarla.')
+      marcarError('informado', 'Marque la casilla después de explicar la política de datos.')
     }
   })
 

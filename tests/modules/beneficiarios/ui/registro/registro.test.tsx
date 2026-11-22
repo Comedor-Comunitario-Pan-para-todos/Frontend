@@ -185,7 +185,7 @@ describe('registro de beneficiarios', () => {
     expect(screen.getByText('Escriba los apellidos.')).toBeInTheDocument()
     expect(screen.getByText('Indique la fecha de nacimiento.')).toBeInTheDocument()
     expect(
-      screen.getByText('Confirme que informó a la persona antes de registrarla.'),
+      screen.getByText('Marque la casilla después de explicar la política de datos.'),
     ).toBeInTheDocument()
     expect(llamadas).toBe(0)
   })
@@ -277,6 +277,17 @@ describe('registro de beneficiarios', () => {
     await userEvent.clear(screen.getByLabelText('Fecha de nacimiento'))
     await escribir('Fecha de nacimiento', '2999-01-01')
     expect(screen.queryByText('Es menor de edad')).not.toBeInTheDocument()
+  })
+
+  it('a un menor lo autoriza el adulto que lo acompaña', async () => {
+    await abrirRegistro()
+    expect(screen.getByRole('checkbox', { name: 'Informé a la persona' })).toBeInTheDocument()
+
+    await llenarIdentidad('Mateo', 'Arias', '2015-06-01')
+    await marcar('Informé al adulto que lo acompaña')
+    await registrar()
+
+    expect(await screen.findByText('Persona registrada')).toBeInTheDocument()
   })
 
   it('explica la política de datos junto a la autorización', async () => {

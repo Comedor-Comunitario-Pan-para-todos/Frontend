@@ -15,7 +15,7 @@ export const esquemaCompletar = z
     validarDatosExtendidos(campos, marcarError)
 
     if (!campos.informado) {
-      marcarError('informado', 'Confirme que informó a la persona antes de guardar sus datos.')
+      marcarError('informado', 'Marque la casilla después de explicar la política de datos.')
     }
   })
 

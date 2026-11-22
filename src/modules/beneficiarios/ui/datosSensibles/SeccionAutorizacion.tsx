@@ -6,11 +6,25 @@ import { PoliticaTratamiento } from './PoliticaTratamiento.tsx'
 import { POLITICA_VIGENTE } from '@/modules/beneficiarios/domain/politicaVigente.ts'
 
 interface SeccionAutorizacionProps {
+  /** Por un menor de edad autoriza el adulto que lo acompaña (Decreto 1377). */
+  readonly esMenor?: boolean
   readonly className?: string
 }
 
+const CASILLA = {
+  adulto: {
+    etiqueta: 'Informé a la persona',
+    descripcion: 'Le expliqué la política de datos y estuvo de acuerdo.',
+  },
+  menor: {
+    etiqueta: 'Informé al adulto que lo acompaña',
+    descripcion:
+      'Por ser menor de edad, le expliqué la política de datos a su madre, padre o acudiente, y estuvo de acuerdo.',
+  },
+}
+
 /** Va dentro de un `FormProvider` cuyo formulario tiene el campo `informado`. */
-export function SeccionAutorizacion({ className = '' }: SeccionAutorizacionProps) {
+export function SeccionAutorizacion({ esMenor = false, className = '' }: SeccionAutorizacionProps) {
   const { usuario } = useAuth()
   const {
     register,
@@ -32,8 +46,7 @@ export function SeccionAutorizacion({ className = '' }: SeccionAutorizacionProps
       </div>
       <PoliticaTratamiento politica={POLITICA_VIGENTE} />
       <CasillaVerificacion
-        etiqueta="Informé a la persona"
-        descripcion="Le expliqué la política de datos y estuvo de acuerdo."
+        {...CASILLA[esMenor ? 'menor' : 'adulto']}
         error={errors.informado?.message}
         {...register('informado')}
       />

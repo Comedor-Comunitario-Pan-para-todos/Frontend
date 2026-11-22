@@ -1,7 +1,9 @@
 import { ArrowLeft } from 'lucide-react'
 import { Link, useParams } from 'react-router'
 import { nombreCompleto } from '@/modules/beneficiarios/domain/Beneficiario.ts'
+import { esMenorDeEdad } from '@/modules/beneficiarios/domain/edad.ts'
 import { useBeneficiario } from '@/modules/beneficiarios/ui/beneficiario/useBeneficiario.ts'
+import { fechaDeHoy } from '@/shared/domain/fechaDeHoy.ts'
 import { Alerta } from '@/shared/ui/Alerta.tsx'
 import { Boton } from '@/shared/ui/Boton.tsx'
 import { mensajeDeError } from '@/shared/ui/mensajeDeError.ts'
@@ -52,7 +54,11 @@ export function PaginaCompletar() {
       )}
 
       {ficha.data?.nivel === 'BASICO' && (
-        <FormularioCompletar id={id} nombre={nombreCompleto(ficha.data)} />
+        <FormularioCompletar
+          id={id}
+          nombre={nombreCompleto(ficha.data)}
+          esMenor={esMenorDeEdad(ficha.data.fechaNacimiento, fechaDeHoy())}
+        />
       )}
     </div>
   )

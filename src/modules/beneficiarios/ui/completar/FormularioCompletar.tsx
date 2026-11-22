@@ -12,12 +12,13 @@ import { useCompletar } from './useCompletar.ts'
 interface FormularioCompletarProps {
   readonly id: string
   readonly nombre: string
+  readonly esMenor: boolean
 }
 
 const CLASES_TARJETA =
   'flex flex-col gap-4 rounded-lg border border-hairline bg-surface p-4 shadow-card'
 
-export function FormularioCompletar({ id, nombre }: FormularioCompletarProps) {
+export function FormularioCompletar({ id, nombre, esMenor }: FormularioCompletarProps) {
   const completar = useCompletar(id)
 
   return (
@@ -42,7 +43,7 @@ export function FormularioCompletar({ id, nombre }: FormularioCompletarProps) {
           <SeccionDatosExtendidos />
         </section>
 
-        <SeccionAutorizacion className={CLASES_TARJETA} />
+        <SeccionAutorizacion esMenor={esMenor} className={CLASES_TARJETA} />
 
         {(completar.documentoRepetido || completar.duenoDelDocumento !== null) && (
           <div className="flex flex-col gap-2">

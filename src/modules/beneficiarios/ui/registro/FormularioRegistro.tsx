@@ -122,7 +122,7 @@ export function FormularioRegistro({ registro }: FormularioRegistroProps) {
           <AvisoDuplicado duplicado={posibleDuplicado} />
         )}
 
-        <SeccionAutorizacion className={CLASES_TARJETA} />
+        <SeccionAutorizacion esMenor={registro.esMenor} className={CLASES_TARJETA} />
 
         {registro.yaRegistrada && (
           <div className="flex flex-col gap-2">
