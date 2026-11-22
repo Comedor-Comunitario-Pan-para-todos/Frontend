@@ -55,6 +55,17 @@ describe('padrón de beneficiarios', () => {
       expect(screen.getByText('Mostrando 20 de 24')).toBeInTheDocument()
     })
 
+    it('marca a los menores de edad en su tarjeta', async () => {
+      await abrirPadron()
+
+      expect(
+        within(tarjetaDe('Carlos Julio Morales Restrepo')).getByText('Menor de edad'),
+      ).toBeInTheDocument()
+      expect(
+        within(tarjetaDe('María Elena Restrepo')).queryByText('Menor de edad'),
+      ).not.toBeInTheDocument()
+    })
+
     it('"Ver más personas" trae el resto y luego desaparece', async () => {
       await abrirPadron()
 
