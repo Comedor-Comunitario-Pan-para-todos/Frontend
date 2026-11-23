@@ -1,4 +1,4 @@
-import { Outlet, useLocation } from 'react-router'
+import { Outlet, ScrollRestoration, useLocation } from 'react-router'
 import { SesionUsuario } from '@/modules/auth/ui/SesionUsuario.tsx'
 import { ConstanciaProvider } from '@/shared/ui/constancia/ConstanciaProvider.tsx'
 import { NavegacionPrincipal } from './NavegacionPrincipal.tsx'
@@ -15,6 +15,7 @@ export function LayoutPrincipal() {
           <Outlet />
         </main>
       </div>
+      <ScrollRestoration />
     </ConstanciaProvider>
   )
 }
