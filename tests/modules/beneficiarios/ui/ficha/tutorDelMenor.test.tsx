@@ -1,5 +1,6 @@
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { http, HttpResponse } from 'msw'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { reiniciarBeneficiariosMock } from '@/mocks/beneficiarios.ts'
 import { handlers } from '@/mocks/handlers.ts'
@@ -171,6 +172,126 @@ describe('tutor del menor en la ficha', () => {
       await userEvent.click(await screen.findByRole('button', { name: 'Sí, retirarla' }))
 
       expect(await within(imagen).findByText('Rostro no fotografiable')).toBeInTheDocument()
+    })
+  })
+
+  describe('revocar al tutor', () => {
+    async function abrirRevocacion() {
+      const seccion = await seccionTutor()
+      await userEvent.click(within(seccion).getByRole('button', { name: 'Revocar al tutor' }))
+      return seccion
+    }
+
+    async function escribirMotivo(motivo: string) {
+      await userEvent.type(screen.getByLabelText('Motivo de la revocación'), motivo, {
+        delay: null,
+      })
+    }
+
+    it('con el motivo y la confirmación, lo revoca y retira las fotos del menor', async () => {
+      await aprobarTutor()
+      await autorizarFotosDelMenor()
+      abrirFicha(ID_CARLOS, COORDINADORA)
+      const seccion = await abrirRevocacion()
+      expect(screen.getByLabelText('Motivo de la revocación')).toHaveFocus()
+
+      await escribirMotivo('La madre pidió que no le tomen más fotos.')
+      await userEvent.click(within(seccion).getByRole('button', { name: 'Revocar al tutor' }))
+      expect(
+        await screen.findByText(/También se retira la autorización de fotos/),
+      ).toBeInTheDocument()
+      await userEvent.click(screen.getByRole('button', { name: 'Sí, revocarlo' }))
+
+      expect(await screen.findByText('Tutor revocado')).toBeInTheDocument()
+      const sinTutor = await seccionTutor()
+      expect(within(sinTutor).getByText(/Todavía no tiene un tutor aprobado/)).toBeInTheDocument()
+      expect(within(sinTutor).getByRole('link', { name: 'Aprobar al tutor' })).toBeInTheDocument()
+      const imagen = await seccionImagen()
+      expect(within(imagen).getByText(/Para tomarle fotos se necesita/)).toBeInTheDocument()
+      expect(within(imagen).queryByRole('button', { name: 'Retirar autorización' })).toBeNull()
+    })
+
+    it('sin fotos autorizadas, la confirmación no habla de fotos', async () => {
+      await aprobarTutor()
+      abrirFicha(ID_CARLOS, COORDINADORA)
+      await abrirRevocacion()
+      await escribirMotivo('Se aprobó por error.')
+
+      await userEvent.click(screen.getByRole('button', { name: 'Revocar al tutor' }))
+
+      expect(await screen.findByText(/dejará de ser el tutor aprobado/)).toBeInTheDocument()
+      expect(screen.queryByText(/retira la autorización de fotos/)).toBeNull()
+    })
+
+    it('sin motivo no pide confirmación y dice qué falta', async () => {
+      await aprobarTutor()
+      abrirFicha(ID_CARLOS, COORDINADORA)
+      const seccion = await abrirRevocacion()
+      await escribirMotivo('   ')
+
+      await userEvent.click(within(seccion).getByRole('button', { name: 'Revocar al tutor' }))
+
+      expect(screen.getByLabelText('Motivo de la revocación')).toHaveAccessibleDescription(
+        'Escriba por qué se revoca al tutor.',
+      )
+      expect(screen.queryByRole('button', { name: 'Sí, revocarlo' })).toBeNull()
+    })
+
+    it('el motivo no pasa de 255 caracteres y muestra cuántos van', async () => {
+      await aprobarTutor()
+      abrirFicha(ID_CARLOS, COORDINADORA)
+      const seccion = await abrirRevocacion()
+
+      await escribirMotivo('Cambió')
+
+      expect(screen.getByLabelText('Motivo de la revocación')).toHaveAttribute('maxlength', '255')
+      expect(within(seccion).getByText('6/255')).toBeInTheDocument()
+    })
+
+    it('al cancelar vuelve el botón y se borra lo escrito', async () => {
+      await aprobarTutor()
+      abrirFicha(ID_CARLOS, COORDINADORA)
+      const seccion = await abrirRevocacion()
+      await escribirMotivo('Algo')
+
+      await userEvent.click(within(seccion).getByRole('button', { name: 'Cancelar' }))
+      expect(screen.queryByLabelText('Motivo de la revocación')).toBeNull()
+      await abrirRevocacion()
+
+      expect(screen.getByLabelText('Motivo de la revocación')).toHaveValue('')
+    })
+
+    it('si falla, conserva el motivo y Reintentar lo vuelve a intentar', async () => {
+      await aprobarTutor()
+      servidor.use(
+        http.post(
+          '*/beneficiarios/:id/autorizacion-tutor/revocacion',
+          () => HttpResponse.json({}, { status: 500 }),
+          { once: true },
+        ),
+      )
+      abrirFicha(ID_CARLOS, COORDINADORA)
+      const seccion = await abrirRevocacion()
+      await escribirMotivo('Cambió el acudiente.')
+
+      await userEvent.click(within(seccion).getByRole('button', { name: 'Revocar al tutor' }))
+      await userEvent.click(await screen.findByRole('button', { name: 'Sí, revocarlo' }))
+
+      expect(await screen.findByText('No se revocó al tutor')).toBeInTheDocument()
+      expect(screen.getByLabelText('Motivo de la revocación')).toHaveValue('Cambió el acudiente.')
+
+      await userEvent.click(screen.getByRole('button', { name: 'Reintentar' }))
+
+      expect(await screen.findByText('Tutor revocado')).toBeInTheDocument()
+    })
+
+    it('el Voluntario no puede revocarlo', async () => {
+      await aprobarTutor()
+      abrirFicha(ID_CARLOS, VOLUNTARIO)
+
+      const seccion = await seccionTutor()
+
+      expect(within(seccion).queryByRole('button', { name: 'Revocar al tutor' })).toBeNull()
     })
   })
 

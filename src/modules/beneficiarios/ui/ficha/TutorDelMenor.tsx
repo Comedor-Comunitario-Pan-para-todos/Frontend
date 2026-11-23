@@ -8,6 +8,7 @@ import { etiquetaParentesco } from '@/modules/beneficiarios/domain/parentesco.ts
 import { Dato } from './Dato.tsx'
 import { DatoReservado } from './DatoReservado.tsx'
 import { formatearFechaYHora } from './formatearFechaYHora.ts'
+import { RevocarTutor } from './RevocarTutor.tsx'
 
 interface TutorDelMenorProps {
   readonly beneficiario: Beneficiario
@@ -45,7 +46,7 @@ function DatosDelTutor({ autorizacion }: { readonly autorizacion: AutorizacionTu
 
 /** Quién firmó por el menor la autorización de su imagen (RF-21). Solo va en la ficha de un menor. */
 export function TutorDelMenor({ beneficiario, className = '' }: TutorDelMenorProps) {
-  const puedeAprobar = usePermiso('beneficiarios.gestionarTutor')
+  const puedeGestionar = usePermiso('beneficiarios.gestionarTutor')
   const autorizacion =
     beneficiario.autorizacionTutor?.estado === 'ACTIVA' ? beneficiario.autorizacionTutor : null
 
@@ -62,14 +63,18 @@ export function TutorDelMenor({ beneficiario, className = '' }: TutorDelMenorPro
             Tutor aprobado
           </span>
           <DatosDelTutor autorizacion={autorizacion} />
+          {puedeGestionar && (
+            <RevocarTutor beneficiario={beneficiario} nombreTutor={autorizacion.tutor.nombre} />
+          )}
         </>
       ) : (
         <>
           <p className="text-body text-ink-secondary">
             Todavía no tiene un tutor aprobado. Su madre, padre, acudiente o tutor legal firma la
-            autorización para el uso de su imagen. {!puedeAprobar && 'Lo aprueba la coordinación.'}
+            autorización para el uso de su imagen.{' '}
+            {!puedeGestionar && 'Lo aprueba la coordinación.'}
           </p>
-          {puedeAprobar && (
+          {puedeGestionar && (
             <Link
               to={`/beneficiarios/${beneficiario.id}/tutor`}
               className="inline-flex min-h-touch w-full items-center justify-center gap-2 rounded-md border border-border-input bg-surface px-6 py-2 text-body-lg font-semibold text-primary transition duration-150 ease-press hover:bg-surface-hover active:translate-y-px active:scale-99 md:w-auto md:self-end"
