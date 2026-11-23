@@ -56,6 +56,24 @@ const PAGINAS_DE_MODULO: Readonly<Record<string, RouteObject[]>> = {
       },
       hydrateFallbackElement: <PantallaCarga />,
     },
+    {
+      path: ':id/tutor',
+      element: (
+        <ConPermiso permiso="beneficiarios.gestionarTutor" alternativa={<PaginaSinAcceso />}>
+          <Outlet />
+        </ConPermiso>
+      ),
+      children: [
+        {
+          index: true,
+          lazy: async () => {
+            const { PaginaTutor } = await import('@/modules/beneficiarios/ui/tutor/PaginaTutor.tsx')
+            return { Component: PaginaTutor }
+          },
+          hydrateFallbackElement: <PantallaCarga />,
+        },
+      ],
+    },
   ],
   '/reportes': [
     {
