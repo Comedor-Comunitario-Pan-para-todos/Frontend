@@ -3,7 +3,9 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { reiniciarBeneficiariosMock } from '@/mocks/beneficiarios.ts'
 import { handlers } from '@/mocks/handlers.ts'
+import { POLITICA_IMAGEN } from '@/modules/beneficiarios/domain/politicaImagen.ts'
 import { AutorizacionTutorHttpRepository } from '@/modules/beneficiarios/infrastructure/http/AutorizacionTutorHttpRepository.ts'
+import { ConsentimientoHttpRepository } from '@/modules/beneficiarios/infrastructure/http/ConsentimientoHttpRepository.ts'
 import { iniciarSesionDePrueba, renderizarApp } from '../../../../app/renderizarApp.tsx'
 import { crearHttp } from '../../../../mocks/clienteDePrueba.ts'
 import { servidor } from '../../../../mocks/servidor.ts'
@@ -27,6 +29,19 @@ function aprobarTutor(tipoDocumento: 'CC' | 'PASAPORTE' = 'CC', numeroDocumento 
     telefono: '3101234567',
     soporte: new File(['%PDF-1.4'], 'autorizacion.pdf', { type: 'application/pdf' }),
   })
+}
+
+const AUTORIZAR_POR_EL_TUTOR = 'Le expliqué al tutor y autorizó las fotos'
+
+function autorizarFotosDelMenor() {
+  return new ConsentimientoHttpRepository(crearHttp(COORDINADORA)).registrar(
+    ID_CARLOS,
+    POLITICA_IMAGEN,
+  )
+}
+
+async function seccionImagen() {
+  return screen.findByRole('region', { name: 'Uso de imagen' })
 }
 
 async function seccionTutor() {
@@ -120,5 +135,42 @@ describe('tutor del menor en la ficha', () => {
     await screen.findByRole('region', { name: 'Uso de imagen' })
 
     expect(screen.queryByRole('region', { name: 'Tutor del menor' })).toBeNull()
+  })
+
+  describe('fotos de un menor con tutor aprobado', () => {
+    it('la Coordinadora le explica al tutor la política y registra la autorización', async () => {
+      await aprobarTutor()
+      abrirFicha(ID_CARLOS, COORDINADORA)
+      const imagen = await seccionImagen()
+      expect(within(imagen).getByText(/Explíquele al tutor la política/)).toBeInTheDocument()
+      expect(within(imagen).getByText('Política de uso de imagen · versión 1')).toBeInTheDocument()
+
+      await userEvent.click(within(imagen).getByRole('button', { name: AUTORIZAR_POR_EL_TUTOR }))
+
+      expect(await within(imagen).findByText('Foto autorizada')).toBeInTheDocument()
+      expect(within(imagen).getByText('Coordinación de Prueba')).toBeInTheDocument()
+    })
+
+    it('el Voluntario no la registra: le dice que lo hace la coordinación', async () => {
+      await aprobarTutor()
+      abrirFicha(ID_CARLOS, VOLUNTARIO)
+
+      const imagen = await seccionImagen()
+
+      expect(within(imagen).getByText(/la registra la coordinación/)).toBeInTheDocument()
+      expect(within(imagen).queryByRole('button', { name: /autorizó las fotos/ })).toBeNull()
+    })
+
+    it('el Voluntario sí puede retirarla', async () => {
+      await aprobarTutor()
+      await autorizarFotosDelMenor()
+      abrirFicha(ID_CARLOS, VOLUNTARIO)
+      const imagen = await seccionImagen()
+
+      await userEvent.click(within(imagen).getByRole('button', { name: 'Retirar autorización' }))
+      await userEvent.click(await screen.findByRole('button', { name: 'Sí, retirarla' }))
+
+      expect(await within(imagen).findByText('Rostro no fotografiable')).toBeInTheDocument()
+    })
   })
 })
