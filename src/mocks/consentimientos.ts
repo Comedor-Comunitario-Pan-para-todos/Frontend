@@ -1,19 +1,11 @@
-import { delay, http, HttpResponse } from 'msw'
+import { http, HttpResponse } from 'msw'
 import type { Rol } from '@/modules/auth/domain/Usuario.ts'
-import {
-  calcularEdad,
-  esMenorDeEdad,
-  MAYORIA_DE_EDAD,
-} from '@/modules/beneficiarios/domain/edad.ts'
+import { eraMayorDeEdad, esMenorDeEdad } from '@/modules/beneficiarios/domain/edad.ts'
 import { fechaDeHoy } from '@/shared/domain/fechaDeHoy.ts'
-import { esCargaDePagina, esUuid, texto } from './lecturaDePeticion.ts'
-import {
-  beneficiarioNoEncontrado,
-  camposDesconocidos,
-  errorNest,
-  idInvalido,
-  solicitudInvalida,
-} from './respuestasNest.ts'
+import type { AutorMock } from './autorMock.ts'
+import { esCargaDePagina, texto } from './lecturaDePeticion.ts'
+import { camposDesconocidos, errorNest, solicitudInvalida } from './respuestasNest.ts'
+import { crearBeneficiarioDeLaRuta } from './rutaDeBeneficiario.ts'
 
 // Simula los consentimientos del backend (RF-19 y RF-20, docs/CONSENTIMIENTOS.md).
 // Un retiro no borra nada: marca cuándo y quién lo retiró, y queda en el historial.
@@ -24,19 +16,14 @@ const CAMPOS_REGISTRO = ['versionPolitica', 'finalidad']
 const CAMPOS_REVOCACION = ['finalidad']
 const PARAMETROS_HISTORIAL = ['finalidad']
 
-interface UsuarioMock {
-  readonly id: string
-  readonly nombreCompleto: string
-}
-
 export interface ConsentimientoMock {
   readonly id: string
   readonly versionPolitica: number
   readonly finalidad: string
-  readonly registradoPor: UsuarioMock
+  readonly registradoPor: AutorMock
   readonly createdAt: string
   readonly revocadoEn: string | null
-  readonly revocadoPor: UsuarioMock | null
+  readonly revocadoPor: AutorMock | null
 }
 
 export interface RegistroConsentimientoMock extends ConsentimientoMock {
@@ -66,18 +53,12 @@ function vigente(idBeneficiario: string, finalidad: string) {
 export function retirarConsentimientoVigente(
   idBeneficiario: string,
   finalidad: string,
-  usuario: UsuarioMock,
+  usuario: AutorMock,
 ): void {
   const actual = vigente(idBeneficiario, finalidad)
   if (!actual) return
   const retirado = { ...actual, revocadoEn: new Date().toISOString(), revocadoPor: usuario }
   registros = registros.map((r) => (r.id === actual.id ? retirado : r))
-}
-
-// La que autorizó el tutor de un menor deja de valer cuando cumple 18.
-function laDioSiendoMenor(fechaNacimiento: string, registro: ConsentimientoMock): boolean {
-  const edad = calcularEdad(fechaNacimiento, fechaDeHoy(new Date(registro.createdAt)))
-  return edad === null || edad < MAYORIA_DE_EDAD
 }
 
 export function consentimientoVigente(
@@ -141,7 +122,7 @@ function sinAutorizacionVigente(finalidad: string) {
 interface Dependencias {
   /** Responde 401 o 403 como los guards del backend; `null` si el usuario puede continuar. */
   readonly rechazoDeAcceso: (request: Request) => Response | null
-  readonly usuarioDe: (request: Request) => UsuarioMock
+  readonly usuarioDe: (request: Request) => AutorMock
   readonly rolDe: (request: Request) => Rol
   readonly buscarBeneficiario: (id: string) => { readonly fechaNacimiento: string } | undefined
   readonly tieneTutorActivo: (idBeneficiario: string) => boolean
@@ -154,18 +135,7 @@ export function crearHandlersConsentimientos({
   buscarBeneficiario,
   tieneTutorActivo,
 }: Dependencias) {
-  /** Lo que revisan todas las rutas antes de empezar: acceso, id válido y que la persona exista. */
-  async function beneficiarioDeLaRuta(request: Request, idEnRuta: unknown) {
-    await delay()
-    const rechazo = rechazoDeAcceso(request)
-    if (rechazo) return { rechazo }
-
-    const id = String(idEnRuta)
-    if (!esUuid(id)) return { rechazo: idInvalido() }
-    const beneficiario = buscarBeneficiario(id)
-    if (!beneficiario) return { rechazo: beneficiarioNoEncontrado(id) }
-    return { id, beneficiario }
-  }
+  const beneficiarioDeLaRuta = crearBeneficiarioDeLaRuta({ rechazoDeAcceso, buscarBeneficiario })
 
   return [
     http.post('*/beneficiarios/:id/consentimiento', async ({ request, params }) => {
@@ -187,11 +157,12 @@ export function crearHandlersConsentimientos({
 
       const versionPolitica = cuerpo.versionPolitica as number
       const existente = vigente(id, finalidad)
+      // La que autorizó el tutor de un menor deja de valer cuando cumple 18.
       const vencioAlCumplir18 =
         existente !== undefined &&
         esImagen &&
         !esMenor &&
-        laDioSiendoMenor(beneficiario.fechaNacimiento, existente)
+        !eraMayorDeEdad(beneficiario.fechaNacimiento, existente.createdAt)
       if (existente?.versionPolitica === versionPolitica && !vencioAlCumplir18) {
         return HttpResponse.json(sinBeneficiario(existente))
       }

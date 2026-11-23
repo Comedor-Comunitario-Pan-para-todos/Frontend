@@ -86,6 +86,19 @@ describe('mock de la autorización del tutor', () => {
       ).rejects.toMatchObject({ estado: 403 })
     })
 
+    it('rechaza un id que no es UUID y una persona que no existe', async () => {
+      await expect(aprobarTutor('123')).rejects.toMatchObject({ estado: 400 })
+      await expect(aprobarTutor('00000000-0000-4000-8000-000000000999')).rejects.toMatchObject({
+        estado: 404,
+      })
+    })
+
+    it('al Voluntario le responde 403 antes de revisar el id, como el backend', async () => {
+      await expect(voluntario().tutores.registrar('123', datosDelTutor())).rejects.toMatchObject({
+        estado: 403,
+      })
+    })
+
     it('rechaza a un adulto', async () => {
       await expect(aprobarTutor(ID_MARIA)).rejects.toMatchObject({ estado: 409 })
     })

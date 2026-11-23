@@ -462,9 +462,10 @@ export function crearHandlersBeneficiarios(identificar: Identificar) {
     ...crearHandlersAutorizacionesTutor({
       rechazoDeAcceso,
       usuarioDe: (request) => {
-        const { id, nombreCompleto, rol } = usuarioDe(request)
-        return { id, nombreCompleto, rol }
+        const { id, nombreCompleto } = usuarioDe(request)
+        return { id, nombreCompleto }
       },
+      rolDe,
       buscarBeneficiario,
       retirarImagenVigente: (idBeneficiario, usuario) =>
         retirarConsentimientoVigente(idBeneficiario, 'USO_IMAGEN', usuario),

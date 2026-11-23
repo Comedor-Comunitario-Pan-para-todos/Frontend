@@ -2,10 +2,9 @@ import { z } from 'zod'
 import type { AutorizacionTutor } from '@/modules/beneficiarios/domain/AutorizacionTutor.ts'
 import { TIPOS_DOCUMENTO_TUTOR } from '@/modules/beneficiarios/domain/documento.ts'
 import { PARENTESCOS } from '@/modules/beneficiarios/domain/parentesco.ts'
+import { esquemaUsuarioDto } from './respuestasUsuario.ts'
 
 // Contrato propuesto para RF-21 (ver docs/CONSENTIMIENTOS.md, sección 6).
-
-const esquemaUsuarioDto = z.object({ nombreCompleto: z.string() })
 
 const esquemaAutorizacionTutorDto = z.object({
   id: z.string().min(1),

@@ -1,10 +1,9 @@
 import { z } from 'zod'
 import type { Consentimiento } from '@/modules/beneficiarios/domain/Consentimiento.ts'
 import type { RegistroConsentimiento } from '@/modules/beneficiarios/domain/RegistroConsentimiento.ts'
+import { esquemaUsuarioDto } from './respuestasUsuario.ts'
 
 // Contrato propuesto para RF-19 y RF-20 (ver docs/CONSENTIMIENTOS.md).
-
-const esquemaUsuarioDto = z.object({ nombreCompleto: z.string() })
 
 const esquemaConsentimientoDto = z.object({
   versionPolitica: z.number().int(),
