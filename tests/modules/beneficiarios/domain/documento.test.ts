@@ -4,6 +4,7 @@ import {
   etiquetaTipoDocumento,
   formatearNumeroDocumento,
   normalizarNumeroDocumento,
+  siglaVisible,
   TIPOS_DOCUMENTO,
   TIPOS_DOCUMENTO_TUTOR,
   ultimosDigitos,
@@ -82,5 +83,13 @@ describe('enmascararDocumento', () => {
 
   it.each(['', '7', '1234'])('oculta completo un número de cuatro dígitos o menos ("%s")', (n) => {
     expect(enmascararDocumento(n)).toBe('••••')
+  })
+})
+
+describe('siglaVisible', () => {
+  it('muestra la sigla, y el pasaporte con su nombre porque no tiene sigla', () => {
+    expect(siglaVisible('CC')).toBe('CC')
+    expect(siglaVisible('PPT')).toBe('PPT')
+    expect(siglaVisible('PASAPORTE')).toBe('Pasaporte')
   })
 })

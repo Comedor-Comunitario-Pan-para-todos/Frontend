@@ -38,6 +38,11 @@ export function etiquetaTipoDocumento(tipo: string): string {
   return ETIQUETAS[tipo as SiglaDocumento] ?? tipo
 }
 
+/** La forma corta que se ve en pantalla: la sigla, salvo el pasaporte, que no tiene. */
+export function siglaVisible(tipo: string): string {
+  return tipo === 'PASAPORTE' ? ETIQUETAS.PASAPORTE : tipo
+}
+
 /** "42.185.390" y "42185390" son la misma persona: se guarda sin puntos, espacios ni guiones. */
 export function normalizarNumeroDocumento(numero: string): string {
   return numero.replace(/[\s.,-]/g, '').toUpperCase()

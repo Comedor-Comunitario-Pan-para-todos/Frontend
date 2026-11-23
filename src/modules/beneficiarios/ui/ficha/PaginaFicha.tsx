@@ -1,12 +1,15 @@
 import { ArrowLeft, PencilLine, ShieldCheck } from 'lucide-react'
 import { Link, useParams } from 'react-router'
+import { esMenorDeEdad } from '@/modules/beneficiarios/domain/edad.ts'
 import { useBeneficiario } from '@/modules/beneficiarios/ui/beneficiario/useBeneficiario.ts'
 import { esErrorApi } from '@/shared/application/errores/ErrorApi.ts'
+import { fechaDeHoy } from '@/shared/domain/fechaDeHoy.ts'
 import { Alerta } from '@/shared/ui/Alerta.tsx'
 import { Boton } from '@/shared/ui/Boton.tsx'
 import { mensajeDeError } from '@/shared/ui/mensajeDeError.ts'
 import { AutorizacionDeDatos } from './AutorizacionDeDatos.tsx'
 import { DatosDelComensal } from './DatosDelComensal.tsx'
+import { TutorDelMenor } from './TutorDelMenor.tsx'
 import { UsoDeImagen } from './UsoDeImagen.tsx'
 
 const CLASES_TARJETA = 'rounded-lg border border-hairline bg-surface p-4 shadow-card'
@@ -85,6 +88,10 @@ export function PaginaFicha() {
       )}
 
       {ficha.data && <AutorizacionDeDatos beneficiario={ficha.data} className={CLASES_TARJETA} />}
+
+      {ficha.data && esMenorDeEdad(ficha.data.fechaNacimiento, fechaDeHoy()) && (
+        <TutorDelMenor beneficiario={ficha.data} className={CLASES_TARJETA} />
+      )}
 
       {ficha.data && <UsoDeImagen beneficiario={ficha.data} className={CLASES_TARJETA} />}
     </div>

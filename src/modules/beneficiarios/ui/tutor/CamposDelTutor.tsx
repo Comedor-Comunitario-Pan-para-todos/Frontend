@@ -2,6 +2,7 @@ import { IdCard, Phone, UserRound } from 'lucide-react'
 import { useFormContext, useWatch } from 'react-hook-form'
 import {
   etiquetaTipoDocumento,
+  siglaVisible,
   TIPOS_DOCUMENTO_TUTOR,
   type TipoDocumentoTutor,
 } from '@/modules/beneficiarios/domain/documento.ts'
@@ -18,7 +19,7 @@ const OPCIONES_DE_PARENTESCO = PARENTESCOS.map((parentesco) => ({
 
 const OPCIONES_DE_TIPO = TIPOS_DOCUMENTO_TUTOR.map((tipo) => ({
   valor: tipo,
-  etiqueta: tipo === 'PASAPORTE' ? 'Pasaporte' : tipo,
+  etiqueta: siglaVisible(tipo),
   nombre: etiquetaTipoDocumento(tipo),
 }))
 
