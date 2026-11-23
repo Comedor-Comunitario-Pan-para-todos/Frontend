@@ -11,6 +11,7 @@ import { fechaDeHoy } from '@/shared/domain/fechaDeHoy.ts'
 import type { AutorMock } from './autorMock.ts'
 import { leerFormulario, texto } from './lecturaDePeticion.ts'
 import { camposDesconocidos, errorNest, solicitudInvalida } from './respuestasNest.ts'
+import { nuevoId } from './nuevoId.ts'
 import { crearBeneficiarioDeLaRuta } from './rutaDeBeneficiario.ts'
 
 // Simula la autorización del tutor de un menor (RF-21, docs/CONSENTIMIENTOS.md sección 6).
@@ -170,7 +171,7 @@ export function crearHandlersAutorizacionesTutor({
       }
 
       const nueva: AutorizacionTutorMock = {
-        id: crypto.randomUUID(),
+        id: nuevoId(),
         beneficiarioId: id,
         estado: 'ACTIVA',
         tutor: {

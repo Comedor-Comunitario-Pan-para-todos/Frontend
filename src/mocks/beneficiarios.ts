@@ -27,6 +27,7 @@ import {
   idInvalido,
   solicitudInvalida,
 } from './respuestasNest.ts'
+import { nuevoId } from './nuevoId.ts'
 
 // Simula el módulo `beneficiarios` del backend (NestJS) con un padrón en memoria:
 // mismas rutas, mismos nombres de campo y mismos mensajes. Al recargar vuelve al estado inicial.
@@ -318,7 +319,7 @@ export function crearHandlersBeneficiarios(identificar: Identificar) {
 
       const ahora = new Date().toISOString()
       const nuevo: BeneficiarioMock = {
-        id: crypto.randomUUID(),
+        id: nuevoId(),
         nivel: cuerpo.nivel as NivelCaptura,
         tipoDocumento: numeroDocumento ? texto(cuerpo.tipoDocumento).toUpperCase() : null,
         numeroDocumento,

@@ -5,6 +5,7 @@ import { fechaDeHoy } from '@/shared/domain/fechaDeHoy.ts'
 import type { AutorMock } from './autorMock.ts'
 import { esCargaDePagina, texto } from './lecturaDePeticion.ts'
 import { camposDesconocidos, errorNest, solicitudInvalida } from './respuestasNest.ts'
+import { nuevoId } from './nuevoId.ts'
 import { crearBeneficiarioDeLaRuta } from './rutaDeBeneficiario.ts'
 
 // Simula los consentimientos del backend (RF-19 y RF-20, docs/CONSENTIMIENTOS.md).
@@ -169,7 +170,7 @@ export function crearHandlersConsentimientos({
       if (vencioAlCumplir18) retirarConsentimientoVigente(id, finalidad, usuarioDe(request))
 
       const nuevo: RegistroConsentimientoMock = {
-        id: crypto.randomUUID(),
+        id: nuevoId(),
         beneficiarioId: id,
         versionPolitica,
         finalidad,
