@@ -35,13 +35,22 @@ import {
   type RegistrarBeneficiario,
 } from '@/modules/beneficiarios/application/registrarBeneficiario.ts'
 import {
+  crearRegistrarAutorizacionTutor,
+  type RegistrarAutorizacionTutor,
+} from '@/modules/beneficiarios/application/registrarAutorizacionTutor.ts'
+import {
   crearRetirarUsoDeImagen,
   type RetirarUsoDeImagen,
 } from '@/modules/beneficiarios/application/retirarUsoDeImagen.ts'
 import {
+  crearRevocarAutorizacionTutor,
+  type RevocarAutorizacionTutor,
+} from '@/modules/beneficiarios/application/revocarAutorizacionTutor.ts'
+import {
   crearVerificarDuplicado,
   type VerificarDuplicado,
 } from '@/modules/beneficiarios/application/verificarDuplicado.ts'
+import { AutorizacionTutorHttpRepository } from '@/modules/beneficiarios/infrastructure/http/AutorizacionTutorHttpRepository.ts'
 import { BeneficiarioHttpRepository } from '@/modules/beneficiarios/infrastructure/http/BeneficiarioHttpRepository.ts'
 import { ConsentimientoHttpRepository } from '@/modules/beneficiarios/infrastructure/http/ConsentimientoHttpRepository.ts'
 import {
@@ -86,6 +95,8 @@ export interface Dependencias {
   readonly autorizarUsoDeImagen: AutorizarUsoDeImagen
   readonly retirarUsoDeImagen: RetirarUsoDeImagen
   readonly consultarHistorialDeImagen: ConsultarHistorialDeImagen
+  readonly registrarAutorizacionTutor: RegistrarAutorizacionTutor
+  readonly revocarAutorizacionTutor: RevocarAutorizacionTutor
 }
 
 export function crearDependencias({ apiBaseUrl }: Pick<Entorno, 'apiBaseUrl'>): Dependencias {
@@ -104,6 +115,7 @@ export function crearDependencias({ apiBaseUrl }: Pick<Entorno, 'apiBaseUrl'>): 
   const repositorio = new AuthHttpRepository(http)
   const beneficiarios = new BeneficiarioHttpRepository(http)
   const consentimientos = new ConsentimientoHttpRepository(http)
+  const autorizacionesTutor = new AutorizacionTutorHttpRepository(http)
   const induccion = new InduccionHttpRepository(http)
   const exportaciones = new ExportacionHttpRepository(http)
   const hoy = () => fechaDeHoy()
@@ -139,5 +151,9 @@ export function crearDependencias({ apiBaseUrl }: Pick<Entorno, 'apiBaseUrl'>): 
     autorizarUsoDeImagen: crearAutorizarUsoDeImagen({ repositorio: consentimientos }),
     retirarUsoDeImagen: crearRetirarUsoDeImagen({ repositorio: consentimientos }),
     consultarHistorialDeImagen: crearConsultarHistorialDeImagen({ repositorio: consentimientos }),
+    registrarAutorizacionTutor: crearRegistrarAutorizacionTutor({
+      repositorio: autorizacionesTutor,
+    }),
+    revocarAutorizacionTutor: crearRevocarAutorizacionTutor({ repositorio: autorizacionesTutor }),
   }
 }

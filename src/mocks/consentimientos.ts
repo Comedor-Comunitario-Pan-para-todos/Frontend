@@ -1,5 +1,10 @@
 import { delay, http, HttpResponse } from 'msw'
-import { esMenorDeEdad } from '@/modules/beneficiarios/domain/edad.ts'
+import type { Rol } from '@/modules/auth/domain/Usuario.ts'
+import {
+  calcularEdad,
+  esMenorDeEdad,
+  MAYORIA_DE_EDAD,
+} from '@/modules/beneficiarios/domain/edad.ts'
 import { fechaDeHoy } from '@/shared/domain/fechaDeHoy.ts'
 import { esCargaDePagina, esUuid, texto } from './lecturaDePeticion.ts'
 import {
@@ -57,6 +62,24 @@ function vigente(idBeneficiario: string, finalidad: string) {
   )
 }
 
+/** Retira la vigente de esa finalidad, si hay una. Lo usa la revocación del tutor (en cascada). */
+export function retirarConsentimientoVigente(
+  idBeneficiario: string,
+  finalidad: string,
+  usuario: UsuarioMock,
+): void {
+  const actual = vigente(idBeneficiario, finalidad)
+  if (!actual) return
+  const retirado = { ...actual, revocadoEn: new Date().toISOString(), revocadoPor: usuario }
+  registros = registros.map((r) => (r.id === actual.id ? retirado : r))
+}
+
+// La que autorizó el tutor de un menor deja de valer cuando cumple 18.
+function laDioSiendoMenor(fechaNacimiento: string, registro: ConsentimientoMock): boolean {
+  const edad = calcularEdad(fechaNacimiento, fechaDeHoy(new Date(registro.createdAt)))
+  return edad === null || edad < MAYORIA_DE_EDAD
+}
+
 export function consentimientoVigente(
   idBeneficiario: string,
   finalidad: string,
@@ -99,6 +122,14 @@ function menorSinTutor() {
   )
 }
 
+function imagenDeMenorSoloCoordinadora() {
+  return errorNest(
+    403,
+    'Solo la Coordinadora puede autorizar el uso de imagen de un menor de edad',
+    'Forbidden',
+  )
+}
+
 function sinAutorizacionVigente(finalidad: string) {
   return errorNest(
     404,
@@ -111,13 +142,17 @@ interface Dependencias {
   /** Responde 401 o 403 como los guards del backend; `null` si el usuario puede continuar. */
   readonly rechazoDeAcceso: (request: Request) => Response | null
   readonly usuarioDe: (request: Request) => UsuarioMock
+  readonly rolDe: (request: Request) => Rol
   readonly buscarBeneficiario: (id: string) => { readonly fechaNacimiento: string } | undefined
+  readonly tieneTutorActivo: (idBeneficiario: string) => boolean
 }
 
 export function crearHandlersConsentimientos({
   rechazoDeAcceso,
   usuarioDe,
+  rolDe,
   buscarBeneficiario,
+  tieneTutorActivo,
 }: Dependencias) {
   /** Lo que revisan todas las rutas antes de empezar: acceso, id válido y que la persona exista. */
   async function beneficiarioDeLaRuta(request: Request, idEnRuta: unknown) {
@@ -143,18 +178,24 @@ export function crearHandlersConsentimientos({
       if (errores.length > 0) return solicitudInvalida(errores)
 
       const finalidad = texto(cuerpo.finalidad)
-      if (
-        finalidad === FINALIDAD_USO_IMAGEN &&
-        esMenorDeEdad(beneficiario.fechaNacimiento, fechaDeHoy())
-      ) {
-        return menorSinTutor()
+      const esImagen = finalidad === FINALIDAD_USO_IMAGEN
+      const esMenor = esMenorDeEdad(beneficiario.fechaNacimiento, fechaDeHoy())
+      if (esImagen && esMenor) {
+        if (rolDe(request) !== 'COORDINADORA') return imagenDeMenorSoloCoordinadora()
+        if (!tieneTutorActivo(id)) return menorSinTutor()
       }
 
       const versionPolitica = cuerpo.versionPolitica as number
       const existente = vigente(id, finalidad)
-      if (existente?.versionPolitica === versionPolitica) {
+      const vencioAlCumplir18 =
+        existente !== undefined &&
+        esImagen &&
+        !esMenor &&
+        laDioSiendoMenor(beneficiario.fechaNacimiento, existente)
+      if (existente?.versionPolitica === versionPolitica && !vencioAlCumplir18) {
         return HttpResponse.json(sinBeneficiario(existente))
       }
+      if (vencioAlCumplir18) retirarConsentimientoVigente(id, finalidad, usuarioDe(request))
 
       const nuevo: RegistroConsentimientoMock = {
         id: crypto.randomUUID(),

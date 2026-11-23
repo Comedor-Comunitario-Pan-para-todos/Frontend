@@ -7,9 +7,16 @@ import {
 } from '@/modules/beneficiarios/domain/clasificacionSocioeconomica.ts'
 import type { NivelCaptura } from '@/modules/beneficiarios/domain/nivelCaptura.ts'
 import {
+  autorizacionTutorEnFicha,
+  crearHandlersAutorizacionesTutor,
+  reiniciarAutorizacionesTutorMock,
+  tieneTutorActivo,
+} from './autorizacionesTutor.ts'
+import {
   consentimientoVigente,
   crearHandlersConsentimientos,
   reiniciarConsentimientosMock,
+  retirarConsentimientoVigente,
   type RegistroConsentimientoMock,
 } from './consentimientos.ts'
 import { esCargaDePagina, esUuid, texto } from './lecturaDePeticion.ts'
@@ -27,7 +34,8 @@ import {
 // Diferencias con el backend actual, que siguen el contrato propuesto (docs/BENEFICIARIOS.md):
 // * acepta registrar a una persona sin documento (RNF-15);
 // * recibe y entrega `nivel` y `clasificacion` (RF-02), y en nivel básico rechaza datos sensibles;
-// * guarda el consentimiento informado y la autorización de imagen (RF-19 y RF-20, consentimientos.ts).
+// * guarda el consentimiento informado y la autorización de imagen (RF-19 y RF-20, consentimientos.ts);
+// * guarda la autorización del tutor de un menor (RF-21, autorizacionesTutor.ts).
 
 /** Buscar este texto fuerza un error 500, para probar la pantalla de error. */
 export const BUSQUEDA_SERVIDOR_CAIDO = 'caida'
@@ -138,14 +146,16 @@ reiniciarConsentimientosMock(consentimientosSembrados(padron))
 export function reiniciarBeneficiariosMock(): void {
   padron = sembrar()
   reiniciarConsentimientosMock(consentimientosSembrados(padron))
+  reiniciarAutorizacionesTutorMock()
 }
 
 /** La ficha que entrega el backend: los datos de la persona y sus autorizaciones vigentes. */
-function aFicha(beneficiario: BeneficiarioMock) {
+function aFicha(beneficiario: BeneficiarioMock, rol: Rol) {
   return {
     ...beneficiario,
     consentimiento: consentimientoVigente(beneficiario.id, 'ATENCION_ALIMENTARIA'),
     consentimientoImagen: consentimientoVigente(beneficiario.id, 'USO_IMAGEN'),
+    autorizacionTutor: autorizacionTutorEnFicha(beneficiario.id, rol),
   }
 }
 
@@ -282,6 +292,16 @@ export function crearHandlersBeneficiarios(identificar: Identificar) {
     return null
   }
 
+  function usuarioDe(request: Request) {
+    return identificar(request.headers.get('Authorization'))!
+  }
+
+  function rolDe(request: Request): Rol {
+    return usuarioDe(request).rol
+  }
+
+  const buscarBeneficiario = (id: string) => padron.find((b) => b.id === id)
+
   return [
     http.post('*/beneficiarios', async ({ request }) => {
       await delay()
@@ -314,7 +334,7 @@ export function crearHandlersBeneficiarios(identificar: Identificar) {
       }
       padron = [nuevo, ...padron]
 
-      return HttpResponse.json(aFicha(nuevo), { status: 201 })
+      return HttpResponse.json(aFicha(nuevo, rolDe(request)), { status: 201 })
     }),
 
     http.get('*/beneficiarios', async ({ request }) => {
@@ -354,7 +374,9 @@ export function crearHandlersBeneficiarios(identificar: Identificar) {
       )
 
       return HttpResponse.json({
-        data: encontrados.slice((page - 1) * limit, page * limit).map(aFicha),
+        data: encontrados
+          .slice((page - 1) * limit, page * limit)
+          .map((b) => aFicha(b, rolDe(request))),
         meta: {
           total: encontrados.length,
           page,
@@ -375,7 +397,7 @@ export function crearHandlersBeneficiarios(identificar: Identificar) {
 
       return HttpResponse.json({
         existe: beneficiario !== null,
-        beneficiario: beneficiario && aFicha(beneficiario),
+        beneficiario: beneficiario && aFicha(beneficiario, rolDe(request)),
       })
     }),
 
@@ -389,7 +411,9 @@ export function crearHandlersBeneficiarios(identificar: Identificar) {
       if (!esUuid(id)) return idInvalido()
 
       const beneficiario = padron.find((b) => b.id === id)
-      return beneficiario ? HttpResponse.json(aFicha(beneficiario)) : beneficiarioNoEncontrado(id)
+      return beneficiario
+        ? HttpResponse.json(aFicha(beneficiario, rolDe(request)))
+        : beneficiarioNoEncontrado(id)
     }),
 
     http.patch('*/beneficiarios/:id', async ({ request, params }) => {
@@ -421,16 +445,29 @@ export function crearHandlersBeneficiarios(identificar: Identificar) {
       }
       padron = padron.map((b) => (b.id === id ? completado : b))
 
-      return HttpResponse.json(aFicha(completado))
+      return HttpResponse.json(aFicha(completado, rolDe(request)))
     }),
 
     ...crearHandlersConsentimientos({
       rechazoDeAcceso,
       usuarioDe: (request) => {
-        const { id, nombreCompleto } = identificar(request.headers.get('Authorization'))!
+        const { id, nombreCompleto } = usuarioDe(request)
         return { id, nombreCompleto }
       },
-      buscarBeneficiario: (id) => padron.find((b) => b.id === id),
+      rolDe,
+      buscarBeneficiario,
+      tieneTutorActivo,
+    }),
+
+    ...crearHandlersAutorizacionesTutor({
+      rechazoDeAcceso,
+      usuarioDe: (request) => {
+        const { id, nombreCompleto, rol } = usuarioDe(request)
+        return { id, nombreCompleto, rol }
+      },
+      buscarBeneficiario,
+      retirarImagenVigente: (idBeneficiario, usuario) =>
+        retirarConsentimientoVigente(idBeneficiario, 'USO_IMAGEN', usuario),
     }),
   ]
 }
