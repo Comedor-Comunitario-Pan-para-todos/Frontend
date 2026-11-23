@@ -1,4 +1,4 @@
-import type { TipoDocumentoTutor } from './documentoTutor.ts'
+import type { TipoDocumentoTutor } from './documento.ts'
 import type { Parentesco } from './parentesco.ts'
 
 /** Los datos tal como quedaron en el papel firmado. */

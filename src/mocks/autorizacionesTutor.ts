@@ -1,6 +1,6 @@
 import { delay, http, HttpResponse } from 'msw'
 import type { Rol } from '@/modules/auth/domain/Usuario.ts'
-import { TIPOS_DOCUMENTO_TUTOR } from '@/modules/beneficiarios/domain/documentoTutor.ts'
+import { TIPOS_DOCUMENTO_TUTOR } from '@/modules/beneficiarios/domain/documento.ts'
 import { esMenorDeEdad } from '@/modules/beneficiarios/domain/edad.ts'
 import { PARENTESCOS } from '@/modules/beneficiarios/domain/parentesco.ts'
 import {

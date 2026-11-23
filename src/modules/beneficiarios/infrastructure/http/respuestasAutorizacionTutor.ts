@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import type { AutorizacionTutor } from '@/modules/beneficiarios/domain/AutorizacionTutor.ts'
-import { TIPOS_DOCUMENTO_TUTOR } from '@/modules/beneficiarios/domain/documentoTutor.ts'
+import { TIPOS_DOCUMENTO_TUTOR } from '@/modules/beneficiarios/domain/documento.ts'
 import { PARENTESCOS } from '@/modules/beneficiarios/domain/parentesco.ts'
 
 // Contrato propuesto para RF-21 (ver docs/CONSENTIMIENTOS.md, sección 6).

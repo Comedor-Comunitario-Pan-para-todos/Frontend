@@ -1,13 +1,29 @@
-export const TIPOS_DOCUMENTO = ['CC', 'TI', 'RC', 'PPT'] as const
-
-export type TipoDocumento = (typeof TIPOS_DOCUMENTO)[number]
-
-const ETIQUETAS: Record<TipoDocumento, string> = {
+const ETIQUETAS = {
   CC: 'Cédula de ciudadanía',
   TI: 'Tarjeta de identidad',
   RC: 'Registro civil',
   PPT: 'Permiso por Protección Temporal',
-}
+  CE: 'Cédula de extranjería',
+  PASAPORTE: 'Pasaporte',
+} as const
+
+/** Todos los documentos que conoce la app. */
+export type SiglaDocumento = keyof typeof ETIQUETAS
+
+/** Los que se eligen al registrar a un beneficiario. */
+export const TIPOS_DOCUMENTO = ['CC', 'TI', 'RC', 'PPT'] as const satisfies SiglaDocumento[]
+
+export type TipoDocumento = (typeof TIPOS_DOCUMENTO)[number]
+
+/** El tutor es un adulto: no lleva tarjeta de identidad ni registro civil (MER, AutorizacionTutor). */
+export const TIPOS_DOCUMENTO_TUTOR = [
+  'CC',
+  'CE',
+  'PPT',
+  'PASAPORTE',
+] as const satisfies SiglaDocumento[]
+
+export type TipoDocumentoTutor = (typeof TIPOS_DOCUMENTO_TUTOR)[number]
 
 export interface Documento {
   /** Sigla del tipo. Un registro antiguo puede traer una que no esté en `TIPOS_DOCUMENTO`. */
@@ -19,7 +35,7 @@ const DIGITOS_VISIBLES = 4
 const OCULTO = '••••'
 
 export function etiquetaTipoDocumento(tipo: string): string {
-  return ETIQUETAS[tipo as TipoDocumento] ?? tipo
+  return ETIQUETAS[tipo as SiglaDocumento] ?? tipo
 }
 
 /** "42.185.390" y "42185390" son la misma persona: se guarda sin puntos, espacios ni guiones. */
