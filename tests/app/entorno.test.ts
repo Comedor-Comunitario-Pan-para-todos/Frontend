@@ -29,4 +29,14 @@ describe('leerEntorno', () => {
       /no se permiten mocks/,
     )
   })
+
+  it('el modo demo sí permite mocks en un build de producción', () => {
+    expect(leerEntorno({ PROD: true, MODE: 'demo', VITE_USAR_MOCKS: 'true' }).usarMocks).toBe(true)
+  })
+
+  it('otro modo con nombre no se salta la regla', () => {
+    expect(() => leerEntorno({ PROD: true, MODE: 'mock', VITE_USAR_MOCKS: 'true' })).toThrow(
+      /no se permiten mocks/,
+    )
+  })
 })
