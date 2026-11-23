@@ -1,6 +1,6 @@
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { reiniciarBeneficiariosMock } from '@/mocks/beneficiarios.ts'
 import { handlers } from '@/mocks/handlers.ts'
 import { POLITICA_IMAGEN } from '@/modules/beneficiarios/domain/politicaImagen.ts'
@@ -171,6 +171,36 @@ describe('tutor del menor en la ficha', () => {
       await userEvent.click(await screen.findByRole('button', { name: 'Sí, retirarla' }))
 
       expect(await within(imagen).findByText('Rostro no fotografiable')).toBeInTheDocument()
+    })
+  })
+
+  describe('al cumplir 18', () => {
+    beforeEach(async () => {
+      vi.useFakeTimers({ toFake: ['Date'], now: new Date('2026-11-23T15:00:00Z') })
+      await aprobarTutor()
+      await autorizarFotosDelMenor()
+      vi.setSystemTime(new Date('2032-04-01T15:00:00Z'))
+    })
+
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    it('avisa que lo que autorizó el tutor ya no vale y le pide la suya', async () => {
+      abrirFicha(ID_CARLOS, VOLUNTARIO)
+      const imagen = await seccionImagen()
+
+      expect(within(imagen).getByText(/Cumplió 18 años/)).toBeInTheDocument()
+      expect(within(imagen).getByText('Rostro no fotografiable')).toBeInTheDocument()
+      expect(within(imagen).queryByRole('button', { name: 'Retirar autorización' })).toBeNull()
+      expect(screen.queryByRole('region', { name: 'Tutor del menor' })).toBeNull()
+
+      await userEvent.click(
+        within(imagen).getByRole('button', { name: 'Le expliqué y autorizó las fotos' }),
+      )
+
+      expect(await within(imagen).findByText('Foto autorizada')).toBeInTheDocument()
+      expect(within(imagen).getByText('Voluntario de Prueba')).toBeInTheDocument()
     })
   })
 })

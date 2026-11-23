@@ -3,6 +3,7 @@ import type { Beneficiario } from '@/modules/beneficiarios/domain/Beneficiario.t
 import { esMenorDeEdad } from '@/modules/beneficiarios/domain/edad.ts'
 import {
   estadoUsoImagen,
+  vencioAlCumplir18,
   type EstadoUsoImagen,
 } from '@/modules/beneficiarios/domain/estadoUsoImagen.ts'
 import { fechaDeHoy } from '@/shared/domain/fechaDeHoy.ts'
@@ -33,15 +34,21 @@ const EXPLICACION_MENOR_CON_TUTOR = {
     'No se le toman fotos en las que se le reconozca. La autorización la da su tutor y la registra la coordinación.',
 }
 
+const EXPLICACION_AL_CUMPLIR_18 =
+  'Cumplió 18 años: la autorización que dio su tutor ya no vale. Explíquele la política de imagen y, si está de acuerdo, registre la suya.'
+
 export function UsoDeImagen({ beneficiario, className = '' }: UsoDeImagenProps) {
   const puedeGestionarTutor = usePermiso('beneficiarios.gestionarTutor')
   const hoy = fechaDeHoy()
   const estado = estadoUsoImagen(beneficiario, hoy)
   const porElTutor = esMenorDeEdad(beneficiario.fechaNacimiento, hoy) && estado === 'NO_AUTORIZADA'
-  const autorizacion = beneficiario.consentimientoImagen
-  const explicacion = porElTutor
-    ? EXPLICACION_MENOR_CON_TUTOR[puedeGestionarTutor ? 'coordinadora' : 'otros']
-    : EXPLICACION[estado]
+  const vencida = vencioAlCumplir18(beneficiario, hoy)
+  const autorizacion = vencida ? null : beneficiario.consentimientoImagen
+  const explicacion = vencida
+    ? EXPLICACION_AL_CUMPLIR_18
+    : porElTutor
+      ? EXPLICACION_MENOR_CON_TUTOR[puedeGestionarTutor ? 'coordinadora' : 'otros']
+      : EXPLICACION[estado]
 
   return (
     <section aria-labelledby="titulo-uso-imagen" className={`flex flex-col gap-3 ${className}`}>
