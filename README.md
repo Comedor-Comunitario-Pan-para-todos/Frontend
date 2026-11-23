@@ -42,6 +42,7 @@ El proyecto implementa una **Arquitectura Hexagonal (Puertos y Adaptadores)** en
 | `pnpm dev:mock` | Servidor de desarrollo sin backend, con respuestas simuladas. |
 | `pnpm test` | Pruebas. |
 | `pnpm build` | Build de producción. |
+| `pnpm build:demo` | Build de demostración, sin backend: el que se despliega en Vercel por ahora. |
 
 Más detalle en [`docs/HTTP.md`](./docs/HTTP.md) (entorno, cliente HTTP, errores) y [`docs/AUTENTICACION.md`](./docs/AUTENTICACION.md) (sesión, usuarios de prueba).
 

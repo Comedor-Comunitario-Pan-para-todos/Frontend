@@ -15,6 +15,7 @@ export class ErrorDeEntorno extends Error {
 const esquemaEntorno = z
   .object({
     PROD: z.boolean(),
+    MODE: z.string().default('production'),
     VITE_API_BASE_URL: z
       .string()
       .trim()
@@ -26,10 +27,13 @@ const esquemaEntorno = z
       .enum(['true', 'false'], { message: 'debe ser "true" o "false"' })
       .default('false'),
   })
-  .refine((variables) => !(variables.PROD && variables.VITE_USAR_MOCKS === 'true'), {
-    message: 'no se permiten mocks en un build de producción',
-    path: ['VITE_USAR_MOCKS'],
-  })
+  .refine(
+    ({ PROD, MODE, VITE_USAR_MOCKS }) => !(PROD && VITE_USAR_MOCKS === 'true' && MODE !== 'demo'),
+    {
+      message: 'no se permiten mocks en un build de producción, salvo en el modo demo',
+      path: ['VITE_USAR_MOCKS'],
+    },
+  )
 
 export function leerEntorno(variables: Record<string, unknown>): Entorno {
   const resultado = esquemaEntorno.safeParse(variables)
