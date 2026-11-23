@@ -1,3 +1,5 @@
+import { fechaDeHoy } from '@/shared/domain/fechaDeHoy.ts'
+
 export const MAYORIA_DE_EDAD = 18
 
 type Fecha = readonly [anio: number, mes: number, dia: number]
@@ -27,4 +29,9 @@ export function calcularEdad(fechaNacimiento: string, hoy: string): number | nul
 export function esMenorDeEdad(fechaNacimiento: string, hoy: string): boolean {
   const edad = calcularEdad(fechaNacimiento, hoy)
   return edad === null || edad < MAYORIA_DE_EDAD
+}
+
+export function eraMayorDeEdad(fechaNacimiento: string, momento: string): boolean {
+  const edad = calcularEdad(fechaNacimiento, fechaDeHoy(new Date(momento)))
+  return edad !== null && edad >= MAYORIA_DE_EDAD
 }

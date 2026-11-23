@@ -12,12 +12,10 @@ import {
 import {
   cumpleFormatoDocumento,
   FORMATOS_DOCUMENTO,
+  mensajeDeFormato,
 } from '@/modules/beneficiarios/domain/formatoDocumento.ts'
 import type { DatosExtendidos } from '@/modules/beneficiarios/domain/NuevoBeneficiario.ts'
-import { normalizarTelefono } from '@/modules/beneficiarios/domain/telefono.ts'
-
-// Fijo de 7 dígitos o celular de 10.
-const TELEFONO_VALIDO = /^\d{7,10}$/
+import { esTelefonoValido, normalizarTelefono } from '@/modules/beneficiarios/domain/telefono.ts'
 
 export const camposExtendidos = {
   sinDocumento: z.boolean(),
@@ -41,13 +39,6 @@ export const CAMPOS_EXTENDIDOS_INICIALES: CamposExtendidos = {
   grupoClasificacion: '',
 }
 
-function mensajeDeFormato(tipo: TipoDocumento): string {
-  const { soloDigitos, minimo, maximo } = FORMATOS_DOCUMENTO[tipo]
-  const nombre = etiquetaTipoDocumento(tipo)
-  const unidad = soloDigitos ? 'dígitos' : 'letras o números'
-  return `Revise el número: ${nombre.charAt(0).toLowerCase()}${nombre.slice(1)} lleva de ${minimo} a ${maximo} ${unidad}.`
-}
-
 type MarcarError = (campo: keyof CamposExtendidos, mensaje: string) => void
 
 export function validarDatosExtendidos(campos: CamposExtendidos, marcarError: MarcarError): void {
@@ -57,14 +48,17 @@ export function validarDatosExtendidos(campos: CamposExtendidos, marcarError: Ma
     if (!TIPOS_DOCUMENTO.includes(tipo)) {
       marcarError('tipoDocumento', 'Elija el tipo de documento.')
     } else if (numero !== '' && !cumpleFormatoDocumento(tipo, numero)) {
-      marcarError('numeroDocumento', mensajeDeFormato(tipo))
+      marcarError(
+        'numeroDocumento',
+        mensajeDeFormato(etiquetaTipoDocumento(tipo), FORMATOS_DOCUMENTO[tipo]),
+      )
     }
     if (numero === '') {
       marcarError('numeroDocumento', 'Escriba el número o marque «Sin documento».')
     }
   }
   const telefono = normalizarTelefono(campos.telefono)
-  if (telefono !== '' && !TELEFONO_VALIDO.test(telefono)) {
+  if (telefono !== '' && !esTelefonoValido(telefono)) {
     marcarError('telefono', 'Revise el teléfono: 7 dígitos si es fijo o 10 si es celular.')
   }
   if (

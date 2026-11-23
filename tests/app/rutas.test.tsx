@@ -1,6 +1,6 @@
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { handlers } from '@/mocks/handlers.ts'
 import { servidor } from '../mocks/servidor.ts'
 import { iniciarSesionDePrueba, renderizarApp as renderizarEn } from './renderizarApp.tsx'
@@ -51,5 +51,18 @@ describe('rutas', () => {
 
     expect(await screen.findByRole('heading', { name: 'Reportes' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Reportes' })).toHaveAttribute('aria-current', 'page')
+  })
+
+  it('al cambiar de pantalla la nueva abre arriba', async () => {
+    const desplazar = vi.spyOn(window, 'scrollTo').mockImplementation(() => {})
+    renderizarEn('/turnos')
+    await screen.findByRole('heading', { name: 'Turnos' })
+    desplazar.mockClear()
+
+    await userEvent.click(screen.getByRole('link', { name: 'Reportes' }))
+    await screen.findByRole('heading', { name: 'Reportes' })
+
+    expect(desplazar).toHaveBeenCalledWith(0, 0)
+    desplazar.mockRestore()
   })
 })

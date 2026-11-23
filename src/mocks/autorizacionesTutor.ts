@@ -1,6 +1,6 @@
-import { delay, http, HttpResponse } from 'msw'
+import { http, HttpResponse } from 'msw'
 import type { Rol } from '@/modules/auth/domain/Usuario.ts'
-import { TIPOS_DOCUMENTO_TUTOR } from '@/modules/beneficiarios/domain/documentoTutor.ts'
+import { TIPOS_DOCUMENTO_TUTOR } from '@/modules/beneficiarios/domain/documento.ts'
 import { esMenorDeEdad } from '@/modules/beneficiarios/domain/edad.ts'
 import { PARENTESCOS } from '@/modules/beneficiarios/domain/parentesco.ts'
 import {
@@ -8,14 +8,11 @@ import {
   TAMANO_MAXIMO_SOPORTE,
 } from '@/modules/beneficiarios/domain/soporteAutorizacion.ts'
 import { fechaDeHoy } from '@/shared/domain/fechaDeHoy.ts'
-import { esUuid, leerFormulario, texto } from './lecturaDePeticion.ts'
-import {
-  beneficiarioNoEncontrado,
-  camposDesconocidos,
-  errorNest,
-  idInvalido,
-  solicitudInvalida,
-} from './respuestasNest.ts'
+import type { AutorMock } from './autorMock.ts'
+import { leerFormulario, texto } from './lecturaDePeticion.ts'
+import { camposDesconocidos, errorNest, solicitudInvalida } from './respuestasNest.ts'
+import { nuevoId } from './nuevoId.ts'
+import { crearBeneficiarioDeLaRuta } from './rutaDeBeneficiario.ts'
 
 // Simula la autorización del tutor de un menor (RF-21, docs/CONSENTIMIENTOS.md sección 6).
 // Revocar no borra: marca cuándo, quién y por qué.
@@ -29,11 +26,6 @@ const CAMPOS_REGISTRO = [
   'soporte',
 ]
 
-interface UsuarioMock {
-  readonly id: string
-  readonly nombreCompleto: string
-}
-
 interface AutorizacionTutorMock {
   readonly id: string
   readonly beneficiarioId: string
@@ -46,10 +38,10 @@ interface AutorizacionTutorMock {
     readonly telefono: string
   }
   readonly soporte: File
-  readonly aprobadaPor: UsuarioMock
+  readonly aprobadaPor: AutorMock
   readonly fechaAprobacion: string
   readonly revocadaEn: string | null
-  readonly revocadaPor: UsuarioMock | null
+  readonly revocadaPor: AutorMock | null
   readonly motivoRevocacion: string | null
 }
 
@@ -134,38 +126,33 @@ function soloCoordinadora() {
 interface Dependencias {
   /** Responde 401 o 403 como los guards del backend; `null` si el usuario puede continuar. */
   readonly rechazoDeAcceso: (request: Request) => Response | null
-  readonly usuarioDe: (request: Request) => UsuarioMock & { readonly rol: Rol }
+  readonly usuarioDe: (request: Request) => AutorMock
+  readonly rolDe: (request: Request) => Rol
   readonly buscarBeneficiario: (id: string) => { readonly fechaNacimiento: string } | undefined
   /** Retira la autorización de imagen vigente del menor, anotada por quien revoca al tutor. */
-  readonly retirarImagenVigente: (idBeneficiario: string, usuario: UsuarioMock) => void
+  readonly retirarImagenVigente: (idBeneficiario: string, usuario: AutorMock) => void
 }
 
 export function crearHandlersAutorizacionesTutor({
   rechazoDeAcceso,
   usuarioDe,
+  rolDe,
   buscarBeneficiario,
   retirarImagenVigente,
 }: Dependencias) {
-  /** Acceso, rol de Coordinadora, id válido y que la persona exista. */
-  async function menorDeLaRuta(request: Request, idEnRuta: unknown) {
-    await delay()
-    const rechazo = rechazoDeAcceso(request)
-    if (rechazo) return { rechazo }
-    const { rol, ...usuario } = usuarioDe(request)
-    if (rol !== 'COORDINADORA') return { rechazo: soloCoordinadora() }
-
-    const id = String(idEnRuta)
-    if (!esUuid(id)) return { rechazo: idInvalido() }
-    const beneficiario = buscarBeneficiario(id)
-    if (!beneficiario) return { rechazo: beneficiarioNoEncontrado(id) }
-    return { id, beneficiario, usuario }
-  }
+  // Como el guard de roles del backend: revisa el rol antes que el id.
+  const menorDeLaRuta = crearBeneficiarioDeLaRuta({
+    rechazoDeAcceso: (request) =>
+      rechazoDeAcceso(request) ?? (rolDe(request) === 'COORDINADORA' ? null : soloCoordinadora()),
+    buscarBeneficiario,
+  })
 
   return [
     http.post('*/beneficiarios/:id/autorizacion-tutor', async ({ request, params }) => {
       const ruta = await menorDeLaRuta(request, params.id)
       if (ruta.rechazo) return ruta.rechazo
-      const { id, beneficiario, usuario } = ruta
+      const { id, beneficiario } = ruta
+      const usuario = usuarioDe(request)
 
       const formulario = await leerFormulario(request)
       if (!formulario) return solicitudInvalida('El cuerpo debe ser multipart/form-data')
@@ -184,7 +171,7 @@ export function crearHandlersAutorizacionesTutor({
       }
 
       const nueva: AutorizacionTutorMock = {
-        id: crypto.randomUUID(),
+        id: nuevoId(),
         beneficiarioId: id,
         estado: 'ACTIVA',
         tutor: {
@@ -209,7 +196,8 @@ export function crearHandlersAutorizacionesTutor({
     http.post('*/beneficiarios/:id/autorizacion-tutor/revocacion', async ({ request, params }) => {
       const ruta = await menorDeLaRuta(request, params.id)
       if (ruta.rechazo) return ruta.rechazo
-      const { id, usuario } = ruta
+      const { id } = ruta
+      const usuario = usuarioDe(request)
 
       const cuerpo = (await request.json()) as Record<string, unknown>
       const errores = validarRevocacion(cuerpo)

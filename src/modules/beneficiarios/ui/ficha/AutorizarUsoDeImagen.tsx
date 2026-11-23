@@ -7,13 +7,14 @@ import { useAutorizarUsoDeImagen } from './useAutorizarUsoDeImagen.ts'
 interface AutorizarUsoDeImagenProps {
   readonly beneficiario: Beneficiario
   readonly requiereTutor: boolean
-  /** El texto que explica por qué el botón está deshabilitado. */
+  readonly porElTutor: boolean
   readonly idExplicacion: string
 }
 
 export function AutorizarUsoDeImagen({
   beneficiario,
   requiereTutor,
+  porElTutor,
   idExplicacion,
 }: AutorizarUsoDeImagenProps) {
   const { autorizar, autorizando } = useAutorizarUsoDeImagen()
@@ -28,7 +29,9 @@ export function AutorizarUsoDeImagen({
         onClick={() => autorizar(beneficiario)}
         className="w-full md:w-auto md:self-end"
       >
-        Le expliqué y autorizó las fotos
+        {porElTutor
+          ? 'Le expliqué al tutor y autorizó las fotos'
+          : 'Le expliqué y autorizó las fotos'}
       </Boton>
     </>
   )

@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { estadoUsoImagen } from '@/modules/beneficiarios/domain/estadoUsoImagen.ts'
+import {
+  estadoUsoImagen,
+  vencioAlCumplir18,
+} from '@/modules/beneficiarios/domain/estadoUsoImagen.ts'
 import { AUTORIZACION_IMAGEN, TUTOR_ACTIVO, TUTOR_REVOCADO } from '../consentimientosDePrueba.ts'
 
 const HOY = '2026-11-19'
@@ -175,5 +178,30 @@ describe('estadoUsoImagen', () => {
         HOY,
       ),
     ).toBe('NO_AUTORIZADA')
+  })
+})
+
+describe('vencioAlCumplir18', () => {
+  const CUMPLIO_18_EL_10 = '2008-11-10'
+  const datos = (registradoEn: string | null, fechaNacimiento = CUMPLIO_18_EL_10) => ({
+    fechaNacimiento,
+    consentimientoImagen: registradoEn === null ? null : autorizadaEl(registradoEn),
+    autorizacionTutor: null,
+  })
+
+  it('vence la que se dio siendo menor, una vez cumple 18', () => {
+    expect(vencioAlCumplir18(datos('2026-11-09T15:00:00.000Z'), HOY)).toBe(true)
+  })
+
+  it('no vence la que dio ya siendo mayor', () => {
+    expect(vencioAlCumplir18(datos('2026-11-10T15:00:00.000Z'), HOY)).toBe(false)
+  })
+
+  it('mientras siga siendo menor, no ha vencido', () => {
+    expect(vencioAlCumplir18(datos('2026-11-01T15:00:00.000Z', MENOR), HOY)).toBe(false)
+  })
+
+  it('sin autorización no hay nada que venza', () => {
+    expect(vencioAlCumplir18(datos(null), HOY)).toBe(false)
   })
 })

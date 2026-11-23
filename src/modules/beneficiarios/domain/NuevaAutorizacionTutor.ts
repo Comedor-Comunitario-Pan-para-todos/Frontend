@@ -1,5 +1,5 @@
 import { normalizarNumeroDocumento } from './documento.ts'
-import type { TipoDocumentoTutor } from './documentoTutor.ts'
+import type { TipoDocumentoTutor } from './documento.ts'
 import type { Parentesco } from './parentesco.ts'
 import { normalizarTelefono } from './telefono.ts'
 import { quitarEspaciosSobrantes } from './texto.ts'

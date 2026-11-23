@@ -216,12 +216,29 @@ texto:
 
 | Estado | Cuándo | Qué se puede hacer |
 | :--- | :--- | :--- |
-| Foto autorizada | Adulto con una autorización que dio siendo mayor de edad | Retirar la autorización, después de confirmarlo |
-| Rostro no fotografiable | Adulto sin autorización, o con una que dio su tutor cuando era menor | Explicar la política de imagen y registrar la autorización |
-| Requiere autorización del tutor | Menor de 18 años | Nada todavía: el botón está deshabilitado |
+| Foto autorizada | Adulto con una autorización que dio siendo mayor de edad, o menor con tutor aprobado y autorización | Retirar la autorización, después de confirmarlo (cualquier rol) |
+| Rostro no fotografiable | Adulto sin autorización, o menor con tutor aprobado y sin autorización | Explicar la política y registrar la autorización. Para un menor, se le explica al tutor y solo la registra la Coordinadora |
+| Requiere autorización del tutor | Menor de 18 años sin tutor aprobado | Nada todavía: el botón está deshabilitado |
+
+* **Al cumplir 18**, la autorización que dio su tutor deja de valer: la ficha lo
+  muestra como «Rostro no fotografiable», avisa que ahora autoriza la persona y
+  deja registrar la suya. El servidor hace lo mismo al recibirla (sección 2).
 
 * La edad se calcula con la fecha de hoy en Colombia (`shared/domain/fechaDeHoy.ts`).
 * Al autorizar o retirar, la ficha toma la respuesta del servidor sin volver a
   cargarse, y el historial se actualiza.
 * «Ver historial» muestra cada autorización y cada retiro como un movimiento, con
   la fecha y quién lo anotó. Solo se pide al servidor cuando alguien lo abre.
+
+**Tutor del menor (RF-21).** Solo aparece en la ficha de un menor de edad.
+
+* Sin tutor aprobado, explica quién firma. La Coordinadora ve «Aprobar al tutor»,
+  que abre `/beneficiarios/:id/tutor`; los demás roles leen que lo aprueba la
+  coordinación. Esa pantalla pide los datos del tutor, el papel firmado y que la
+  Coordinadora marque que lo revisó.
+* Con tutor aprobado, muestra su nombre, qué es del menor, el teléfono, el
+  documento, cuándo y quién lo aprobó. Al Voluntario el documento y el teléfono
+  le salen como «Solo lo ve la coordinación».
+* La Coordinadora puede revocarlo: escribe el motivo (hasta 255 caracteres) y
+  confirma. La confirmación avisa si con eso se retira también la autorización
+  de fotos. Si falla, lo escrito se conserva y se puede reintentar.
