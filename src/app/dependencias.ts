@@ -35,6 +35,10 @@ import {
   type RegistrarBeneficiario,
 } from '@/modules/beneficiarios/application/registrarBeneficiario.ts'
 import {
+  crearPrepararSoporte,
+  type PrepararSoporte,
+} from '@/modules/beneficiarios/application/prepararSoporte.ts'
+import {
   crearRegistrarAutorizacionTutor,
   type RegistrarAutorizacionTutor,
 } from '@/modules/beneficiarios/application/registrarAutorizacionTutor.ts'
@@ -50,6 +54,7 @@ import {
   crearVerificarDuplicado,
   type VerificarDuplicado,
 } from '@/modules/beneficiarios/application/verificarDuplicado.ts'
+import { FotoNavegador } from '@/modules/beneficiarios/infrastructure/dispositivo/FotoNavegador.ts'
 import { AutorizacionTutorHttpRepository } from '@/modules/beneficiarios/infrastructure/http/AutorizacionTutorHttpRepository.ts'
 import { BeneficiarioHttpRepository } from '@/modules/beneficiarios/infrastructure/http/BeneficiarioHttpRepository.ts'
 import { ConsentimientoHttpRepository } from '@/modules/beneficiarios/infrastructure/http/ConsentimientoHttpRepository.ts'
@@ -97,6 +102,7 @@ export interface Dependencias {
   readonly consultarHistorialDeImagen: ConsultarHistorialDeImagen
   readonly registrarAutorizacionTutor: RegistrarAutorizacionTutor
   readonly revocarAutorizacionTutor: RevocarAutorizacionTutor
+  readonly prepararSoporte: PrepararSoporte
 }
 
 export function crearDependencias({ apiBaseUrl }: Pick<Entorno, 'apiBaseUrl'>): Dependencias {
@@ -155,5 +161,6 @@ export function crearDependencias({ apiBaseUrl }: Pick<Entorno, 'apiBaseUrl'>): 
       repositorio: autorizacionesTutor,
     }),
     revocarAutorizacionTutor: crearRevocarAutorizacionTutor({ repositorio: autorizacionesTutor }),
+    prepararSoporte: crearPrepararSoporte({ foto: new FotoNavegador() }),
   }
 }
