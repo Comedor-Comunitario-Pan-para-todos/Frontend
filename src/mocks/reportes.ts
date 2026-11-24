@@ -1,6 +1,7 @@
 import { delay, http, HttpResponse } from 'msw'
 import type { Rol } from '@/modules/auth/domain/Usuario.ts'
 import { personasDelPadronMock } from './beneficiarios.ts'
+import { demora } from './demora.ts'
 import { crearXlsx } from './xlsxDePrueba.ts'
 
 // Simula el módulo `exportaciones` del backend con el contrato propuesto para RF-18 en
@@ -94,7 +95,7 @@ export function crearHandlersReportes(identificar: Identificar) {
 
   return [
     http.get('*/exportaciones/beneficiarios/resumen', async ({ request }) => {
-      await delay()
+      await demora()
       const rechazo = rechazoDeAcceso(request)
       if (rechazo) return rechazo
 
