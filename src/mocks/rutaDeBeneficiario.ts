@@ -1,4 +1,4 @@
-import { delay } from 'msw'
+import { demora } from './demora.ts'
 import { esUuid } from './lecturaDePeticion.ts'
 import { beneficiarioNoEncontrado, idInvalido } from './respuestasNest.ts'
 
@@ -14,7 +14,7 @@ export function crearBeneficiarioDeLaRuta<Beneficiario>({
   buscarBeneficiario,
 }: Dependencias<Beneficiario>) {
   return async (request: Request, idEnRuta: unknown) => {
-    await delay()
+    await demora()
     const rechazo = rechazoDeAcceso(request)
     if (rechazo) return { rechazo }
 

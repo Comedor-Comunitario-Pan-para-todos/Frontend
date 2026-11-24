@@ -1,7 +1,8 @@
-import { delay, http, HttpResponse } from 'msw'
+import { http, HttpResponse } from 'msw'
 import type { Rol } from '@/modules/auth/domain/Usuario.ts'
 import { fechaDeHoy } from '@/shared/domain/fechaDeHoy.ts'
 import { nombreEnPadronMock } from './beneficiarios.ts'
+import { demora } from './demora.ts'
 import { esCargaDePagina, esUuid } from './lecturaDePeticion.ts'
 import {
   beneficiarioNoEncontrado,
@@ -104,7 +105,7 @@ export function crearHandlersTurnos(identificar: Identificar) {
   return [
     http.get('*/turnos', async ({ request }) => {
       if (esCargaDePagina(request)) return
-      await delay()
+      await demora()
       const rechazo = rechazoDeAcceso(request)
       if (rechazo) return rechazo
 
@@ -116,7 +117,7 @@ export function crearHandlersTurnos(identificar: Identificar) {
     }),
 
     http.post('*/turnos', async ({ request }) => {
-      await delay()
+      await demora()
       const rechazo = rechazoDeAcceso(request)
       if (rechazo) return rechazo
 

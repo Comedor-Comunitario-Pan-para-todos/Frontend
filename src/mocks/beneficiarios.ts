@@ -1,4 +1,4 @@
-import { delay, http, HttpResponse } from 'msw'
+import { http, HttpResponse } from 'msw'
 import type { Rol } from '@/modules/auth/domain/Usuario.ts'
 import {
   esGrupoClasificacion,
@@ -19,6 +19,7 @@ import {
   retirarConsentimientoVigente,
   type RegistroConsentimientoMock,
 } from './consentimientos.ts'
+import { demora } from './demora.ts'
 import { esCargaDePagina, esUuid, texto } from './lecturaDePeticion.ts'
 import {
   beneficiarioNoEncontrado,
@@ -311,7 +312,7 @@ export function crearHandlersBeneficiarios(identificar: Identificar) {
 
   return [
     http.post('*/beneficiarios', async ({ request }) => {
-      await delay()
+      await demora()
       const rechazo = rechazoDeAcceso(request)
       if (rechazo) return rechazo
 
@@ -346,7 +347,7 @@ export function crearHandlersBeneficiarios(identificar: Identificar) {
 
     http.get('*/beneficiarios', async ({ request }) => {
       if (esCargaDePagina(request)) return undefined
-      await delay()
+      await demora()
       const rechazo = rechazoDeAcceso(request)
       if (rechazo) return rechazo
 
@@ -395,7 +396,7 @@ export function crearHandlersBeneficiarios(identificar: Identificar) {
 
     http.get('*/beneficiarios/validar-documento/:numero', async ({ request, params }) => {
       if (esCargaDePagina(request)) return undefined
-      await delay()
+      await demora()
       const rechazo = rechazoDeAcceso(request)
       if (rechazo) return rechazo
 
@@ -410,7 +411,7 @@ export function crearHandlersBeneficiarios(identificar: Identificar) {
 
     http.get('*/beneficiarios/:id', async ({ request, params }) => {
       if (esCargaDePagina(request)) return undefined
-      await delay()
+      await demora()
       const rechazo = rechazoDeAcceso(request)
       if (rechazo) return rechazo
 
@@ -424,7 +425,7 @@ export function crearHandlersBeneficiarios(identificar: Identificar) {
     }),
 
     http.patch('*/beneficiarios/:id', async ({ request, params }) => {
-      await delay()
+      await demora()
       const rechazo = rechazoDeAcceso(request)
       if (rechazo) return rechazo
 

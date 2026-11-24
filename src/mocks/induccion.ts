@@ -1,5 +1,6 @@
-import { delay, http, HttpResponse } from 'msw'
+import { http, HttpResponse } from 'msw'
 import type { Rol } from '@/modules/auth/domain/Usuario.ts'
+import { demora } from './demora.ts'
 import { esCargaDePagina } from './lecturaDePeticion.ts'
 
 // Simula el módulo `induccion` del backend con el contrato propuesto (docs/INDUCCION.md).
@@ -120,14 +121,14 @@ export function crearHandlersInduccion(identificar: Identificar) {
   return [
     http.get('*/induccion', async ({ request }) => {
       if (esCargaDePagina(request)) return
-      await delay()
+      await demora()
       const { usuario, rechazo } = usuarioPermitido(request)
       if (!usuario) return rechazo
       return HttpResponse.json({ modulos: MODULOS_INDUCCION, progreso: progresoDe(usuario.id) })
     }),
 
     http.patch('*/induccion/progreso', async ({ request }) => {
-      await delay()
+      await demora()
       const { usuario, rechazo } = usuarioPermitido(request)
       if (!usuario) return rechazo
 

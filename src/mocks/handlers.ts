@@ -1,6 +1,7 @@
-import { delay, http, HttpResponse } from 'msw'
+import { http, HttpResponse } from 'msw'
 import type { Rol } from '@/modules/auth/domain/Usuario.ts'
 import { crearHandlersBeneficiarios } from './beneficiarios.ts'
+import { demora } from './demora.ts'
 import { crearHandlersInduccion } from './induccion.ts'
 import { crearHandlersReportes } from './reportes.ts'
 import { crearHandlersTurnos } from './turnos.ts'
@@ -43,7 +44,7 @@ function buscarPorToken(autorizacion: string | null) {
 
 export const handlers = [
   http.post('*/auth/login', async ({ request }) => {
-    await delay()
+    await demora()
     const { email, password } = (await request.json()) as { email: string; password: string }
 
     if (email === EMAIL_SERVIDOR_CAIDO) {
@@ -63,7 +64,7 @@ export const handlers = [
   }),
 
   http.get('*/auth/me', async ({ request }) => {
-    await delay()
+    await demora()
     const encontrado = buscarPorToken(request.headers.get('Authorization'))
     return encontrado ? HttpResponse.json(encontrado) : noAutorizado('Unauthorized')
   }),
