@@ -260,6 +260,37 @@ function validarCompletado(cuerpo: Record<string, unknown>): string[] {
   return [...desconocidos, ...validarExtendidos(cuerpo)]
 }
 
+function tieneCamposExtendidos(cuerpo: Record<string, unknown>): boolean {
+  return Object.keys(cuerpo).some((campo) => CAMPOS_EXTENDIDOS.includes(campo))
+}
+
+function validarActualizacion(cuerpo: Record<string, unknown>, nivel: NivelCaptura): string[] {
+  const desconocidos = validarCamposPermitidos(cuerpo, nivel)
+  const extendidos = nivel === 'EXTENDIDO' ? validarExtendidos(cuerpo) : []
+  return [...desconocidos, ...extendidos, ...validarBasicos(cuerpo)]
+}
+
+function actualizar(actual: BeneficiarioMock, cuerpo: Record<string, unknown>): BeneficiarioMock {
+  const basicos = {
+    ...actual,
+    nombres: texto(cuerpo.nombres),
+    apellidos: texto(cuerpo.apellidos),
+    fechaNacimiento: texto(cuerpo.fechaNacimiento),
+    barrio: texto(cuerpo.barrio) || null,
+    updatedAt: new Date().toISOString(),
+  }
+  if (!tieneCamposExtendidos(cuerpo)) return basicos
+
+  const numeroDocumento = texto(cuerpo.numeroDocumento) || null
+  return {
+    ...basicos,
+    tipoDocumento: numeroDocumento ? texto(cuerpo.tipoDocumento).toUpperCase() : null,
+    numeroDocumento,
+    telefono: texto(cuerpo.telefono) || null,
+    clasificacion: aClasificacion(cuerpo.clasificacion),
+  }
+}
+
 function documentoRepetido(numeroDocumento: string | null, id?: string) {
   if (!numeroDocumento) return null
   if (!padron.some((b) => b.numeroDocumento === numeroDocumento && b.id !== id)) return null
@@ -302,6 +333,26 @@ export function crearHandlersBeneficiarios(identificar: Identificar) {
   }
 
   const buscarBeneficiario = (id: string) => padron.find((b) => b.id === id)
+
+  /** Actualización de datos (Ley 1581): los datos sensibles solo los cambia la Coordinadora. */
+  function actualizarDatos(
+    request: Request,
+    actual: BeneficiarioMock,
+    cuerpo: Record<string, unknown>,
+  ) {
+    if (tieneCamposExtendidos(cuerpo) && rolDe(request) !== 'COORDINADORA') {
+      return errorNest(403, 'Forbidden resource', 'Forbidden')
+    }
+    const errores = validarActualizacion(cuerpo, actual.nivel)
+    if (errores.length > 0) return solicitudInvalida(errores)
+
+    const repetido = documentoRepetido(texto(cuerpo.numeroDocumento) || null, actual.id)
+    if (repetido) return repetido
+
+    const actualizado = actualizar(actual, cuerpo)
+    padron = padron.map((b) => (b.id === actual.id ? actualizado : b))
+    return HttpResponse.json(aFicha(actualizado, rolDe(request)))
+  }
 
   return [
     http.post('*/beneficiarios', async ({ request }) => {
@@ -428,6 +479,8 @@ export function crearHandlersBeneficiarios(identificar: Identificar) {
       if (!actual) return beneficiarioNoEncontrado(id)
 
       const cuerpo = (await request.json()) as Record<string, unknown>
+      if (!('nivel' in cuerpo)) return actualizarDatos(request, actual, cuerpo)
+
       const errores = validarCompletado(cuerpo)
       if (errores.length > 0) return solicitudInvalida(errores)
 

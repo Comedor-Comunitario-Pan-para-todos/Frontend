@@ -86,6 +86,33 @@ describe('BeneficiarioHttpRepository', () => {
     expect(error).toBeInstanceOf(BeneficiarioDuplicado)
   })
 
+  it('actualizarDatos envía PATCH /beneficiarios/:id sin nivel', async () => {
+    const recibida = responder(DTO_MARIA)
+
+    const ficha = await repositorio.actualizarDatos(MARIA.id, { ...NUEVA, sensibles: null })
+
+    expect(recibida.metodo).toBe('PATCH')
+    expect(recibida.url?.pathname).toBe(`/api/beneficiarios/${MARIA.id}`)
+    expect(recibida.cuerpo).toEqual({
+      nombres: 'María Elena',
+      apellidos: 'Restrepo',
+      fechaNacimiento: '1958-03-15',
+      barrio: 'El Poblado',
+    })
+    expect(ficha).toEqual(MARIA)
+  })
+
+  it('un 409 al actualizar se convierte en BeneficiarioDuplicado con el documento', async () => {
+    responder({ statusCode: 409, message: 'Ya existe' }, 409)
+
+    const error = await repositorio
+      .actualizarDatos(MARIA.id, { ...NUEVA, sensibles: NUEVA })
+      .catch((capturado: unknown) => capturado)
+
+    expect(error).toBeInstanceOf(BeneficiarioDuplicado)
+    expect(error).toMatchObject({ numeroDocumento: '42185390' })
+  })
+
   it('buscar envía GET /beneficiarios con los criterios', async () => {
     const recibida = responder({ data: [], meta: { total: 0, page: 1, limit: 20, totalPages: 0 } })
 

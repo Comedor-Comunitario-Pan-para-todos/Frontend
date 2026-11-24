@@ -26,7 +26,7 @@ export function limpiarNuevoBeneficiario(datos: NuevoBeneficiario): NuevoBenefic
   return { ...basicos, ...limpiarDatosExtendidos(datos), nivel: 'EXTENDIDO' }
 }
 
-function limpiarDatosBasicos(datos: DatosBasicos): DatosBasicos {
+export function limpiarDatosBasicos(datos: DatosBasicos): DatosBasicos {
   return {
     nombres: quitarEspaciosSobrantes(datos.nombres),
     apellidos: quitarEspaciosSobrantes(datos.apellidos),

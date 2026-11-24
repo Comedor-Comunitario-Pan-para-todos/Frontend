@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { NuevoBeneficiarioExtendido } from '@/modules/beneficiarios/domain/NuevoBeneficiario.ts'
 import {
+  aCuerpoDeActualizacion,
   aCuerpoDeDatosExtendidos,
   aCuerpoDeRegistro,
   aParametrosDeBusqueda,
@@ -65,6 +66,52 @@ describe('aCuerpoDeDatosExtendidos', () => {
       tipoDocumento: 'CC',
       numeroDocumento: '42185390',
       telefono: '3151234567',
+      clasificacion: { sistema: 'RUI', grupo: 'B3' },
+    })
+  })
+})
+
+describe('aCuerpoDeActualizacion', () => {
+  it('sin datos sensibles envía solo los básicos y no lleva nivel', () => {
+    expect(aCuerpoDeActualizacion({ ...BASICOS, sensibles: null })).toEqual(BASICOS)
+  })
+
+  it('envía null para borrar el barrio', () => {
+    const cuerpo = aCuerpoDeActualizacion({ ...BASICOS, barrio: null, sensibles: null })
+
+    expect(JSON.parse(JSON.stringify(cuerpo))).toEqual({ ...BASICOS, barrio: null })
+  })
+
+  it('con datos sensibles usa los nombres del backend y null para borrarlos', () => {
+    const cuerpo = aCuerpoDeActualizacion({
+      ...BASICOS,
+      sensibles: { documento: null, telefono: '3151234567', clasificacion: null },
+    })
+
+    expect(JSON.parse(JSON.stringify(cuerpo))).toEqual({
+      ...BASICOS,
+      tipoDocumento: null,
+      numeroDocumento: null,
+      telefono: '3151234567',
+      clasificacion: null,
+    })
+  })
+
+  it('con documento envía su tipo y su número, y null para borrar el teléfono', () => {
+    const cuerpo = aCuerpoDeActualizacion({
+      ...BASICOS,
+      sensibles: {
+        documento: { tipo: 'TI', numero: '1086999888' },
+        telefono: null,
+        clasificacion: { sistema: 'RUI', grupo: 'B3' },
+      },
+    })
+
+    expect(JSON.parse(JSON.stringify(cuerpo))).toEqual({
+      ...BASICOS,
+      tipoDocumento: 'TI',
+      numeroDocumento: '1086999888',
+      telefono: null,
       clasificacion: { sistema: 'RUI', grupo: 'B3' },
     })
   })

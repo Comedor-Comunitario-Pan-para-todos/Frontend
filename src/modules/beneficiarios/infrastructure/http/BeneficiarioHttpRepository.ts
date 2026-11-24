@@ -11,7 +11,9 @@ import type {
 } from '@/modules/beneficiarios/domain/NuevoBeneficiario.ts'
 import { esErrorApi } from '@/shared/application/errores/ErrorApi.ts'
 import type { HttpClient } from '@/shared/infrastructure/http/HttpClient.ts'
+import type { ActualizacionDeDatos } from '@/modules/beneficiarios/domain/ActualizacionDeDatos.ts'
 import {
+  aCuerpoDeActualizacion,
   aCuerpoDeDatosExtendidos,
   aCuerpoDeRegistro,
   aParametrosDeBusqueda,
@@ -60,6 +62,16 @@ export class BeneficiarioHttpRepository implements BeneficiarioRepository {
       })
     } catch (error) {
       throw comoDuplicado(error, datos.documento?.numero ?? null)
+    }
+  }
+
+  async actualizarDatos(id: string, actualizacion: ActualizacionDeDatos): Promise<Beneficiario> {
+    try {
+      return await this.#http.patch(rutaDe(id), aCuerpoDeActualizacion(actualizacion), {
+        esquema: esquemaBeneficiario,
+      })
+    } catch (error) {
+      throw comoDuplicado(error, actualizacion.sensibles?.documento?.numero ?? null)
     }
   }
 
