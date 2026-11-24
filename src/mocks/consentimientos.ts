@@ -1,14 +1,12 @@
-import { delay, http, HttpResponse } from 'msw'
-import { esMenorDeEdad } from '@/modules/beneficiarios/domain/edad.ts'
+import { http, HttpResponse } from 'msw'
+import type { Rol } from '@/modules/auth/domain/Usuario.ts'
+import { eraMayorDeEdad, esMenorDeEdad } from '@/modules/beneficiarios/domain/edad.ts'
 import { fechaDeHoy } from '@/shared/domain/fechaDeHoy.ts'
-import { esCargaDePagina, esUuid, texto } from './lecturaDePeticion.ts'
-import {
-  beneficiarioNoEncontrado,
-  camposDesconocidos,
-  errorNest,
-  idInvalido,
-  solicitudInvalida,
-} from './respuestasNest.ts'
+import type { AutorMock } from './autorMock.ts'
+import { esCargaDePagina, texto } from './lecturaDePeticion.ts'
+import { camposDesconocidos, errorNest, solicitudInvalida } from './respuestasNest.ts'
+import { nuevoId } from './nuevoId.ts'
+import { crearBeneficiarioDeLaRuta } from './rutaDeBeneficiario.ts'
 
 // Simula los consentimientos del backend (RF-19 y RF-20, docs/CONSENTIMIENTOS.md).
 // Un retiro no borra nada: marca cuándo y quién lo retiró, y queda en el historial.
@@ -19,19 +17,14 @@ const CAMPOS_REGISTRO = ['versionPolitica', 'finalidad']
 const CAMPOS_REVOCACION = ['finalidad']
 const PARAMETROS_HISTORIAL = ['finalidad']
 
-interface UsuarioMock {
-  readonly id: string
-  readonly nombreCompleto: string
-}
-
 export interface ConsentimientoMock {
   readonly id: string
   readonly versionPolitica: number
   readonly finalidad: string
-  readonly registradoPor: UsuarioMock
+  readonly registradoPor: AutorMock
   readonly createdAt: string
   readonly revocadoEn: string | null
-  readonly revocadoPor: UsuarioMock | null
+  readonly revocadoPor: AutorMock | null
 }
 
 export interface RegistroConsentimientoMock extends ConsentimientoMock {
@@ -55,6 +48,18 @@ function vigente(idBeneficiario: string, finalidad: string) {
   return registros.find(
     (r) => r.beneficiarioId === idBeneficiario && r.finalidad === finalidad && !r.revocadoEn,
   )
+}
+
+/** Retira la vigente de esa finalidad, si hay una. Lo usa la revocación del tutor (en cascada). */
+export function retirarConsentimientoVigente(
+  idBeneficiario: string,
+  finalidad: string,
+  usuario: AutorMock,
+): void {
+  const actual = vigente(idBeneficiario, finalidad)
+  if (!actual) return
+  const retirado = { ...actual, revocadoEn: new Date().toISOString(), revocadoPor: usuario }
+  registros = registros.map((r) => (r.id === actual.id ? retirado : r))
 }
 
 export function consentimientoVigente(
@@ -99,6 +104,14 @@ function menorSinTutor() {
   )
 }
 
+function imagenDeMenorSoloCoordinadora() {
+  return errorNest(
+    403,
+    'Solo la Coordinadora puede autorizar el uso de imagen de un menor de edad',
+    'Forbidden',
+  )
+}
+
 function sinAutorizacionVigente(finalidad: string) {
   return errorNest(
     404,
@@ -110,27 +123,20 @@ function sinAutorizacionVigente(finalidad: string) {
 interface Dependencias {
   /** Responde 401 o 403 como los guards del backend; `null` si el usuario puede continuar. */
   readonly rechazoDeAcceso: (request: Request) => Response | null
-  readonly usuarioDe: (request: Request) => UsuarioMock
+  readonly usuarioDe: (request: Request) => AutorMock
+  readonly rolDe: (request: Request) => Rol
   readonly buscarBeneficiario: (id: string) => { readonly fechaNacimiento: string } | undefined
+  readonly tieneTutorActivo: (idBeneficiario: string) => boolean
 }
 
 export function crearHandlersConsentimientos({
   rechazoDeAcceso,
   usuarioDe,
+  rolDe,
   buscarBeneficiario,
+  tieneTutorActivo,
 }: Dependencias) {
-  /** Lo que revisan todas las rutas antes de empezar: acceso, id válido y que la persona exista. */
-  async function beneficiarioDeLaRuta(request: Request, idEnRuta: unknown) {
-    await delay()
-    const rechazo = rechazoDeAcceso(request)
-    if (rechazo) return { rechazo }
-
-    const id = String(idEnRuta)
-    if (!esUuid(id)) return { rechazo: idInvalido() }
-    const beneficiario = buscarBeneficiario(id)
-    if (!beneficiario) return { rechazo: beneficiarioNoEncontrado(id) }
-    return { id, beneficiario }
-  }
+  const beneficiarioDeLaRuta = crearBeneficiarioDeLaRuta({ rechazoDeAcceso, buscarBeneficiario })
 
   return [
     http.post('*/beneficiarios/:id/consentimiento', async ({ request, params }) => {
@@ -143,21 +149,28 @@ export function crearHandlersConsentimientos({
       if (errores.length > 0) return solicitudInvalida(errores)
 
       const finalidad = texto(cuerpo.finalidad)
-      if (
-        finalidad === FINALIDAD_USO_IMAGEN &&
-        esMenorDeEdad(beneficiario.fechaNacimiento, fechaDeHoy())
-      ) {
-        return menorSinTutor()
+      const esImagen = finalidad === FINALIDAD_USO_IMAGEN
+      const esMenor = esMenorDeEdad(beneficiario.fechaNacimiento, fechaDeHoy())
+      if (esImagen && esMenor) {
+        if (rolDe(request) !== 'COORDINADORA') return imagenDeMenorSoloCoordinadora()
+        if (!tieneTutorActivo(id)) return menorSinTutor()
       }
 
       const versionPolitica = cuerpo.versionPolitica as number
       const existente = vigente(id, finalidad)
-      if (existente?.versionPolitica === versionPolitica) {
+      // La que autorizó el tutor de un menor deja de valer cuando cumple 18.
+      const vencioAlCumplir18 =
+        existente !== undefined &&
+        esImagen &&
+        !esMenor &&
+        !eraMayorDeEdad(beneficiario.fechaNacimiento, existente.createdAt)
+      if (existente?.versionPolitica === versionPolitica && !vencioAlCumplir18) {
         return HttpResponse.json(sinBeneficiario(existente))
       }
+      if (vencioAlCumplir18) retirarConsentimientoVigente(id, finalidad, usuarioDe(request))
 
       const nuevo: RegistroConsentimientoMock = {
-        id: crypto.randomUUID(),
+        id: nuevoId(),
         beneficiarioId: id,
         versionPolitica,
         finalidad,

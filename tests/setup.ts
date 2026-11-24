@@ -27,3 +27,8 @@ if (typeof HTMLDialogElement !== 'undefined' && !HTMLDialogElement.prototype.sho
     this.dispatchEvent(new Event('close'))
   }
 }
+
+// jsdom no desplaza la página: sin esto, `ScrollRestoration` llena la salida de avisos.
+if (typeof window !== 'undefined') {
+  window.scrollTo = () => {}
+}

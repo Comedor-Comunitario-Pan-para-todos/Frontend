@@ -1,3 +1,4 @@
+import type { AutorizacionTutor } from './AutorizacionTutor.ts'
 import type { ClasificacionSocioeconomica } from './clasificacionSocioeconomica.ts'
 import type { Consentimiento } from './Consentimiento.ts'
 import type { Documento } from './documento.ts'
@@ -17,6 +18,7 @@ export interface Beneficiario {
   readonly registradoEn: string
   readonly consentimiento: Consentimiento | null
   readonly consentimientoImagen: Consentimiento | null
+  readonly autorizacionTutor: AutorizacionTutor | null
 }
 
 type Nombre = Pick<Beneficiario, 'nombres' | 'apellidos'>

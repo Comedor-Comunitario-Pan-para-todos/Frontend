@@ -4,9 +4,9 @@ import { entorno } from '@/app/entorno.ts'
 import './index.css'
 import { App } from '@/app/App.tsx'
 
-// La condición DEV deja los mocks por fuera del build de producción.
 async function prepararMocks(): Promise<void> {
-  if (import.meta.env.DEV && entorno.usarMocks) {
+  const permiteMocks = import.meta.env.DEV || import.meta.env.MODE === 'demo'
+  if (permiteMocks && entorno.usarMocks) {
     const { iniciarMocks } = await import('@/mocks/browser.ts')
     await iniciarMocks(entorno.apiBaseUrl)
   }

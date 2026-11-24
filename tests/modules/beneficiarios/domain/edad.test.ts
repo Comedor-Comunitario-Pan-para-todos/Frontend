@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { calcularEdad, esMenorDeEdad } from '@/modules/beneficiarios/domain/edad.ts'
+import { calcularEdad, eraMayorDeEdad, esMenorDeEdad } from '@/modules/beneficiarios/domain/edad.ts'
 
 const HOY = '2026-11-19'
 
@@ -43,5 +43,20 @@ describe('esMenorDeEdad', () => {
 
   it('si la fecha no se puede leer, protege como si fuera menor', () => {
     expect(esMenorDeEdad('15/03/1958', HOY)).toBe(true)
+  })
+})
+
+describe('eraMayorDeEdad', () => {
+  it('ya era mayor desde el día en que cumplió 18, no antes', () => {
+    expect(eraMayorDeEdad('2008-11-19', '2026-11-19T15:00:00.000Z')).toBe(true)
+    expect(eraMayorDeEdad('2008-11-19', '2026-11-18T15:00:00.000Z')).toBe(false)
+  })
+
+  it('cuenta el día en Colombia, no en UTC', () => {
+    expect(eraMayorDeEdad('2008-11-19', '2026-11-19T03:00:00.000Z')).toBe(false)
+  })
+
+  it('si la fecha no se puede leer, no la cuenta como mayor', () => {
+    expect(eraMayorDeEdad('15/03/1958', '2026-11-19T15:00:00.000Z')).toBe(false)
   })
 })

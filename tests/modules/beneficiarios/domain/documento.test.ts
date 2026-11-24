@@ -4,7 +4,9 @@ import {
   etiquetaTipoDocumento,
   formatearNumeroDocumento,
   normalizarNumeroDocumento,
+  siglaVisible,
   TIPOS_DOCUMENTO,
+  TIPOS_DOCUMENTO_TUTOR,
   ultimosDigitos,
 } from '@/modules/beneficiarios/domain/documento.ts'
 
@@ -14,18 +16,20 @@ describe('etiquetaTipoDocumento', () => {
     ['TI', 'Tarjeta de identidad'],
     ['RC', 'Registro civil'],
     ['PPT', 'Permiso por Protección Temporal'],
+    ['CE', 'Cédula de extranjería'],
+    ['PASAPORTE', 'Pasaporte'],
   ])('%s se muestra como "%s"', (tipo, etiqueta) => {
     expect(etiquetaTipoDocumento(tipo)).toBe(etiqueta)
   })
 
   it('todos los tipos que se pueden elegir tienen etiqueta propia', () => {
-    for (const tipo of TIPOS_DOCUMENTO) {
+    for (const tipo of [...TIPOS_DOCUMENTO, ...TIPOS_DOCUMENTO_TUTOR]) {
       expect(etiquetaTipoDocumento(tipo)).not.toBe(tipo)
     }
   })
 
   it('un tipo que no conoce se muestra con su sigla', () => {
-    expect(etiquetaTipoDocumento('CE')).toBe('CE')
+    expect(etiquetaTipoDocumento('NIT')).toBe('NIT')
   })
 })
 
@@ -79,5 +83,13 @@ describe('enmascararDocumento', () => {
 
   it.each(['', '7', '1234'])('oculta completo un número de cuatro dígitos o menos ("%s")', (n) => {
     expect(enmascararDocumento(n)).toBe('••••')
+  })
+})
+
+describe('siglaVisible', () => {
+  it('muestra la sigla, y el pasaporte con su nombre porque no tiene sigla', () => {
+    expect(siglaVisible('CC')).toBe('CC')
+    expect(siglaVisible('PPT')).toBe('PPT')
+    expect(siglaVisible('PASAPORTE')).toBe('Pasaporte')
   })
 })

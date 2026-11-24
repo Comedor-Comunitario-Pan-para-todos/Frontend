@@ -6,6 +6,7 @@ import {
   SISTEMAS_CLASIFICACION,
 } from '@/modules/beneficiarios/domain/clasificacionSocioeconomica.ts'
 import { NIVELES_CAPTURA, type NivelCaptura } from '@/modules/beneficiarios/domain/nivelCaptura.ts'
+import { esquemaAutorizacionTutor } from './respuestasAutorizacionTutor.ts'
 import { esquemaConsentimiento } from './respuestasConsentimiento.ts'
 
 // Lo que entrega el backend y cómo se traduce al dominio. `nivel` y `clasificacion` son del
@@ -36,6 +37,7 @@ const esquemaBeneficiarioDto = z.object({
   createdAt: z.string(),
   consentimiento: esquemaConsentimiento.nullish().catch(null),
   consentimientoImagen: esquemaConsentimiento.nullish().catch(null),
+  autorizacionTutor: esquemaAutorizacionTutor.nullish().catch(null),
 })
 
 type BeneficiarioDto = z.infer<typeof esquemaBeneficiarioDto>
@@ -61,6 +63,7 @@ function aBeneficiario(dto: BeneficiarioDto): Beneficiario {
     registradoEn: dto.createdAt,
     consentimiento: dto.consentimiento ?? null,
     consentimientoImagen: dto.consentimientoImagen ?? null,
+    autorizacionTutor: dto.autorizacionTutor ?? null,
   }
 }
 

@@ -5,7 +5,7 @@ import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { defineConfig, loadEnv, type Plugin, type ProxyOptions } from 'vite'
 
-// Todo public/ se copia al build; este archivo solo sirve para `pnpm dev:mock`.
+// Todo public/ se copia al build; este archivo solo sirve para los mocks (`dev:mock` y el modo demo).
 function excluirWorkerDeMocks(): Plugin {
   let carpetaSalida = 'dist'
 
@@ -49,7 +49,7 @@ export default defineConfig(({ mode }) => {
   const variables = loadEnv(mode, process.cwd(), '')
 
   return {
-    plugins: [react(), tailwindcss(), excluirWorkerDeMocks()],
+    plugins: [react(), tailwindcss(), mode !== 'demo' && excluirWorkerDeMocks()],
     resolve: {
       alias: {
         '@': fileURLToPath(new URL('./src', import.meta.url)),

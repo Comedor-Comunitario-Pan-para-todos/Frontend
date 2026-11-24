@@ -15,6 +15,7 @@ export const MARIA: Beneficiario = {
   registradoEn: '2026-11-01T15:00:00.000Z',
   consentimiento: null,
   consentimientoImagen: null,
+  autorizacionTutor: null,
 }
 
 export const CARLOS: Beneficiario = {
@@ -30,6 +31,7 @@ export const CARLOS: Beneficiario = {
   registradoEn: '2026-11-02T16:30:00.000Z',
   consentimiento: null,
   consentimientoImagen: null,
+  autorizacionTutor: null,
 }
 
 export function paginaCon(...beneficiarios: Beneficiario[]) {

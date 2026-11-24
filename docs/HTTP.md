@@ -35,6 +35,7 @@ Reglas:
 * `VITE_API_BASE_URL` debe empezar por `/` o ser una URL completa. Se le quita la barra final.
 * `VITE_USAR_MOCKS` solo acepta `"true"` o `"false"`.
 * Un build de producción con `VITE_USAR_MOCKS=true` no arranca: nunca se despliega con datos falsos.
+  La única excepción es el modo demo (`pnpm build:demo`), que avisa en pantalla que los datos son de prueba.
 
 Solo `src/app/` lee el entorno. El resto del código recibe los valores por
 parámetro (por ejemplo, el cliente HTTP recibe su URL base al crearse).
@@ -75,8 +76,16 @@ API_PROXY_TARGET=https://staging.comedor.org
 | `pnpm dev` | `.env`, `.env.development`, `.env.development.local` | Proxy hacia `API_PROXY_TARGET` (por defecto el backend local en el puerto 3000). |
 | `pnpm dev:mock` | `.env`, `.env.mock`, `.env.mock.local` | Sin backend: MSW responde en el navegador. Ver [AUTENTICACION.md](./AUTENTICACION.md). |
 | `pnpm build` | `.env`, `.env.production`, `.env.production.local` | Sin proxy ni mocks: el proxy de Vite solo existe en desarrollo. En producción, o el servidor web reenvía `/api` al backend (mismo dominio), o se construye con `VITE_API_BASE_URL` apuntando a la URL del backend (dominios distintos, con CORS en el backend). |
+| `pnpm build:demo` | `.env`, `.env.demo`, `.env.demo.local` | Build de producción con MSW, para mostrar la app sin backend. Conserva `mockServiceWorker.js` y muestra arriba «Demostración: datos de prueba que se borran al recargar.» |
 
 Los archivos `*.local` tienen prioridad y no se versionan.
+
+### Vercel
+
+`vercel.json` construye con `pnpm build:demo` mientras no haya un backend
+desplegado, y manda toda ruta que no sea un archivo a `index.html`, para que
+recargar `/beneficiarios/:id` no dé 404. Cuando exista el backend, la versión
+real usará `pnpm build` y reenviará `/api` a su URL.
 
 ---
 

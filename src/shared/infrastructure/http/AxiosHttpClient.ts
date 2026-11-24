@@ -107,8 +107,14 @@ export class AxiosHttpClient implements HttpClient {
   }
 
   async #enviar<T>(peticion: AxiosRequestConfig, opciones: OpcionesPeticion<T> = {}): Promise<T> {
-    const { esquema, params, signal, omitirSesion } = opciones
-    const respuesta = await this.#axios.request({ ...peticion, params, signal, omitirSesion })
+    const { esquema, params, signal, omitirSesion, tiempoLimiteMs } = opciones
+    const respuesta = await this.#axios.request({
+      ...peticion,
+      params,
+      signal,
+      omitirSesion,
+      timeout: tiempoLimiteMs,
+    })
     return validar(respuesta.data, esquema)
   }
 }

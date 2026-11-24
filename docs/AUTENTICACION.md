@@ -139,5 +139,7 @@ los usuarios es `Comedor123*`.
 | `inactivo@comedor.test` | 401: usuario inactivo |
 | `caida@comedor.test` | 500: servidor caído |
 
+Los mismos usuarios sirven en el build de demostración (`pnpm build:demo`).
+
 Los handlers están en `src/mocks/handlers.ts`. Ni ellos ni
-`mockServiceWorker.js` llegan al build de producción.
+`mockServiceWorker.js` llegan al build de producción (`pnpm build`).
