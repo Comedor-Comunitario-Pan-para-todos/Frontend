@@ -20,7 +20,7 @@ describe('rutas', () => {
   })
 
   it.each([
-    ['/turnos', 'Turnos'],
+    ['/turnos', 'Turnos de hoy'],
     ['/beneficiarios', 'Beneficiarios'],
     ['/inventario', 'Inventario'],
     ['/reportes', 'Reportes'],
