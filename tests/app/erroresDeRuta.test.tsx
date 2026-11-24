@@ -47,7 +47,7 @@ describe('errores de ruta', () => {
 
     await userEvent.click(screen.getByRole('link', { name: 'Turnos' }))
 
-    expect(await screen.findByRole('heading', { name: 'Turnos' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Turnos de hoy' })).toBeInTheDocument()
   })
 
   it('si falla el layout muestra el error sin menú', async () => {

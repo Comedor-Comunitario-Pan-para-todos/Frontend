@@ -174,6 +174,12 @@ export function personasDelPadronMock() {
   )
 }
 
+/** Nombre completo de una persona del padrón simulado, o `null` si no está. Lo usa el mock de turnos. */
+export function nombreEnPadronMock(id: string): string | null {
+  const encontrado = padron.find((beneficiario) => beneficiario.id === id)
+  return encontrado ? `${encontrado.nombres} ${encontrado.apellidos}` : null
+}
+
 const ROLES_PERMITIDOS: readonly Rol[] = ['COORDINADORA', 'VOLUNTARIO']
 const CAMPOS_BASICOS = ['nivel', 'nombres', 'apellidos', 'fechaNacimiento', 'barrio']
 const CAMPOS_EXTENDIDOS = ['tipoDocumento', 'numeroDocumento', 'telefono', 'clasificacion']

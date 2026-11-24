@@ -3,6 +3,7 @@ import type { Rol } from '@/modules/auth/domain/Usuario.ts'
 import { crearHandlersBeneficiarios } from './beneficiarios.ts'
 import { crearHandlersInduccion } from './induccion.ts'
 import { crearHandlersReportes } from './reportes.ts'
+import { crearHandlersTurnos } from './turnos.ts'
 
 export const CLAVE_MOCK = 'Comedor123*'
 
@@ -72,4 +73,5 @@ export const handlers = [
   ...crearHandlersReportes(buscarPorToken),
   ...crearHandlersBeneficiarios(buscarPorToken),
   ...crearHandlersInduccion(buscarPorToken),
+  ...crearHandlersTurnos(buscarPorToken),
 ]
