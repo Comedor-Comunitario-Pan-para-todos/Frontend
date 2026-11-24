@@ -64,6 +64,15 @@ import {
 } from '@/modules/reportes/application/exportarPadron.ts'
 import { DescargaNavegador } from '@/modules/reportes/infrastructure/dispositivo/DescargaNavegador.ts'
 import { ExportacionHttpRepository } from '@/modules/reportes/infrastructure/http/ExportacionHttpRepository.ts'
+import {
+  crearConsultarTurnosDeHoy,
+  type ConsultarTurnosDeHoy,
+} from '@/modules/turnos/application/consultarTurnosDeHoy.ts'
+import {
+  crearEntregarTurno,
+  type EntregarTurno,
+} from '@/modules/turnos/application/entregarTurno.ts'
+import { TurnosHttpRepository } from '@/modules/turnos/infrastructure/http/TurnosHttpRepository.ts'
 import { AxiosHttpClient } from '@/shared/infrastructure/http/AxiosHttpClient.ts'
 import type { Entorno } from './entorno.ts'
 
@@ -86,6 +95,8 @@ export interface Dependencias {
   readonly autorizarUsoDeImagen: AutorizarUsoDeImagen
   readonly retirarUsoDeImagen: RetirarUsoDeImagen
   readonly consultarHistorialDeImagen: ConsultarHistorialDeImagen
+  readonly consultarTurnosDeHoy: ConsultarTurnosDeHoy
+  readonly entregarTurno: EntregarTurno
 }
 
 export function crearDependencias({ apiBaseUrl }: Pick<Entorno, 'apiBaseUrl'>): Dependencias {
@@ -106,6 +117,7 @@ export function crearDependencias({ apiBaseUrl }: Pick<Entorno, 'apiBaseUrl'>): 
   const consentimientos = new ConsentimientoHttpRepository(http)
   const induccion = new InduccionHttpRepository(http)
   const exportaciones = new ExportacionHttpRepository(http)
+  const turnos = new TurnosHttpRepository(http)
   const hoy = () => fechaDeHoy()
 
   return {
@@ -139,5 +151,7 @@ export function crearDependencias({ apiBaseUrl }: Pick<Entorno, 'apiBaseUrl'>): 
     autorizarUsoDeImagen: crearAutorizarUsoDeImagen({ repositorio: consentimientos }),
     retirarUsoDeImagen: crearRetirarUsoDeImagen({ repositorio: consentimientos }),
     consultarHistorialDeImagen: crearConsultarHistorialDeImagen({ repositorio: consentimientos }),
+    consultarTurnosDeHoy: crearConsultarTurnosDeHoy({ repositorio: turnos }),
+    entregarTurno: crearEntregarTurno({ repositorio: turnos }),
   }
 }
