@@ -1,4 +1,5 @@
 import { IdCard, Phone } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { useFormContext, useWatch } from 'react-hook-form'
 import {
   descripcionGrupo,
@@ -27,8 +28,12 @@ const OPCIONES_DE_SISTEMA = [
   { valor: 'SISBEN_IV', etiqueta: etiquetaSistemaClasificacion('SISBEN_IV') },
 ]
 
+interface SeccionDatosExtendidosProps {
+  readonly avisoDelDocumento?: ReactNode
+}
+
 /** Va dentro de un `FormProvider` cuyo formulario incluye `CamposExtendidos`. */
-export function SeccionDatosExtendidos() {
+export function SeccionDatosExtendidos({ avisoDelDocumento }: SeccionDatosExtendidosProps) {
   const {
     register,
     control,
@@ -68,6 +73,7 @@ export function SeccionDatosExtendidos() {
             error={errors.numeroDocumento?.message}
             {...register('numeroDocumento')}
           />
+          {avisoDelDocumento}
         </>
       )}
 

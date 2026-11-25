@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import type { QueryClient } from '@tanstack/react-query'
@@ -12,6 +12,7 @@ import { servidor } from '../../../../mocks/servidor.ts'
 const COORDINADORA = 'mock-token.mock-1'
 const VOLUNTARIO = 'mock-token.mock-3'
 const ID_MARIA = '00000000-0000-4000-8000-000000000001'
+const ID_ROSA = '00000000-0000-4000-8000-000000000003'
 const ID_PEDRO = '00000000-0000-4000-8000-000000000008'
 const ID_INEXISTENTE = '00000000-0000-4000-8000-000000009999'
 
@@ -159,5 +160,120 @@ describe('actualizar datos', () => {
 
     expect(await screen.findByText('No encontramos a esta persona')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Guardar cambios' })).not.toBeInTheDocument()
+  })
+})
+
+describe('actualizar datos sensibles', () => {
+  beforeEach(() => {
+    localStorage.clear()
+    reiniciarBeneficiariosMock()
+    servidor.use(...handlers)
+  })
+
+  it('la coordinación los ve con lo que ya tiene la persona y los cambia', async () => {
+    iniciarSesionDePrueba(COORDINADORA)
+    await abrir(ID_ROSA)
+
+    expect(screen.getByRole('heading', { name: 'Datos sensibles' })).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: 'Cédula de ciudadanía' })).toBeChecked()
+    expect(screen.getByLabelText('Número de documento')).toHaveValue('24891034')
+    expect(screen.getByLabelText('Teléfono')).toHaveValue('3104567812')
+    expect(screen.getByLabelText('Grupo')).toHaveValue('A3')
+
+    await reemplazar('Teléfono', '3209876543')
+    await guardar()
+
+    await screen.findByText('Datos actualizados')
+    expect(await screen.findByText('3209876543')).toBeInTheDocument()
+    expect(dato('Documento')).toHaveTextContent('CC 24.891.034')
+  })
+
+  it('al dejar el teléfono vacío lo borra', async () => {
+    iniciarSesionDePrueba(COORDINADORA)
+    await abrir(ID_ROSA)
+
+    await reemplazar('Teléfono', '')
+    await guardar()
+
+    await screen.findByText('Datos actualizados')
+    await screen.findByRole('heading', { name: 'Rosa Martínez de Osorio' })
+    expect(dato('Teléfono')).toHaveTextContent('Sin registrar')
+  })
+
+  it('el voluntario no los ve', async () => {
+    iniciarSesionDePrueba(VOLUNTARIO)
+    await abrir(ID_ROSA)
+
+    expect(screen.queryByRole('heading', { name: 'Datos sensibles' })).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Número de documento')).not.toBeInTheDocument()
+  })
+
+  it('en nivel básico no se muestran: eso es completar datos', async () => {
+    iniciarSesionDePrueba(COORDINADORA)
+    await abrir(ID_PEDRO)
+
+    expect(screen.queryByRole('heading', { name: 'Datos sensibles' })).not.toBeInTheDocument()
+  })
+
+  it('valida los datos sensibles antes de enviar', async () => {
+    iniciarSesionDePrueba(COORDINADORA)
+    await abrir(ID_ROSA)
+
+    await reemplazar('Teléfono', '12345')
+    await guardar()
+
+    expect(
+      await screen.findByText('Revise el teléfono: 7 dígitos si es fijo o 10 si es celular.'),
+    ).toBeInTheDocument()
+  })
+
+  it('avisa mientras se escribe si el documento ya es de otra persona', async () => {
+    iniciarSesionDePrueba(COORDINADORA)
+    await abrir(ID_ROSA)
+
+    await reemplazar('Número de documento', '42185390')
+
+    const sensibles = screen.getByRole('region', { name: 'Datos sensibles' })
+    expect(
+      await within(sensibles).findByText(
+        'Ese documento ya es de otra persona',
+        {},
+        { timeout: 3000 },
+      ),
+    ).toBeInTheDocument()
+    expect(
+      within(sensibles).getByRole('heading', { name: 'María Elena Restrepo' }),
+    ).toBeInTheDocument()
+  })
+
+  it('no avisa cuando el documento escrito es el de la misma persona', async () => {
+    iniciarSesionDePrueba(COORDINADORA)
+    await abrir(ID_ROSA)
+
+    await reemplazar('Teléfono', '3209876543')
+    await new Promise((resolver) => setTimeout(resolver, 700))
+
+    expect(screen.queryByText('Ese documento ya es de otra persona')).not.toBeInTheDocument()
+  })
+
+  it('si el servidor responde que el documento es de otra persona, lo dice y conserva lo escrito', async () => {
+    servidor.use(
+      http.get('*/beneficiarios/validar-documento/:numero', () =>
+        HttpResponse.json({ existe: false, beneficiario: null }),
+      ),
+    )
+    iniciarSesionDePrueba(COORDINADORA)
+    await abrir(ID_ROSA)
+
+    await reemplazar('Número de documento', '42185390')
+    await guardar()
+
+    const sensibles = screen.getByRole('region', { name: 'Datos sensibles' })
+    expect(
+      await within(sensibles).findByText('Ese documento ya es de otra persona'),
+    ).toBeInTheDocument()
+    expect(screen.getByLabelText('Número de documento')).toHaveValue('42185390')
+    expect(screen.getByLabelText('Número de documento')).toHaveFocus()
+    expect(screen.queryByText('No se pudieron actualizar los datos')).not.toBeInTheDocument()
   })
 })

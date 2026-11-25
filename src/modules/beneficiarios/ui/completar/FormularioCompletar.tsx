@@ -1,7 +1,7 @@
 import { LockKeyhole } from 'lucide-react'
 import { FormProvider } from 'react-hook-form'
 import { Link } from 'react-router'
-import { TarjetaBeneficiario } from '@/modules/beneficiarios/ui/beneficiario/TarjetaBeneficiario.tsx'
+import { AvisoDocumentoAjeno } from '@/modules/beneficiarios/ui/datosSensibles/AvisoDocumentoAjeno.tsx'
 import { SeccionAutorizacion } from '@/modules/beneficiarios/ui/datosSensibles/SeccionAutorizacion.tsx'
 import { SeccionDatosExtendidos } from '@/modules/beneficiarios/ui/datosSensibles/SeccionDatosExtendidos.tsx'
 import { Alerta } from '@/shared/ui/Alerta.tsx'
@@ -40,21 +40,17 @@ export function FormularioCompletar({ id, nombre, esMenor }: FormularioCompletar
               <p className="text-label wrap-break-word text-ink-secondary">{nombre}</p>
             </div>
           </div>
-          <SeccionDatosExtendidos />
+          <SeccionDatosExtendidos
+            avisoDelDocumento={
+              (completar.documentoRepetido || completar.duenoDelDocumento !== null) && (
+                <AvisoDocumentoAjeno dueno={completar.duenoDelDocumento} />
+              )
+            }
+          />
         </section>
 
         <SeccionAutorizacion esMenor={esMenor} className={CLASES_TARJETA} />
 
-        {(completar.documentoRepetido || completar.duenoDelDocumento !== null) && (
-          <div className="flex flex-col gap-2">
-            <Alerta tipo="peligro" titulo="Ese documento ya es de otra persona">
-              Revise el número. Si es la misma persona, ya tiene ficha en el padrón.
-            </Alerta>
-            {completar.duenoDelDocumento !== null && (
-              <TarjetaBeneficiario beneficiario={completar.duenoDelDocumento} />
-            )}
-          </div>
-        )}
         {completar.error !== null && !completar.documentoRepetido && (
           <Alerta tipo="peligro" titulo="No se pudieron guardar los datos">
             {mensajeDeError(completar.error)} Lo que escribió sigue aquí.

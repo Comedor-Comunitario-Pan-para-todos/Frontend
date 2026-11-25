@@ -138,10 +138,17 @@ describe('completar datos extendidos', () => {
 
     await escribir('Número de documento', '42.185.390')
 
+    const sensibles = screen.getByRole('region', { name: 'Datos sensibles' })
     expect(
-      await screen.findByText('Ese documento ya es de otra persona', {}, { timeout: 3000 }),
+      await within(sensibles).findByText(
+        'Ese documento ya es de otra persona',
+        {},
+        { timeout: 3000 },
+      ),
     ).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'María Elena Restrepo' })).toBeInTheDocument()
+    expect(
+      within(sensibles).getByRole('heading', { name: 'María Elena Restrepo' }),
+    ).toBeInTheDocument()
   })
 
   it('si el servidor responde que el documento es de otra persona, lo dice y conserva lo escrito', async () => {
@@ -160,8 +167,12 @@ describe('completar datos extendidos', () => {
     )
     await guardar()
 
-    expect(await screen.findByText('Ese documento ya es de otra persona')).toBeInTheDocument()
+    const sensibles = screen.getByRole('region', { name: 'Datos sensibles' })
+    expect(
+      await within(sensibles).findByText('Ese documento ya es de otra persona'),
+    ).toBeInTheDocument()
     expect(screen.getByLabelText('Número de documento')).toHaveValue('42185390')
+    expect(screen.getByLabelText('Número de documento')).toHaveFocus()
   })
 
   it('no ofrece completar a quien ya está en nivel extendido', async () => {
