@@ -1,9 +1,11 @@
 import { MapPin, User } from 'lucide-react'
-import { useFormContext } from 'react-hook-form'
+import { useFormContext, useWatch } from 'react-hook-form'
 import { fechaDeHoy } from '@/shared/domain/fechaDeHoy.ts'
 import { Alerta } from '@/shared/ui/Alerta.tsx'
 import { CampoTexto } from '@/shared/ui/CampoTexto.tsx'
 import type { CamposBasicos } from './esquemaDatosBasicos.ts'
+import { SugerenciasBarrio } from './SugerenciasBarrio.tsx'
+import { useBarrios } from './useBarrios.ts'
 
 interface SeccionDatosBasicosProps {
   readonly esMenor: boolean
@@ -13,8 +15,18 @@ interface SeccionDatosBasicosProps {
 export function SeccionDatosBasicos({ esMenor }: SeccionDatosBasicosProps) {
   const {
     register,
+    setValue,
+    setFocus,
+    control,
     formState: { errors },
   } = useFormContext<CamposBasicos>()
+  const barrios = useBarrios()
+  const barrio = useWatch({ control, name: 'barrio' })
+
+  function elegirBarrio(elegido: string) {
+    setValue('barrio', elegido, { shouldDirty: true, shouldTouch: true, shouldValidate: true })
+    setFocus('barrio')
+  }
 
   return (
     <>
@@ -57,17 +69,20 @@ export function SeccionDatosBasicos({ esMenor }: SeccionDatosBasicosProps) {
         </Alerta>
       )}
 
-      <CampoTexto
-        etiqueta="Barrio o sector"
-        nota="Opcional"
-        placeholder="Ej.: El Jardín"
-        ayuda="No condiciona la entrega de la ración. Si la persona no quiere decirlo, déjelo en blanco."
-        icono={MapPin}
-        autoComplete="off"
-        autoCapitalize="words"
-        error={errors.barrio?.message}
-        {...register('barrio')}
-      />
+      <div className="flex flex-col gap-2">
+        <CampoTexto
+          etiqueta="Barrio o sector"
+          nota="Opcional"
+          placeholder="Ej.: El Jardín"
+          ayuda="No condiciona la entrega de la ración. Si la persona no quiere decirlo, déjelo en blanco."
+          icono={MapPin}
+          autoComplete="off"
+          autoCapitalize="words"
+          error={errors.barrio?.message}
+          {...register('barrio')}
+        />
+        <SugerenciasBarrio escrito={barrio} barrios={barrios} onElegir={elegirBarrio} />
+      </div>
     </>
   )
 }
