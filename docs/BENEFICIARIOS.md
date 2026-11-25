@@ -159,7 +159,7 @@ envíe a los roles que no deben verlos.
 
 ---
 
-## 3. Propuesta para RF-24: barrios (por proponer en Backend#74)
+## 3. Propuesta para RF-24: barrios ([Backend#74](https://github.com/Comedor-Comunitario-Pan-para-todos/Backend/issues/74#issuecomment-7155792949))
 
 El barrio es opcional y no condiciona la entrega de la ración. Así lo dice la
 ayuda del campo, que cumple el criterio de puertas abiertas de RF-24.
@@ -170,17 +170,25 @@ ayuda del campo, que cumple el criterio de puertas abiertas de RF-24.
 ["Cuba", "El Jardín", "El Poblado", "Otún", "Villasantana"]
 ```
 
-* Los barrios que ya tiene el padrón, sin repetir (sin distinguir mayúsculas
-  ni tildes) y en orden alfabético.
+* Los barrios que ya tiene el padrón, cada uno una vez y en orden alfabético.
 * Lo pueden usar Voluntario y Coordinadora.
 * En Nest debe declararse antes de `GET /beneficiarios/:id`, o `barrios` se
   tomaría como un id.
 * Si falla, el campo sigue sirviendo, solo que sin sugerencias.
 
-Se propone además que el backend, al guardar, deje el barrio con la forma ya
-registrada cuando coincida sin importar mayúsculas, tildes, signos ni espacios
-repetidos. El frontend lo hace al salir del campo, pero no cubre todos los
-casos (ver «Barrio» en la sección 4).
+### Recomendación: tabla `Barrio`
+
+* `Barrio` con `id`, `nombre` y `clave` única: el nombre sin mayúsculas,
+  tildes, signos ni espacios de más. `Beneficiario.barrioId` puede ser nulo.
+* Al guardar, se busca el barrio por su clave y, si no existe, se crea: la
+  lista sigue abierta y `el jardin` queda como «El Jardín».
+* El contrato no cambia: se envía y se recibe el nombre como texto.
+
+Por qué: el reporte de cobertura barrial del Presidente JAC (RF-16, CU-15)
+agrupa por barrio, y el hash contra duplicados de RNF-15 lo incluye. Con texto
+suelto, «El Jardín» y «el jardin» cuentan como dos barrios. El frontend unifica
+al salir del campo, pero no cubre todos los casos (ver «Barrio» en la
+sección 4).
 
 ---
 
