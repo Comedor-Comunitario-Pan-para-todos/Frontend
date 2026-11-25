@@ -19,6 +19,7 @@ import {
   aParametrosDeBusqueda,
 } from './peticionesBeneficiario.ts'
 import {
+  esquemaBarrios,
   esquemaBeneficiario,
   esquemaPagina,
   esquemaValidacionDocumento,
@@ -95,5 +96,9 @@ export class BeneficiarioHttpRepository implements BeneficiarioRepository {
       esquema: esquemaValidacionDocumento,
       signal,
     })
+  }
+
+  listarBarrios(signal?: AbortSignal): Promise<readonly string[]> {
+    return this.#http.get(`${RUTA}/barrios`, { esquema: esquemaBarrios, signal })
   }
 }

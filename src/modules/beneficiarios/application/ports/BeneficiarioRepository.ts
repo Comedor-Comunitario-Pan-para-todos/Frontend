@@ -31,4 +31,5 @@ export interface BeneficiarioRepository {
   consultarPorId(id: string, signal?: AbortSignal): Promise<Beneficiario>
   /** `null` si nadie tiene ese número de documento. */
   buscarPorDocumento(numero: string, signal?: AbortSignal): Promise<Beneficiario | null>
+  listarBarrios(signal?: AbortSignal): Promise<readonly string[]>
 }

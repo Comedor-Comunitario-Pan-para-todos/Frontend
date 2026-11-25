@@ -298,6 +298,15 @@ function actualizar(actual: BeneficiarioMock, cuerpo: Record<string, unknown>): 
   }
 }
 
+/** Sin repetir aunque cambien mayúsculas o tildes, en orden alfabético. */
+function barriosRegistrados(): string[] {
+  const porClave = new Map<string, string>()
+  for (const { barrio } of padron) {
+    if (barrio && !porClave.has(comparable(barrio))) porClave.set(comparable(barrio), barrio)
+  }
+  return [...porClave.values()].sort((a, b) => a.localeCompare(b, 'es'))
+}
+
 function documentoRepetido(numeroDocumento: string | null, id?: string) {
   if (!numeroDocumento) return null
   if (!padron.some((b) => b.numeroDocumento === numeroDocumento && b.id !== id)) return null
@@ -458,6 +467,16 @@ export function crearHandlersBeneficiarios(identificar: Identificar) {
         existe: beneficiario !== null,
         beneficiario: beneficiario && aFicha(beneficiario, rolDe(request)),
       })
+    }),
+
+    // Antes de `:id`, para que «barrios» no se tome como un id.
+    http.get('*/beneficiarios/barrios', async ({ request }) => {
+      if (esCargaDePagina(request)) return undefined
+      await demora()
+      const rechazo = rechazoDeAcceso(request)
+      if (rechazo) return rechazo
+
+      return HttpResponse.json(barriosRegistrados())
     }),
 
     http.get('*/beneficiarios/:id', async ({ request, params }) => {

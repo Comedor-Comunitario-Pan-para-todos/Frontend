@@ -139,4 +139,12 @@ describe('BeneficiarioHttpRepository', () => {
     await expect(repositorio.buscarPorDocumento('AB/12 3')).resolves.toBeNull()
     expect(recibida.url?.pathname).toBe('/api/beneficiarios/validar-documento/AB%2F12%203')
   })
+
+  it('listarBarrios envía GET /beneficiarios/barrios', async () => {
+    const recibida = responder(['Cuba', 'El Jardín'])
+
+    await expect(repositorio.listarBarrios()).resolves.toEqual(['Cuba', 'El Jardín'])
+    expect(recibida.metodo).toBe('GET')
+    expect(recibida.url?.pathname).toBe('/api/beneficiarios/barrios')
+  })
 })

@@ -19,6 +19,10 @@ import {
   type CompletarDatosExtendidos,
 } from '@/modules/beneficiarios/application/completarDatosExtendidos.ts'
 import {
+  crearConsultarBarrios,
+  type ConsultarBarrios,
+} from '@/modules/beneficiarios/application/consultarBarrios.ts'
+import {
   crearConsultarBeneficiario,
   type ConsultarBeneficiario,
 } from '@/modules/beneficiarios/application/consultarBeneficiario.ts'
@@ -105,6 +109,7 @@ export interface Dependencias {
   readonly actualizarDatos: ActualizarDatos
   readonly buscarBeneficiarios: BuscarBeneficiarios
   readonly consultarBeneficiario: ConsultarBeneficiario
+  readonly consultarBarrios: ConsultarBarrios
   readonly verificarDuplicado: VerificarDuplicado
   readonly registrarConsentimiento: RegistrarConsentimiento
   readonly consultarGuiaInduccion: ConsultarGuiaInduccion
@@ -159,6 +164,7 @@ export function crearDependencias({ apiBaseUrl }: Pick<Entorno, 'apiBaseUrl'>): 
     actualizarDatos: crearActualizarDatos({ repositorio: beneficiarios }),
     buscarBeneficiarios: crearBuscarBeneficiarios({ repositorio: beneficiarios }),
     consultarBeneficiario: crearConsultarBeneficiario({ repositorio: beneficiarios }),
+    consultarBarrios: crearConsultarBarrios({ repositorio: beneficiarios }),
     verificarDuplicado: crearVerificarDuplicado({ repositorio: beneficiarios }),
     registrarConsentimiento: crearRegistrarConsentimiento({ repositorio: consentimientos }),
     consultarGuiaInduccion: crearConsultarGuiaInduccion({ repositorio: induccion }),

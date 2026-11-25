@@ -47,5 +47,6 @@ export function crearRepositorioDePrueba(): BeneficiarioRepository {
     buscar: vi.fn().mockResolvedValue(paginaCon()),
     consultarPorId: vi.fn().mockResolvedValue(MARIA),
     buscarPorDocumento: vi.fn().mockResolvedValue(null),
+    listarBarrios: vi.fn().mockResolvedValue([]),
   }
 }
