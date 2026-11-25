@@ -303,7 +303,7 @@ describe('registro de beneficiarios', () => {
     await abrirRegistro()
 
     expect(screen.getByLabelText('Barrio o sector')).toHaveAccessibleDescription(
-      'Opcional No condiciona la entrega del almuerzo.',
+      'Opcional No condiciona la entrega de la ración. Si la persona no quiere decirlo, déjelo en blanco.',
     )
     expect(screen.getByRole('checkbox', { name: 'Informé a la persona' })).not.toBeChecked()
     expect(screen.getByText('Registra: Voluntario de Prueba')).toBeInTheDocument()

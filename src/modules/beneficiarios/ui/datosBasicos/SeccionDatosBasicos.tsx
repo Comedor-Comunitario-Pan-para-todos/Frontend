@@ -61,7 +61,7 @@ export function SeccionDatosBasicos({ esMenor }: SeccionDatosBasicosProps) {
         etiqueta="Barrio o sector"
         nota="Opcional"
         placeholder="Ej.: El Jardín"
-        ayuda="No condiciona la entrega del almuerzo."
+        ayuda="No condiciona la entrega de la ración. Si la persona no quiere decirlo, déjelo en blanco."
         icono={MapPin}
         autoComplete="off"
         autoCapitalize="words"
