@@ -1,4 +1,5 @@
 import type { CriteriosBusqueda } from '@/modules/beneficiarios/application/ports/BeneficiarioRepository.ts'
+import type { ActualizacionDeDatos } from '@/modules/beneficiarios/domain/ActualizacionDeDatos.ts'
 import type {
   DatosExtendidos,
   NuevoBeneficiario,
@@ -20,6 +21,26 @@ export function aCuerpoDeRegistro(datos: NuevoBeneficiario) {
 
 export function aCuerpoDeDatosExtendidos(datos: DatosExtendidos) {
   return { nivel: 'EXTENDIDO', ...camposExtendidos(datos) }
+}
+
+export function aCuerpoDeActualizacion(actualizacion: ActualizacionDeDatos) {
+  const basicos = {
+    nombres: actualizacion.nombres,
+    apellidos: actualizacion.apellidos,
+    fechaNacimiento: actualizacion.fechaNacimiento,
+    barrio: actualizacion.barrio,
+  }
+  const { sensibles } = actualizacion
+
+  if (sensibles === null) return basicos
+
+  return {
+    ...basicos,
+    tipoDocumento: sensibles.documento?.tipo ?? null,
+    numeroDocumento: sensibles.documento?.numero ?? null,
+    telefono: sensibles.telefono,
+    clasificacion: sensibles.clasificacion,
+  }
 }
 
 function camposExtendidos(datos: DatosExtendidos) {

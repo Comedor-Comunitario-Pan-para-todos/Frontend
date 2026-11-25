@@ -11,12 +11,15 @@ import type {
 } from '@/modules/beneficiarios/domain/NuevoBeneficiario.ts'
 import { esErrorApi } from '@/shared/application/errores/ErrorApi.ts'
 import type { HttpClient } from '@/shared/infrastructure/http/HttpClient.ts'
+import type { ActualizacionDeDatos } from '@/modules/beneficiarios/domain/ActualizacionDeDatos.ts'
 import {
+  aCuerpoDeActualizacion,
   aCuerpoDeDatosExtendidos,
   aCuerpoDeRegistro,
   aParametrosDeBusqueda,
 } from './peticionesBeneficiario.ts'
 import {
+  esquemaBarrios,
   esquemaBeneficiario,
   esquemaPagina,
   esquemaValidacionDocumento,
@@ -63,6 +66,16 @@ export class BeneficiarioHttpRepository implements BeneficiarioRepository {
     }
   }
 
+  async actualizarDatos(id: string, actualizacion: ActualizacionDeDatos): Promise<Beneficiario> {
+    try {
+      return await this.#http.patch(rutaDe(id), aCuerpoDeActualizacion(actualizacion), {
+        esquema: esquemaBeneficiario,
+      })
+    } catch (error) {
+      throw comoDuplicado(error, actualizacion.sensibles?.documento?.numero ?? null)
+    }
+  }
+
   buscar(criterios: CriteriosBusqueda, signal?: AbortSignal): Promise<PaginaBeneficiarios> {
     return this.#http.get(RUTA, {
       esquema: esquemaPagina,
@@ -83,5 +96,9 @@ export class BeneficiarioHttpRepository implements BeneficiarioRepository {
       esquema: esquemaValidacionDocumento,
       signal,
     })
+  }
+
+  listarBarrios(signal?: AbortSignal): Promise<readonly string[]> {
+    return this.#http.get(`${RUTA}/barrios`, { esquema: esquemaBarrios, signal })
   }
 }

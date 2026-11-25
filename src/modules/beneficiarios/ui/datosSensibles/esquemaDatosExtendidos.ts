@@ -69,6 +69,18 @@ export function validarDatosExtendidos(campos: CamposExtendidos, marcarError: Ma
   }
 }
 
+/** Los datos sensibles que ya tiene la persona, para empezar a editarlos. */
+export function aCamposExtendidos(datos: DatosExtendidos): CamposExtendidos {
+  return {
+    sinDocumento: datos.documento === null,
+    tipoDocumento: datos.documento?.tipo ?? CAMPOS_EXTENDIDOS_INICIALES.tipoDocumento,
+    numeroDocumento: datos.documento?.numero ?? '',
+    telefono: datos.telefono ?? '',
+    sistemaClasificacion: datos.clasificacion?.sistema ?? '',
+    grupoClasificacion: datos.clasificacion?.grupo ?? '',
+  }
+}
+
 export function aDatosExtendidos(campos: CamposExtendidos): DatosExtendidos {
   const sistema = campos.sistemaClasificacion
   return {

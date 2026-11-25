@@ -19,9 +19,17 @@ import {
   type CompletarDatosExtendidos,
 } from '@/modules/beneficiarios/application/completarDatosExtendidos.ts'
 import {
+  crearConsultarBarrios,
+  type ConsultarBarrios,
+} from '@/modules/beneficiarios/application/consultarBarrios.ts'
+import {
   crearConsultarBeneficiario,
   type ConsultarBeneficiario,
 } from '@/modules/beneficiarios/application/consultarBeneficiario.ts'
+import {
+  crearActualizarDatos,
+  type ActualizarDatos,
+} from '@/modules/beneficiarios/application/actualizarDatos.ts'
 import {
   crearConsultarHistorialDeImagen,
   type ConsultarHistorialDeImagen,
@@ -98,8 +106,10 @@ export interface Dependencias {
   readonly suscribirCambioDeToken: (oyente: (token: string | null) => void) => () => void
   readonly registrarBeneficiario: RegistrarBeneficiario
   readonly completarDatosExtendidos: CompletarDatosExtendidos
+  readonly actualizarDatos: ActualizarDatos
   readonly buscarBeneficiarios: BuscarBeneficiarios
   readonly consultarBeneficiario: ConsultarBeneficiario
+  readonly consultarBarrios: ConsultarBarrios
   readonly verificarDuplicado: VerificarDuplicado
   readonly registrarConsentimiento: RegistrarConsentimiento
   readonly consultarGuiaInduccion: ConsultarGuiaInduccion
@@ -151,8 +161,10 @@ export function crearDependencias({ apiBaseUrl }: Pick<Entorno, 'apiBaseUrl'>): 
     suscribirCambioDeToken: (oyente) => almacen.suscribirCambiosExternos(oyente),
     registrarBeneficiario: crearRegistrarBeneficiario({ repositorio: beneficiarios }),
     completarDatosExtendidos: crearCompletarDatosExtendidos({ repositorio: beneficiarios }),
+    actualizarDatos: crearActualizarDatos({ repositorio: beneficiarios }),
     buscarBeneficiarios: crearBuscarBeneficiarios({ repositorio: beneficiarios }),
     consultarBeneficiario: crearConsultarBeneficiario({ repositorio: beneficiarios }),
+    consultarBarrios: crearConsultarBarrios({ repositorio: beneficiarios }),
     verificarDuplicado: crearVerificarDuplicado({ repositorio: beneficiarios }),
     registrarConsentimiento: crearRegistrarConsentimiento({ repositorio: consentimientos }),
     consultarGuiaInduccion: crearConsultarGuiaInduccion({ repositorio: induccion }),

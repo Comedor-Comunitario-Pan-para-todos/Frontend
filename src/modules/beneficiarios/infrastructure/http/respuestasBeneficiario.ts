@@ -88,3 +88,8 @@ export const esquemaPagina = z
 export const esquemaValidacionDocumento = z
   .object({ beneficiario: esquemaBeneficiario.nullable() })
   .transform(({ beneficiario }) => beneficiario)
+
+// Un barrio vacío no sirve como sugerencia.
+export const esquemaBarrios = z
+  .array(z.string())
+  .transform((barrios) => barrios.map((barrio) => barrio.trim()).filter((barrio) => barrio !== ''))

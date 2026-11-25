@@ -1,13 +1,12 @@
-import { LockKeyhole, MapPin, User } from 'lucide-react'
+import { LockKeyhole } from 'lucide-react'
 import { FormProvider } from 'react-hook-form'
 import { Link } from 'react-router'
 import type { NivelCaptura } from '@/modules/beneficiarios/domain/nivelCaptura.ts'
+import { SeccionDatosBasicos } from '@/modules/beneficiarios/ui/datosBasicos/SeccionDatosBasicos.tsx'
 import { SeccionAutorizacion } from '@/modules/beneficiarios/ui/datosSensibles/SeccionAutorizacion.tsx'
 import { SeccionDatosExtendidos } from '@/modules/beneficiarios/ui/datosSensibles/SeccionDatosExtendidos.tsx'
-import { fechaDeHoy } from '@/shared/domain/fechaDeHoy.ts'
 import { Alerta } from '@/shared/ui/Alerta.tsx'
 import { Boton } from '@/shared/ui/Boton.tsx'
-import { CampoTexto } from '@/shared/ui/CampoTexto.tsx'
 import { mensajeDeError } from '@/shared/ui/mensajeDeError.ts'
 import { SelectorOpciones } from '@/shared/ui/SelectorOpciones.tsx'
 import { AvisoDuplicado } from './AvisoDuplicado.tsx'
@@ -32,10 +31,7 @@ const AYUDA_NIVEL: Record<NivelCaptura, string> = {
 
 export function FormularioRegistro({ registro }: FormularioRegistroProps) {
   const { formulario, nivel, posibleDuplicado } = registro
-  const {
-    register,
-    formState: { errors },
-  } = formulario
+  const { register } = formulario
 
   return (
     <FormProvider {...formulario}>
@@ -45,56 +41,7 @@ export function FormularioRegistro({ registro }: FormularioRegistroProps) {
         className="flex flex-col gap-4"
       >
         <section aria-label="Datos de la persona" className={CLASES_TARJETA}>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <CampoTexto
-              etiqueta="Nombres"
-              nota="Obligatorio"
-              placeholder="Ej.: María Elena"
-              icono={User}
-              autoComplete="off"
-              autoCapitalize="words"
-              error={errors.nombres?.message}
-              {...register('nombres')}
-            />
-            <CampoTexto
-              etiqueta="Apellidos"
-              nota="Obligatorio"
-              placeholder="Ej.: Restrepo Gómez"
-              icono={User}
-              autoComplete="off"
-              autoCapitalize="words"
-              error={errors.apellidos?.message}
-              {...register('apellidos')}
-            />
-          </div>
-
-          <CampoTexto
-            etiqueta="Fecha de nacimiento"
-            nota="Obligatorio"
-            type="date"
-            max={fechaDeHoy()}
-            className="font-mono"
-            error={errors.fechaNacimiento?.message}
-            {...register('fechaNacimiento')}
-          />
-          {registro.esMenor && (
-            <Alerta tipo="privacidad" titulo="Es menor de edad">
-              Recibe la ración como cualquier persona. Su imagen queda protegida: no se le toman
-              fotos sin la autorización escrita de su madre, padre o tutor.
-            </Alerta>
-          )}
-
-          <CampoTexto
-            etiqueta="Barrio o sector"
-            nota="Opcional"
-            placeholder="Ej.: El Jardín"
-            ayuda="No condiciona la entrega del almuerzo."
-            icono={MapPin}
-            autoComplete="off"
-            autoCapitalize="words"
-            error={errors.barrio?.message}
-            {...register('barrio')}
-          />
+          <SeccionDatosBasicos esMenor={registro.esMenor} />
         </section>
 
         <section aria-labelledby="titulo-nivel" className={CLASES_TARJETA}>

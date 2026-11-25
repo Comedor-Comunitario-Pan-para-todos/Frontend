@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  esquemaBarrios,
   esquemaBeneficiario,
   esquemaPagina,
   esquemaValidacionDocumento,
@@ -214,5 +215,11 @@ describe('esquemaValidacionDocumento', () => {
       MARIA,
     )
     expect(esquemaValidacionDocumento.parse({ existe: false, beneficiario: null })).toBeNull()
+  })
+})
+
+describe('esquemaBarrios', () => {
+  it('quita los espacios sobrantes y descarta los barrios vacíos', () => {
+    expect(esquemaBarrios.parse([' Cuba ', '', '   ', 'El Jardín'])).toEqual(['Cuba', 'El Jardín'])
   })
 })

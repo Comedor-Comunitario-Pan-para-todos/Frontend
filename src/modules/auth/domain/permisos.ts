@@ -7,6 +7,8 @@ export type Permiso =
   | 'beneficiarios.registrar'
   /** Ver completos el documento y el teléfono de un beneficiario (RNF-07). */
   | 'beneficiarios.verDatosSensibles'
+  /** Cambiar documento, teléfono y clasificación de quien ya tiene registro extendido. */
+  | 'beneficiarios.actualizarDatosSensibles'
   /** Aprobar o revocar al tutor de un menor y autorizar el uso de su imagen (RF-21). */
   | 'beneficiarios.gestionarTutor'
   | 'inventario.ver'
@@ -23,6 +25,7 @@ const MATRIZ: Record<Permiso, readonly Rol[]> = {
   'beneficiarios.ver': ['COORDINADORA', 'VOLUNTARIO'],
   'beneficiarios.registrar': ['COORDINADORA', 'VOLUNTARIO'],
   'beneficiarios.verDatosSensibles': ['COORDINADORA'],
+  'beneficiarios.actualizarDatosSensibles': ['COORDINADORA'],
   'beneficiarios.gestionarTutor': ['COORDINADORA'],
   'inventario.ver': ['COORDINADORA', 'VOLUNTARIO'],
   'aportes.ver': ['DONANTE'],

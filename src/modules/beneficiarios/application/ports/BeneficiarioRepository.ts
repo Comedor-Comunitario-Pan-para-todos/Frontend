@@ -1,4 +1,5 @@
 import type { Beneficiario } from '@/modules/beneficiarios/domain/Beneficiario.ts'
+import type { ActualizacionDeDatos } from '@/modules/beneficiarios/domain/ActualizacionDeDatos.ts'
 import type {
   DatosExtendidos,
   NuevoBeneficiario,
@@ -25,8 +26,10 @@ export interface BeneficiarioRepository {
   registrar(datos: NuevoBeneficiario): Promise<Beneficiario>
   /** Lanza `BeneficiarioDuplicado` si el documento ya es de otra persona. */
   completarDatosExtendidos(id: string, datos: DatosExtendidos): Promise<Beneficiario>
+  actualizarDatos(id: string, actualizacion: ActualizacionDeDatos): Promise<Beneficiario>
   buscar(criterios: CriteriosBusqueda, signal?: AbortSignal): Promise<PaginaBeneficiarios>
   consultarPorId(id: string, signal?: AbortSignal): Promise<Beneficiario>
   /** `null` si nadie tiene ese número de documento. */
   buscarPorDocumento(numero: string, signal?: AbortSignal): Promise<Beneficiario | null>
+  listarBarrios(signal?: AbortSignal): Promise<readonly string[]>
 }

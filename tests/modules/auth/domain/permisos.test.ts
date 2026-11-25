@@ -71,6 +71,17 @@ describe('tienePermiso', () => {
     expect(tienePermiso(usuarioConRol(rol), 'beneficiarios.gestionarTutor')).toBe(esperado)
   })
 
+  it.each<[Rol, boolean]>([
+    ['COORDINADORA', true],
+    ['VOLUNTARIO', false],
+    ['PRESIDENTE_JAC', false],
+    ['DONANTE', false],
+  ])('%s puede actualizar los datos sensibles: %s', (rol, esperado) => {
+    expect(tienePermiso(usuarioConRol(rol), 'beneficiarios.actualizarDatosSensibles')).toBe(
+      esperado,
+    )
+  })
+
   it('sin usuario no concede ningún permiso', () => {
     expect(tienePermiso(null, 'inicio.ver')).toBe(false)
   })
