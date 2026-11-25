@@ -20,6 +20,16 @@ const ERROR_SIN_LAYOUT = (
 // Páginas ya construidas de cada módulo. Los que no aparecen aquí muestran "Próximamente".
 const PAGINAS_DE_MODULO: Readonly<Record<string, RouteObject[]>> = {
   '/': [{ index: true, element: <PaginaInicio /> }],
+  '/turnos': [
+    {
+      index: true,
+      lazy: async () => {
+        const { PaginaTurnos } = await import('@/modules/turnos/ui/fila/PaginaTurnos.tsx')
+        return { Component: PaginaTurnos }
+      },
+      hydrateFallbackElement: <PantallaCarga />,
+    },
+  ],
   '/beneficiarios': [
     {
       index: true,

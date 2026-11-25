@@ -47,7 +47,7 @@ describe('autenticación', () => {
 
     await ingresar('voluntario@comedor.test', CLAVE_MOCK)
 
-    expect(await screen.findByRole('heading', { name: 'Turnos' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Turnos de hoy' })).toBeInTheDocument()
   })
 
   it('con credenciales incorrectas muestra el motivo y sigue en el login', async () => {
@@ -133,7 +133,7 @@ describe('autenticación', () => {
     const cliente = crearClienteDePrueba()
     cliente.setQueryData(['beneficiarios', 'lista'], ['Comensal de prueba'])
     renderizarApp('/turnos', cliente)
-    await screen.findByRole('heading', { name: 'Turnos' })
+    await screen.findByRole('heading', { name: 'Turnos de hoy' })
     servidor.use(
       http.get(
         '*/auth/me',
@@ -150,7 +150,7 @@ describe('autenticación', () => {
 
     await ingresar('voluntario@comedor.test', CLAVE_MOCK)
 
-    expect(await screen.findByRole('heading', { name: 'Turnos' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Turnos de hoy' })).toBeInTheDocument()
   })
 
   it('al abrir la app con el token vencido avisa que la sesión terminó', async () => {
@@ -164,7 +164,7 @@ describe('autenticación', () => {
   it('si se cierra la sesión en otra pestaña también sale de esta', async () => {
     iniciarSesionDePrueba()
     renderizarApp('/turnos')
-    await screen.findByRole('heading', { name: 'Turnos' })
+    await screen.findByRole('heading', { name: 'Turnos de hoy' })
 
     cambiarTokenEnOtraPestana(null)
 
@@ -197,6 +197,6 @@ describe('autenticación', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Reintentar' }))
 
-    expect(await screen.findByRole('heading', { name: 'Turnos' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Turnos de hoy' })).toBeInTheDocument()
   })
 })

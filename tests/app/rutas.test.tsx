@@ -20,7 +20,7 @@ describe('rutas', () => {
   })
 
   it.each([
-    ['/turnos', 'Turnos'],
+    ['/turnos', 'Turnos de hoy'],
     ['/beneficiarios', 'Beneficiarios'],
     ['/inventario', 'Inventario'],
     ['/reportes', 'Reportes'],
@@ -56,7 +56,7 @@ describe('rutas', () => {
   it('al cambiar de pantalla la nueva abre arriba', async () => {
     const desplazar = vi.spyOn(window, 'scrollTo').mockImplementation(() => {})
     renderizarEn('/turnos')
-    await screen.findByRole('heading', { name: 'Turnos' })
+    await screen.findByRole('heading', { name: 'Turnos de hoy' })
     desplazar.mockClear()
 
     await userEvent.click(screen.getByRole('link', { name: 'Reportes' }))
