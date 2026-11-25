@@ -67,6 +67,15 @@ const PAGINAS_DE_MODULO: Readonly<Record<string, RouteObject[]>> = {
       hydrateFallbackElement: <PantallaCarga />,
     },
     {
+      path: ':id/actualizar',
+      lazy: async () => {
+        const { PaginaActualizar } =
+          await import('@/modules/beneficiarios/ui/actualizar/PaginaActualizar.tsx')
+        return { Component: PaginaActualizar }
+      },
+      hydrateFallbackElement: <PantallaCarga />,
+    },
+    {
       path: ':id/tutor',
       element: (
         <ConPermiso permiso="beneficiarios.gestionarTutor" alternativa={<PaginaSinAcceso />}>

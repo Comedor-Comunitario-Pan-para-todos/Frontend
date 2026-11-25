@@ -5,8 +5,7 @@ import { useNavigate } from 'react-router'
 import { useDependencias } from '@/app/contextoDependencias.ts'
 import { nombreCompleto } from '@/modules/beneficiarios/domain/Beneficiario.ts'
 import { esBeneficiarioDuplicado } from '@/modules/beneficiarios/domain/BeneficiarioDuplicado.ts'
-import { esMenorDeEdad } from '@/modules/beneficiarios/domain/edad.ts'
-import { fechaDeHoy } from '@/shared/domain/fechaDeHoy.ts'
+import { esMenorSegunFecha } from '@/modules/beneficiarios/ui/datosBasicos/esquemaDatosBasicos.ts'
 import { useConstancia } from '@/shared/ui/constancia/contextoConstancia.ts'
 import {
   aNuevoBeneficiario,
@@ -76,13 +75,10 @@ export function useRegistro() {
     },
   })
 
-  const hoy = fechaDeHoy()
-
   return {
     formulario,
     nivel,
-    esMenor:
-      fechaNacimiento !== '' && fechaNacimiento <= hoy && esMenorDeEdad(fechaNacimiento, hoy),
+    esMenor: esMenorSegunFecha(fechaNacimiento),
     /** Persona del padrón que parece ser la misma que se está registrando. */
     posibleDuplicado: hayQueVerificar ? (duplicado.data ?? null) : null,
     enviar: formulario.handleSubmit((campos) => registro.mutate(campos)),

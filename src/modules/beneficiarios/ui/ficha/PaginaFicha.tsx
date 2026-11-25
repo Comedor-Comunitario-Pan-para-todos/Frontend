@@ -1,4 +1,4 @@
-import { ArrowLeft, PencilLine, ShieldCheck } from 'lucide-react'
+import { ArrowLeft, PencilLine, ShieldCheck, UserPen } from 'lucide-react'
 import { Link, useParams } from 'react-router'
 import { esMenorDeEdad } from '@/modules/beneficiarios/domain/edad.ts'
 import { useBeneficiario } from '@/modules/beneficiarios/ui/beneficiario/useBeneficiario.ts'
@@ -13,6 +13,9 @@ import { TutorDelMenor } from './TutorDelMenor.tsx'
 import { UsoDeImagen } from './UsoDeImagen.tsx'
 
 const CLASES_TARJETA = 'rounded-lg border border-hairline bg-surface p-4 shadow-card'
+
+const CLASES_ACCION =
+  'inline-flex min-h-touch w-full items-center justify-center gap-2 rounded-md border border-border-input bg-surface px-6 py-2 text-body-lg font-semibold text-primary transition duration-150 ease-press hover:bg-surface-hover active:translate-y-px active:scale-99 md:w-auto'
 
 function EsperaDeLaFicha() {
   return (
@@ -77,14 +80,19 @@ export function PaginaFicha() {
 
       {ficha.data && <DatosDelComensal beneficiario={ficha.data} className={CLASES_TARJETA} />}
 
-      {ficha.data?.nivel === 'BASICO' && (
-        <Link
-          to={`/beneficiarios/${id}/completar`}
-          className="inline-flex min-h-touch w-full items-center justify-center gap-2 rounded-md border border-border-input bg-surface px-6 py-2 text-body-lg font-semibold text-primary transition duration-150 ease-press hover:bg-surface-hover active:translate-y-px active:scale-99 md:w-auto md:self-end"
-        >
-          <PencilLine aria-hidden="true" className="size-5 shrink-0" />
-          Completar datos extendidos
-        </Link>
+      {ficha.data && (
+        <div className="flex flex-col gap-2 md:flex-row md:justify-end">
+          <Link to={`/beneficiarios/${id}/actualizar`} className={CLASES_ACCION}>
+            <UserPen aria-hidden="true" className="size-5 shrink-0" />
+            Actualizar datos
+          </Link>
+          {ficha.data.nivel === 'BASICO' && (
+            <Link to={`/beneficiarios/${id}/completar`} className={CLASES_ACCION}>
+              <PencilLine aria-hidden="true" className="size-5 shrink-0" />
+              Completar datos extendidos
+            </Link>
+          )}
+        </div>
       )}
 
       {ficha.data && <AutorizacionDeDatos beneficiario={ficha.data} className={CLASES_TARJETA} />}
