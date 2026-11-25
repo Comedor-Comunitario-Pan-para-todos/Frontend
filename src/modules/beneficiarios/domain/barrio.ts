@@ -19,6 +19,12 @@ export function claveDeBarrio(texto: string): string {
     .trim()
 }
 
+export function barrioRegistrado(texto: string, barrios: readonly string[]): string | null {
+  const clave = claveDeBarrio(texto)
+  if (clave === '') return null
+  return barrios.find((barrio) => claveDeBarrio(barrio) === clave) ?? null
+}
+
 export function sugerirBarrios(texto: string, barrios: readonly string[]): readonly string[] {
   const escritas = formasParaSugerir(texto)
   if (escritas.length === 0) return []

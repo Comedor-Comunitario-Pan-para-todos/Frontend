@@ -84,3 +84,68 @@ describe('sugerencias de barrio', () => {
     expect(await screen.findByText('Datos actualizados')).toBeInTheDocument()
   })
 })
+
+describe('al salir del campo barrio', () => {
+  beforeEach(() => {
+    localStorage.clear()
+    reiniciarBeneficiariosMock()
+    servidor.use(...handlers)
+    iniciarSesionDePrueba(VOLUNTARIO)
+  })
+
+  async function escribirConBarriosCargados(texto: string) {
+    renderizarApp('/beneficiarios/nuevo')
+    await screen.findByLabelText('Barrio o sector')
+    await escribirBarrio('el')
+    await screen.findByRole('button', { name: 'El Jardín' })
+    await escribirBarrio(texto)
+  }
+
+  it('lo deja escrito como el barrio ya registrado', async () => {
+    await escribirConBarriosCargados('el jardin')
+
+    await userEvent.click(screen.getByLabelText('Nombres'))
+
+    expect(campoBarrio()).toHaveValue('El Jardín')
+  })
+
+  it('si sobraba largo por espacios, al dejarlo bien quita el error', async () => {
+    await escribirConBarriosCargados(`El${' '.repeat(100)}Jardín`)
+
+    await userEvent.click(screen.getByLabelText('Nombres'))
+
+    expect(campoBarrio()).toHaveValue('El Jardín')
+    expect(campoBarrio()).not.toHaveAttribute('aria-invalid')
+  })
+
+  it('no cambia lo que solo se parece: queda la sugerencia', async () => {
+    await escribirConBarriosCargados('B/ El Jardín')
+
+    await userEvent.click(screen.getByLabelText('Nombres'))
+
+    expect(campoBarrio()).toHaveValue('B/ El Jardín')
+    expect(sugerencias()).toEqual(['El Jardín'])
+  })
+
+  it('pasar con Tab a las sugerencias no lo cambia; salir de ellas sí', async () => {
+    await escribirConBarriosCargados('el jardin')
+
+    await userEvent.tab()
+    expect(screen.getByRole('button', { name: 'El Jardín' })).toHaveFocus()
+    expect(campoBarrio()).toHaveValue('el jardin')
+
+    await userEvent.tab()
+    expect(campoBarrio()).toHaveValue('El Jardín')
+  })
+
+  it('al presionar una sugerencia el campo no pierde el foco', async () => {
+    await escribirConBarriosCargados('el')
+
+    await userEvent.pointer({
+      keys: '[MouseLeft>]',
+      target: screen.getByRole('button', { name: 'El Poblado' }),
+    })
+
+    expect(campoBarrio()).toHaveFocus()
+  })
+})

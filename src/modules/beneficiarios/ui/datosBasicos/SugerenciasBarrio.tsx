@@ -32,6 +32,7 @@ export function SugerenciasBarrio({ escrito, barrios, onElegir }: SugerenciasBar
                 <button
                   type="button"
                   className={CLASES_SUGERENCIA}
+                  onMouseDown={(evento) => evento.preventDefault()}
                   onClick={() => onElegir(barrio)}
                 >
                   <MapPin aria-hidden="true" className="size-4 shrink-0" />

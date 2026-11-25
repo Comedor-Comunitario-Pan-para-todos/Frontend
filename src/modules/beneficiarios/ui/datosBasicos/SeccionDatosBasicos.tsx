@@ -1,5 +1,7 @@
 import { MapPin, User } from 'lucide-react'
+import type { FocusEvent } from 'react'
 import { useFormContext, useWatch } from 'react-hook-form'
+import { barrioRegistrado } from '@/modules/beneficiarios/domain/barrio.ts'
 import { fechaDeHoy } from '@/shared/domain/fechaDeHoy.ts'
 import { Alerta } from '@/shared/ui/Alerta.tsx'
 import { CampoTexto } from '@/shared/ui/CampoTexto.tsx'
@@ -26,6 +28,12 @@ export function SeccionDatosBasicos({ esMenor }: SeccionDatosBasicosProps) {
   function elegirBarrio(elegido: string) {
     setValue('barrio', elegido, { shouldDirty: true, shouldTouch: true, shouldValidate: true })
     setFocus('barrio')
+  }
+
+  function unificarBarrio(evento: FocusEvent<HTMLDivElement>) {
+    if (evento.currentTarget.contains(evento.relatedTarget)) return
+    const registrado = barrioRegistrado(barrio, barrios)
+    if (registrado !== null) setValue('barrio', registrado)
   }
 
   return (
@@ -69,7 +77,7 @@ export function SeccionDatosBasicos({ esMenor }: SeccionDatosBasicosProps) {
         </Alerta>
       )}
 
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2" onBlur={unificarBarrio}>
         <CampoTexto
           etiqueta="Barrio o sector"
           nota="Opcional"

@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { claveDeBarrio, sugerirBarrios } from '@/modules/beneficiarios/domain/barrio.ts'
+import {
+  barrioRegistrado,
+  claveDeBarrio,
+  sugerirBarrios,
+} from '@/modules/beneficiarios/domain/barrio.ts'
 
 const BARRIOS = ['Cuba', 'El Jardín', 'El Poblado', 'Otún', 'Villasantana']
 
@@ -17,6 +21,26 @@ describe('claveDeBarrio', () => {
 
   it('separa lo que estaba unido por signos', () => {
     expect(claveDeBarrio('B/El Jardín')).toBe('b el jardin')
+  })
+})
+
+describe('barrioRegistrado', () => {
+  it.each(['el jardin', 'EL JARDÍN', '  El   Jardín. ', 'El-Jardín'])(
+    '"%s" es El Jardín',
+    (texto) => {
+      expect(barrioRegistrado(texto, BARRIOS)).toBe('El Jardín')
+    },
+  )
+
+  it('no unifica lo que solo se parece: eso queda como sugerencia', () => {
+    expect(barrioRegistrado('B/ El Jardín', BARRIOS)).toBeNull()
+    expect(barrioRegistrado('Jardín', BARRIOS)).toBeNull()
+    expect(barrioRegistrado('El Jardn', BARRIOS)).toBeNull()
+  })
+
+  it('sin nada escrito no hay barrio', () => {
+    expect(barrioRegistrado('', BARRIOS)).toBeNull()
+    expect(barrioRegistrado(' . ', ['.'])).toBeNull()
   })
 })
 
