@@ -59,7 +59,7 @@ describe('aprobar al tutor de un menor', () => {
     await screen.findByRole('button', { name: 'Aprobar al tutor' })
     await llenarFormulario()
     await aprobar()
-    await screen.findByText('Tutor aprobado')
+    await screen.findByRole('link', { name: 'Volver al padrón' })
 
     await enrutador.navigate(`/beneficiarios/${ID_CARLOS}/tutor`)
 
