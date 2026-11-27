@@ -1,10 +1,11 @@
-import { Download, X } from 'lucide-react'
-import { useEffect, useId, useRef, useState } from 'react'
+import { Download } from 'lucide-react'
+import { useState } from 'react'
 import type { RangoFechas } from '@/modules/reportes/domain/RangoFechas.ts'
 import type { ResumenExportacion } from '@/modules/reportes/domain/ResumenExportacion.ts'
 import { Alerta } from '@/shared/ui/Alerta.tsx'
 import { Boton } from '@/shared/ui/Boton.tsx'
 import { CasillaVerificacion } from '@/shared/ui/CasillaVerificacion.tsx'
+import { HojaInferior } from '@/shared/ui/HojaInferior.tsx'
 import { textoDelRango } from './textos.ts'
 
 interface ConfirmacionDescargaDialogProps {
@@ -15,9 +16,7 @@ interface ConfirmacionDescargaDialogProps {
   alCancelar(): void
 }
 
-interface ContenidoProps extends Omit<ConfirmacionDescargaDialogProps, 'abierto'> {
-  readonly idTitulo: string
-}
+type ContenidoProps = Omit<ConfirmacionDescargaDialogProps, 'abierto'>
 
 function Dato({ etiqueta, valor, mono }: { etiqueta: string; valor: string; mono?: boolean }) {
   return (
@@ -30,25 +29,12 @@ function Dato({ etiqueta, valor, mono }: { etiqueta: string; valor: string; mono
   )
 }
 
-function Contenido({ idTitulo, rango, resumen, alConfirmar, alCancelar }: ContenidoProps) {
+function Contenido({ rango, resumen, alConfirmar, alCancelar }: ContenidoProps) {
   // Se monta cada vez que se abre: la casilla siempre empieza sin marcar.
   const [acepto, setAcepto] = useState(false)
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-start justify-between gap-3">
-        <h2 id={idTitulo} className="pt-3 text-title font-semibold text-ink">
-          Confirmar descarga
-        </h2>
-        <button
-          type="button"
-          aria-label="Cerrar"
-          onClick={alCancelar}
-          className="-mr-3 flex size-touch shrink-0 items-center justify-center rounded-md text-ink-secondary transition duration-150 ease-press hover:bg-surface-hover"
-        >
-          <X aria-hidden="true" className="size-6" />
-        </button>
-      </div>
+    <>
       <p className="text-body text-ink-secondary">
         Revise lo que va a descargar antes de continuar.
       </p>
@@ -86,38 +72,14 @@ function Contenido({ idTitulo, rango, resumen, alConfirmar, alCancelar }: Conten
           «Confirmar y descargar» se activa cuando marque la casilla.
         </p>
       )}
-    </div>
+    </>
   )
 }
 
-/**
- * Última revisión antes de bajar datos personales (RNF-08): resume el archivo y pide que la
- * el Presidente de la JAC acepte ser responsable de él. En teléfono es una hoja inferior; desde tablet,
- * una ventana centrada.
- */
 export function ConfirmacionDescargaDialog({ abierto, ...resto }: ConfirmacionDescargaDialogProps) {
-  const dialogo = useRef<HTMLDialogElement>(null)
-  const idTitulo = useId()
-
-  useEffect(() => {
-    const elemento = dialogo.current
-    if (!elemento) return
-    if (abierto && !elemento.open) elemento.showModal()
-    if (!abierto && elemento.open) elemento.close()
-  }, [abierto])
-
   return (
-    <dialog
-      ref={dialogo}
-      aria-labelledby={idTitulo}
-      // Escape cierra igual que «Cancelar»: el estado lo sigue llevando quien abre la ventana.
-      onCancel={(evento) => {
-        evento.preventDefault()
-        resto.alCancelar()
-      }}
-      className="mx-0 mt-auto mb-0 w-full max-w-full rounded-t-lg bg-surface px-6 pt-4 pb-safe text-ink shadow-raised backdrop:bg-surface-dark/50 md:m-auto md:max-w-narrow md:rounded-lg md:pb-6"
-    >
-      {abierto && <Contenido idTitulo={idTitulo} {...resto} />}
-    </dialog>
+    <HojaInferior abierta={abierto} titulo="Confirmar descarga" alCerrar={resto.alCancelar}>
+      <Contenido {...resto} />
+    </HojaInferior>
   )
 }
