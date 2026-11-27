@@ -202,9 +202,13 @@ el padrón guarde quién es tutor de quién (Ley 1581, minimización).
 
 ## 7. Lo que hace la ficha
 
-**Autorización de datos.** Quien se registró antes de RF-19 llega con
-`consentimiento: null`: la ficha muestra «Autorización pendiente» y deja
-registrarla. Si es menor, el texto pide explicarle la política al adulto que lo
+Las autorizaciones van en un solo bloque, «Autorizaciones», con una fila por
+permiso: Uso de datos, Tutor del menor (solo si es menor) y Uso de imagen. Cada
+fila muestra su estado con color, ícono y texto. Lo ya registrado se resume en
+una línea: fecha y hora, quién lo anotó y la versión de la política.
+
+**Uso de datos.** Quien se registró antes de RF-19 llega con
+`consentimiento: null`: la fila muestra «Pendiente» y deja registrarla. Si es menor, el texto pide explicarle la política al adulto que lo
 acompaña.
 
 La ficha no muestra el texto de las políticas. Al pedir una autorización se abre
@@ -234,7 +238,8 @@ texto:
 * «Ver historial» muestra cada autorización y cada retiro como un movimiento, con
   la fecha y quién lo anotó. Solo se pide al servidor cuando alguien lo abre.
 
-**Tutor del menor (RF-21).** Solo aparece en la ficha de un menor de edad.
+**Tutor del menor (RF-21).** Solo aparece en la ficha de un menor de edad, antes
+de Uso de imagen, porque sin tutor aprobado no hay fotos.
 
 * Sin tutor aprobado, explica quién firma. La Coordinadora ve «Aprobar al tutor»,
   que abre `/beneficiarios/:id/tutor`; los demás roles leen que lo aprueba la

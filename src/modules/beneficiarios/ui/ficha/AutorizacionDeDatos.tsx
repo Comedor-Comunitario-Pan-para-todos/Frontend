@@ -1,23 +1,33 @@
+import { ShieldAlert, ShieldCheck } from 'lucide-react'
 import type { Beneficiario } from '@/modules/beneficiarios/domain/Beneficiario.ts'
 import { AutorizacionPendiente } from './AutorizacionPendiente.tsx'
-import { AutorizacionRegistrada } from './AutorizacionRegistrada.tsx'
+import { FilaAutorizacion, type EstadoDeAutorizacion } from './FilaAutorizacion.tsx'
+import { LineaDeAuditoria } from './LineaDeAuditoria.tsx'
+
+const AUTORIZADO: EstadoDeAutorizacion = { texto: 'Autorizado', icono: ShieldCheck, tono: 'exito' }
+const PENDIENTE: EstadoDeAutorizacion = { texto: 'Pendiente', icono: ShieldAlert, tono: 'aviso' }
 
 interface AutorizacionDeDatosProps {
   readonly beneficiario: Beneficiario
-  readonly className?: string
 }
 
-export function AutorizacionDeDatos({ beneficiario, className = '' }: AutorizacionDeDatosProps) {
+export function AutorizacionDeDatos({ beneficiario }: AutorizacionDeDatosProps) {
+  const { consentimiento } = beneficiario
+
   return (
-    <section aria-labelledby="titulo-autorizacion" className={`flex flex-col gap-3 ${className}`}>
-      <h2 id="titulo-autorizacion" className="text-body-lg font-semibold text-ink">
-        Autorización de datos
-      </h2>
-      {beneficiario.consentimiento ? (
-        <AutorizacionRegistrada consentimiento={beneficiario.consentimiento} />
-      ) : (
-        <AutorizacionPendiente beneficiario={beneficiario} />
-      )}
-    </section>
+    <FilaAutorizacion
+      titulo="Uso de datos"
+      estado={consentimiento ? AUTORIZADO : PENDIENTE}
+      detalle={
+        consentimiento && (
+          <LineaDeAuditoria
+            momento={consentimiento.registradoEn}
+            autor={consentimiento.registradoPor}
+            versionPolitica={consentimiento.versionPolitica}
+          />
+        )
+      }
+      accion={!consentimiento && <AutorizacionPendiente beneficiario={beneficiario} />}
+    />
   )
 }

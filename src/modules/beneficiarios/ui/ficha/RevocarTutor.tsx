@@ -21,9 +21,9 @@ export function RevocarTutor({ beneficiario, nombreTutor }: RevocarTutorProps) {
   if (!abierto) {
     return (
       <Boton
-        variante="secundario"
+        variante="suave"
         onClick={() => setAbierto(true)}
-        className="w-full md:w-auto md:self-end"
+        className="w-full md:w-60 md:self-end"
       >
         Revocar al tutor
       </Boton>

@@ -1,4 +1,3 @@
-import { TriangleAlert } from 'lucide-react'
 import { useState } from 'react'
 import { nombreCompleto, type Beneficiario } from '@/modules/beneficiarios/domain/Beneficiario.ts'
 import { esMenorDeEdad } from '@/modules/beneficiarios/domain/edad.ts'
@@ -12,7 +11,6 @@ interface AutorizacionPendienteProps {
   readonly beneficiario: Beneficiario
 }
 
-/** Para quien se registró sin que quedara guardada su autorización. */
 export function AutorizacionPendiente({ beneficiario }: AutorizacionPendienteProps) {
   const guardarConsentimiento = useGuardarConsentimiento()
   const constancia = useConstancia()
@@ -29,24 +27,18 @@ export function AutorizacionPendiente({ beneficiario }: AutorizacionPendientePro
   }
 
   return (
-    <>
-      <span className="inline-flex items-center gap-1 self-start rounded-pill bg-warning-soft px-3 py-1 text-label font-medium text-warning">
-        <TriangleAlert aria-hidden="true" className="size-4 shrink-0" />
-        Autorización pendiente
-      </span>
-      <PedirAutorizacion
-        etiqueta="Pedir autorización de datos"
-        titulo="Autorización de datos"
-        instruccion={
-          esMenor
-            ? 'Es menor de edad: explíquele la política de datos al adulto que lo acompaña. Si está de acuerdo, registre la autorización.'
-            : 'Explíquele la política de datos. Si está de acuerdo, registre su autorización.'
-        }
-        politica={POLITICA_VIGENTE}
-        confirmacion={esMenor ? 'Le expliqué al adulto y aceptó' : 'Le expliqué y aceptó'}
-        guardando={guardando}
-        alConfirmar={() => void registrarAutorizacion()}
-      />
-    </>
+    <PedirAutorizacion
+      objeto="de datos"
+      titulo="Autorización de datos"
+      instruccion={
+        esMenor
+          ? 'Es menor de edad: explíquele la política de datos al adulto que lo acompaña. Si está de acuerdo, registre la autorización.'
+          : 'Explíquele la política de datos. Si está de acuerdo, registre su autorización.'
+      }
+      politica={POLITICA_VIGENTE}
+      confirmacion={esMenor ? 'Le expliqué al adulto y aceptó' : 'Le expliqué y aceptó'}
+      guardando={guardando}
+      alConfirmar={() => void registrarAutorizacion()}
+    />
   )
 }

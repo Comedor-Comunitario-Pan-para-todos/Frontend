@@ -6,7 +6,7 @@ import { Boton } from '@/shared/ui/Boton.tsx'
 import { HojaInferior } from '@/shared/ui/HojaInferior.tsx'
 
 interface PedirAutorizacionProps {
-  readonly etiqueta: string
+  readonly objeto: string
   readonly titulo: string
   readonly instruccion: string
   readonly politica: PoliticaVigente
@@ -17,7 +17,7 @@ interface PedirAutorizacionProps {
 
 /** La política se explica en una hoja aparte, solo cuando se pide la autorización. */
 export function PedirAutorizacion({
-  etiqueta,
+  objeto,
   titulo,
   instruccion,
   politica,
@@ -35,13 +35,14 @@ export function PedirAutorizacion({
   return (
     <>
       <Boton
-        variante="secundario"
+        variante="suave"
         cargando={guardando}
         onClick={() => setAbierta(true)}
-        className="w-full md:w-auto md:self-end"
+        aria-label={`Pedir autorización ${objeto}`}
+        className="w-full"
       >
         {!guardando && <ClipboardPen aria-hidden="true" className="size-5 shrink-0" />}
-        {etiqueta}
+        Pedir autorización
       </Boton>
       <HojaInferior abierta={abierta} titulo={titulo} alCerrar={() => setAbierta(false)}>
         <p className="text-body text-ink-secondary">{instruccion}</p>

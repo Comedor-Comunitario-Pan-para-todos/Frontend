@@ -13,7 +13,7 @@ export function AutorizarUsoDeImagen({ beneficiario, porElTutor }: AutorizarUsoD
 
   return (
     <PedirAutorizacion
-      etiqueta="Pedir autorización de fotos"
+      objeto="de fotos"
       titulo="Autorización de fotos"
       instruccion={
         porElTutor

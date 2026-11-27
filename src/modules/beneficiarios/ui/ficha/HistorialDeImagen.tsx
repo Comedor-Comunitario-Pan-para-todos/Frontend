@@ -41,11 +41,8 @@ export function HistorialDeImagen({ idBeneficiario }: HistorialDeImagenProps) {
   const historial = useHistorialDeImagen(idBeneficiario, abierto)
 
   return (
-    <details
-      className="group border-t border-hairline pt-1"
-      onToggle={(evento) => setAbierto(evento.currentTarget.open)}
-    >
-      <summary className="flex min-h-touch cursor-pointer items-center justify-between gap-2 text-body font-semibold text-primary">
+    <details className="group" onToggle={(evento) => setAbierto(evento.currentTarget.open)}>
+      <summary className="flex min-h-touch w-fit cursor-pointer items-center gap-2 rounded-sm text-body font-semibold text-primary">
         Ver historial
         <ChevronDown
           aria-hidden="true"

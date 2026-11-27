@@ -81,10 +81,8 @@ describe('completar datos extendidos', () => {
     await screen.findByText('Registro extendido')
     await waitFor(() => expect(cliente.isFetching()).toBe(0))
 
-    const autorizacion = screen.getByRole('region', { name: 'Autorización de datos' })
-    expect(
-      await within(autorizacion).findByText('Autorizó el uso de sus datos'),
-    ).toBeInTheDocument()
+    const autorizacion = screen.getByRole('region', { name: 'Uso de datos' })
+    expect(await within(autorizacion).findByText('Autorizado')).toBeInTheDocument()
   })
 
   it('si no se guarda la autorización, lleva a la ficha y deja reintentar solo eso', async () => {
