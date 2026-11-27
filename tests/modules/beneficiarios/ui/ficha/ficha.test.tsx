@@ -18,6 +18,7 @@ const VOLUNTARIO = 'mock-token.mock-3'
 const ID_MARIA = '00000000-0000-4000-8000-000000000001'
 const ID_CARLOS = '00000000-0000-4000-8000-000000000002'
 const AUTORIZAR_FOTOS = 'Le expliqué y autorizó las fotos'
+const PEDIR_FOTOS = 'Pedir autorización de fotos'
 const ID_ROSA = '00000000-0000-4000-8000-000000000003'
 
 function abrirFicha(id: string, token = VOLUNTARIO) {
@@ -35,6 +36,15 @@ function autorizarFotos(id: string) {
 
 function historialDeFotos(id: string) {
   return consentimientos().consultarHistorial(id, FINALIDAD_USO_IMAGEN)
+}
+
+async function pedirAutorizacion(seccion: HTMLElement, etiqueta: string, titulo: string) {
+  await userEvent.click(within(seccion).getByRole('button', { name: etiqueta }))
+  return screen.getByRole('dialog', { name: titulo })
+}
+
+function pedirFotos(imagen: HTMLElement) {
+  return pedirAutorizacion(imagen, PEDIR_FOTOS, 'Autorización de fotos')
 }
 
 function dato(nombre: string) {
@@ -147,9 +157,43 @@ describe('ficha del comensal', () => {
     abrirFicha(ID_ROSA)
     const autorizacion = await screen.findByRole('region', { name: 'Autorización de datos' })
 
-    expect(
-      within(autorizacion).getByRole('button', { name: 'Le expliqué y aceptó' }),
-    ).toBeInTheDocument()
+    const hoja = await pedirAutorizacion(
+      autorizacion,
+      'Pedir autorización de datos',
+      'Autorización de datos',
+    )
+
+    expect(within(hoja).getByRole('button', { name: 'Le expliqué y aceptó' })).toBeInTheDocument()
+  })
+
+  it('la política se explica en una hoja, no en la ficha', async () => {
+    abrirFicha(ID_ROSA)
+    const autorizacion = await screen.findByRole('region', { name: 'Autorización de datos' })
+    expect(screen.queryByText('Política de datos · versión 1')).not.toBeInTheDocument()
+
+    const hoja = await pedirAutorizacion(
+      autorizacion,
+      'Pedir autorización de datos',
+      'Autorización de datos',
+    )
+
+    expect(within(hoja).getByText(/Explíquele la política de datos/)).toBeInTheDocument()
+    expect(within(hoja).getByText('Política de datos · versión 1')).toBeInTheDocument()
+  })
+
+  it('al cancelar se cierra la hoja y la autorización sigue pendiente', async () => {
+    abrirFicha(ID_ROSA)
+    const autorizacion = await screen.findByRole('region', { name: 'Autorización de datos' })
+    const hoja = await pedirAutorizacion(
+      autorizacion,
+      'Pedir autorización de datos',
+      'Autorización de datos',
+    )
+
+    await userEvent.click(within(hoja).getByRole('button', { name: 'Cancelar' }))
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(within(autorizacion).getByText('Autorización pendiente')).toBeInTheDocument()
   })
 
   it('si falta la autorización, deja registrarla desde la ficha', async () => {
@@ -157,9 +201,16 @@ describe('ficha del comensal', () => {
     const autorizacion = await screen.findByRole('region', { name: 'Autorización de datos' })
     expect(within(autorizacion).getByText('Autorización pendiente')).toBeInTheDocument()
 
-    await userEvent.click(
-      within(autorizacion).getByRole('button', { name: 'Le expliqué al adulto y aceptó' }),
+    const hoja = await pedirAutorizacion(
+      autorizacion,
+      'Pedir autorización de datos',
+      'Autorización de datos',
     )
+    await userEvent.click(
+      within(hoja).getByRole('button', { name: 'Le expliqué al adulto y aceptó' }),
+    )
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
 
     expect(await screen.findByText('Autorización guardada')).toBeInTheDocument()
     expect(await within(autorizacion).findByText('Voluntario de Prueba')).toBeInTheDocument()
@@ -207,16 +258,34 @@ describe('ficha del comensal', () => {
     it('deja registrar la autorización después de explicar la política de imagen', async () => {
       abrirFicha(ID_ROSA)
       const imagen = await screen.findByRole('region', { name: 'Uso de imagen' })
-      expect(within(imagen).getByText('Política de uso de imagen · versión 1')).toBeInTheDocument()
+      const hoja = await pedirFotos(imagen)
+      expect(within(hoja).getByText(/^Explíquele la política de imagen/)).toBeInTheDocument()
+      expect(within(hoja).getByText('Política de uso de imagen · versión 1')).toBeInTheDocument()
 
-      await userEvent.click(within(imagen).getByRole('button', { name: AUTORIZAR_FOTOS }))
+      await userEvent.click(within(hoja).getByRole('button', { name: AUTORIZAR_FOTOS }))
 
       expect(await screen.findByText('Autorización de imagen guardada')).toBeInTheDocument()
       expect(await within(imagen).findByText('Foto autorizada')).toBeInTheDocument()
       expect(within(imagen).getByText('Voluntario de Prueba')).toBeInTheDocument()
-      expect(
-        within(imagen).queryByRole('button', { name: AUTORIZAR_FOTOS }),
-      ).not.toBeInTheDocument()
+      expect(within(imagen).queryByRole('button', { name: PEDIR_FOTOS })).not.toBeInTheDocument()
+    })
+
+    it('mientras se guarda, la hoja se cierra y el botón muestra que está guardando', async () => {
+      servidor.use(
+        http.post(`*/api/beneficiarios/${ID_ROSA}/consentimiento`, () => new Promise(() => {})),
+      )
+      abrirFicha(ID_ROSA)
+      const imagen = await screen.findByRole('region', { name: 'Uso de imagen' })
+
+      await userEvent.click(
+        within(await pedirFotos(imagen)).getByRole('button', { name: AUTORIZAR_FOTOS }),
+      )
+
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+      expect(within(imagen).getByRole('button', { name: PEDIR_FOTOS })).toHaveAttribute(
+        'aria-busy',
+        'true',
+      )
     })
 
     it('la insignia cambia con la respuesta, sin esperar a que se recargue la ficha', async () => {
@@ -224,7 +293,9 @@ describe('ficha del comensal', () => {
       const imagen = await screen.findByRole('region', { name: 'Uso de imagen' })
       servidor.use(http.get(`*/api/beneficiarios/${ID_ROSA}`, () => new Promise(() => {})))
 
-      await userEvent.click(within(imagen).getByRole('button', { name: AUTORIZAR_FOTOS }))
+      await userEvent.click(
+        within(await pedirFotos(imagen)).getByRole('button', { name: AUTORIZAR_FOTOS }),
+      )
 
       expect(await within(imagen).findByText('Foto autorizada')).toBeInTheDocument()
     })
@@ -240,7 +311,9 @@ describe('ficha del comensal', () => {
       abrirFicha(ID_ROSA)
       const imagen = await screen.findByRole('region', { name: 'Uso de imagen' })
 
-      await userEvent.click(within(imagen).getByRole('button', { name: AUTORIZAR_FOTOS }))
+      await userEvent.click(
+        within(await pedirFotos(imagen)).getByRole('button', { name: AUTORIZAR_FOTOS }),
+      )
 
       expect(await screen.findByText('No se guardó la autorización de imagen')).toBeInTheDocument()
       expect(within(imagen).getByText('Rostro no fotografiable')).toBeInTheDocument()
@@ -250,15 +323,12 @@ describe('ficha del comensal', () => {
       expect(await within(imagen).findByText('Foto autorizada')).toBeInTheDocument()
     })
 
-    it('a un menor no deja autorizarla y explica por qué', async () => {
+    it('a un menor no deja pedirla y explica por qué', async () => {
       abrirFicha(ID_CARLOS)
       const imagen = await screen.findByRole('region', { name: 'Uso de imagen' })
 
-      const boton = within(imagen).getByRole('button', { name: AUTORIZAR_FOTOS })
-
-      expect(boton).toBeDisabled()
-      expect(boton).toHaveAccessibleDescription(/es menor de edad/i)
-      expect(within(imagen).queryByText(/Política de uso de imagen/)).not.toBeInTheDocument()
+      expect(within(imagen).getByText(/es menor de edad/i)).toBeInTheDocument()
+      expect(within(imagen).queryByRole('button', { name: PEDIR_FOTOS })).not.toBeInTheDocument()
     })
 
     it('deja retirar la autorización después de confirmarlo', async () => {
@@ -278,7 +348,7 @@ describe('ficha del comensal', () => {
 
       expect(await screen.findByText('Autorización de imagen retirada')).toBeInTheDocument()
       expect(await within(imagen).findByText('Rostro no fotografiable')).toBeInTheDocument()
-      expect(within(imagen).getByRole('button', { name: AUTORIZAR_FOTOS })).toBeEnabled()
+      expect(within(imagen).getByRole('button', { name: PEDIR_FOTOS })).toBeEnabled()
       expect(within(imagen).queryByText('Tomada por')).not.toBeInTheDocument()
     })
 
@@ -384,7 +454,9 @@ describe('ficha del comensal', () => {
       const imagen = await abrirHistorial(ID_ROSA)
       await within(imagen).findByText('Todavía no hay cambios.')
 
-      await userEvent.click(within(imagen).getByRole('button', { name: AUTORIZAR_FOTOS }))
+      await userEvent.click(
+        within(await pedirFotos(imagen)).getByRole('button', { name: AUTORIZAR_FOTOS }),
+      )
 
       expect(await within(imagen).findByText('Autorizó')).toBeInTheDocument()
 

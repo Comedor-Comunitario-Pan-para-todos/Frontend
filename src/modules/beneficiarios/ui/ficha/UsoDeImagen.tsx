@@ -21,21 +21,19 @@ interface UsoDeImagenProps {
 
 const EXPLICACION: Record<EstadoUsoImagen, string> = {
   AUTORIZADA: 'Se le pueden tomar fotos para mostrar el trabajo del comedor.',
-  NO_AUTORIZADA:
-    'No se le toman fotos en las que se le reconozca. Explíquele la política de imagen y, si está de acuerdo, registre su autorización.',
+  NO_AUTORIZADA: 'No se le toman fotos en las que se le reconozca.',
   REQUIERE_TUTOR:
     'Es menor de edad. Para tomarle fotos se necesita la autorización de su madre, padre o tutor.',
 }
 
 const EXPLICACION_MENOR_CON_TUTOR = {
-  coordinadora:
-    'No se le toman fotos en las que se le reconozca. Explíquele al tutor la política de imagen y, si está de acuerdo, registre la autorización.',
+  coordinadora: 'No se le toman fotos en las que se le reconozca.',
   otros:
     'No se le toman fotos en las que se le reconozca. La autorización la da su tutor y la registra la coordinación.',
 }
 
 const EXPLICACION_AL_CUMPLIR_18 =
-  'Cumplió 18 años: la autorización que dio su tutor ya no vale. Explíquele la política de imagen y, si está de acuerdo, registre la suya.'
+  'Cumplió 18 años: la autorización que dio su tutor ya no vale. Ahora necesita la suya.'
 
 export function UsoDeImagen({ beneficiario, className = '' }: UsoDeImagenProps) {
   const puedeGestionarTutor = usePermiso('beneficiarios.gestionarTutor')
@@ -56,9 +54,7 @@ export function UsoDeImagen({ beneficiario, className = '' }: UsoDeImagenProps) 
         Uso de imagen
       </h2>
       <InsigniaUsoImagen estado={estado} />
-      <p id="explicacion-uso-imagen" className="text-body text-ink-secondary">
-        {explicacion}
-      </p>
+      <p className="text-body text-ink-secondary">{explicacion}</p>
       {autorizacion ? (
         <>
           <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
@@ -73,13 +69,9 @@ export function UsoDeImagen({ beneficiario, className = '' }: UsoDeImagenProps) 
           <RetirarUsoDeImagen beneficiario={beneficiario} />
         </>
       ) : (
+        estado !== 'REQUIERE_TUTOR' &&
         (!porElTutor || puedeGestionarTutor) && (
-          <AutorizarUsoDeImagen
-            beneficiario={beneficiario}
-            requiereTutor={estado === 'REQUIERE_TUTOR'}
-            porElTutor={porElTutor}
-            idExplicacion="explicacion-uso-imagen"
-          />
+          <AutorizarUsoDeImagen beneficiario={beneficiario} porElTutor={porElTutor} />
         )
       )}
       <HistorialDeImagen idBeneficiario={beneficiario.id} />

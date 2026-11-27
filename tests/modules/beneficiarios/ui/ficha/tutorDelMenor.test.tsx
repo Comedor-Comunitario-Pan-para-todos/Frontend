@@ -33,6 +33,7 @@ function aprobarTutor(tipoDocumento: 'CC' | 'PASAPORTE' = 'CC', numeroDocumento 
 }
 
 const AUTORIZAR_POR_EL_TUTOR = 'Le expliqué al tutor y autorizó las fotos'
+const PEDIR_FOTOS = 'Pedir autorización de fotos'
 
 function autorizarFotosDelMenor() {
   return new ConsentimientoHttpRepository(crearHttp(COORDINADORA)).registrar(
@@ -143,10 +144,12 @@ describe('tutor del menor en la ficha', () => {
       await aprobarTutor()
       abrirFicha(ID_CARLOS, COORDINADORA)
       const imagen = await seccionImagen()
-      expect(within(imagen).getByText(/Explíquele al tutor la política/)).toBeInTheDocument()
-      expect(within(imagen).getByText('Política de uso de imagen · versión 1')).toBeInTheDocument()
+      await userEvent.click(within(imagen).getByRole('button', { name: PEDIR_FOTOS }))
+      const hoja = screen.getByRole('dialog', { name: 'Autorización de fotos' })
+      expect(within(hoja).getByText(/Explíquele al tutor la política/)).toBeInTheDocument()
+      expect(within(hoja).getByText('Política de uso de imagen · versión 1')).toBeInTheDocument()
 
-      await userEvent.click(within(imagen).getByRole('button', { name: AUTORIZAR_POR_EL_TUTOR }))
+      await userEvent.click(within(hoja).getByRole('button', { name: AUTORIZAR_POR_EL_TUTOR }))
 
       expect(await within(imagen).findByText('Foto autorizada')).toBeInTheDocument()
       expect(within(imagen).getByText('Coordinación de Prueba')).toBeInTheDocument()
@@ -159,7 +162,7 @@ describe('tutor del menor en la ficha', () => {
       const imagen = await seccionImagen()
 
       expect(within(imagen).getByText(/la registra la coordinación/)).toBeInTheDocument()
-      expect(within(imagen).queryByRole('button', { name: /autorizó las fotos/ })).toBeNull()
+      expect(within(imagen).queryByRole('button', { name: PEDIR_FOTOS })).toBeNull()
     })
 
     it('el Voluntario sí puede retirarla', async () => {
@@ -316,8 +319,9 @@ describe('tutor del menor en la ficha', () => {
       expect(within(imagen).queryByRole('button', { name: 'Retirar autorización' })).toBeNull()
       expect(screen.queryByRole('region', { name: 'Tutor del menor' })).toBeNull()
 
+      await userEvent.click(within(imagen).getByRole('button', { name: PEDIR_FOTOS }))
       await userEvent.click(
-        within(imagen).getByRole('button', { name: 'Le expliqué y autorizó las fotos' }),
+        screen.getByRole('button', { name: 'Le expliqué y autorizó las fotos' }),
       )
 
       expect(await within(imagen).findByText('Foto autorizada')).toBeInTheDocument()

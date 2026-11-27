@@ -2,12 +2,11 @@ import { TriangleAlert } from 'lucide-react'
 import { useState } from 'react'
 import { nombreCompleto, type Beneficiario } from '@/modules/beneficiarios/domain/Beneficiario.ts'
 import { esMenorDeEdad } from '@/modules/beneficiarios/domain/edad.ts'
-import { fechaDeHoy } from '@/shared/domain/fechaDeHoy.ts'
-import { PoliticaTratamiento } from '@/modules/beneficiarios/ui/datosSensibles/PoliticaTratamiento.tsx'
-import { useGuardarConsentimiento } from '@/modules/beneficiarios/ui/datosSensibles/useGuardarConsentimiento.ts'
-import { Boton } from '@/shared/ui/Boton.tsx'
-import { useConstancia } from '@/shared/ui/constancia/contextoConstancia.ts'
 import { POLITICA_VIGENTE } from '@/modules/beneficiarios/domain/politicaVigente.ts'
+import { useGuardarConsentimiento } from '@/modules/beneficiarios/ui/datosSensibles/useGuardarConsentimiento.ts'
+import { fechaDeHoy } from '@/shared/domain/fechaDeHoy.ts'
+import { useConstancia } from '@/shared/ui/constancia/contextoConstancia.ts'
+import { PedirAutorizacion } from './PedirAutorizacion.tsx'
 
 interface AutorizacionPendienteProps {
   readonly beneficiario: Beneficiario
@@ -35,19 +34,19 @@ export function AutorizacionPendiente({ beneficiario }: AutorizacionPendientePro
         <TriangleAlert aria-hidden="true" className="size-4 shrink-0" />
         Autorización pendiente
       </span>
-      <p className="text-body text-ink-secondary">
-        {esMenor
-          ? 'Es menor de edad: explíquele la política de datos al adulto que lo acompaña. Si está de acuerdo, registre la autorización.'
-          : 'Explíquele la política de datos. Si está de acuerdo, registre su autorización.'}
-      </p>
-      <PoliticaTratamiento politica={POLITICA_VIGENTE} />
-      <Boton
-        cargando={guardando}
-        onClick={() => void registrarAutorizacion()}
-        className="w-full md:w-auto md:self-end"
-      >
-        {esMenor ? 'Le expliqué al adulto y aceptó' : 'Le expliqué y aceptó'}
-      </Boton>
+      <PedirAutorizacion
+        etiqueta="Pedir autorización de datos"
+        titulo="Autorización de datos"
+        instruccion={
+          esMenor
+            ? 'Es menor de edad: explíquele la política de datos al adulto que lo acompaña. Si está de acuerdo, registre la autorización.'
+            : 'Explíquele la política de datos. Si está de acuerdo, registre su autorización.'
+        }
+        politica={POLITICA_VIGENTE}
+        confirmacion={esMenor ? 'Le expliqué al adulto y aceptó' : 'Le expliqué y aceptó'}
+        guardando={guardando}
+        alConfirmar={() => void registrarAutorizacion()}
+      />
     </>
   )
 }

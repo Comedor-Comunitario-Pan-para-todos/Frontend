@@ -207,6 +207,10 @@ el padrón guarde quién es tutor de quién (Ley 1581, minimización).
 registrarla. Si es menor, el texto pide explicarle la política al adulto que lo
 acompaña.
 
+La ficha no muestra el texto de las políticas. Al pedir una autorización se abre
+una hoja con la explicación, la política y el botón para registrarla; al
+registrarla, la hoja se cierra y la Constancia confirma si quedó guardada.
+
 **Uso de imagen.** Sin autorización vigente no hay fotos (opt-in, RNF-11). Las
 fotos solo sirven para que la Junta muestre en el barrio la actividad del
 comedor; nunca se entregan a donantes ni a empresas, ni se usan para publicidad.
@@ -218,7 +222,7 @@ texto:
 | :--- | :--- | :--- |
 | Foto autorizada | Adulto con una autorización que dio siendo mayor de edad, o menor con tutor aprobado y autorización | Retirar la autorización, después de confirmarlo (cualquier rol) |
 | Rostro no fotografiable | Adulto sin autorización, o menor con tutor aprobado y sin autorización | Explicar la política y registrar la autorización. Para un menor, se le explica al tutor y solo la registra la Coordinadora |
-| Requiere autorización del tutor | Menor de 18 años sin tutor aprobado | Nada todavía: el botón está deshabilitado |
+| Requiere autorización del tutor | Menor de 18 años sin tutor aprobado | Nada todavía: primero se aprueba al tutor |
 
 * **Al cumplir 18**, la autorización que dio su tutor deja de valer: la ficha lo
   muestra como «Rostro no fotografiable», avisa que ahora autoriza la persona y
