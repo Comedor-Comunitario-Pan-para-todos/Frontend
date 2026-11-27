@@ -1,19 +1,16 @@
-import { TriangleAlert } from 'lucide-react'
 import { useState } from 'react'
 import { nombreCompleto, type Beneficiario } from '@/modules/beneficiarios/domain/Beneficiario.ts'
 import { esMenorDeEdad } from '@/modules/beneficiarios/domain/edad.ts'
-import { fechaDeHoy } from '@/shared/domain/fechaDeHoy.ts'
-import { PoliticaTratamiento } from '@/modules/beneficiarios/ui/datosSensibles/PoliticaTratamiento.tsx'
-import { useGuardarConsentimiento } from '@/modules/beneficiarios/ui/datosSensibles/useGuardarConsentimiento.ts'
-import { Boton } from '@/shared/ui/Boton.tsx'
-import { useConstancia } from '@/shared/ui/constancia/contextoConstancia.ts'
 import { POLITICA_VIGENTE } from '@/modules/beneficiarios/domain/politicaVigente.ts'
+import { useGuardarConsentimiento } from '@/modules/beneficiarios/ui/datosSensibles/useGuardarConsentimiento.ts'
+import { fechaDeHoy } from '@/shared/domain/fechaDeHoy.ts'
+import { useConstancia } from '@/shared/ui/constancia/contextoConstancia.ts'
+import { PedirAutorizacion } from './PedirAutorizacion.tsx'
 
 interface AutorizacionPendienteProps {
   readonly beneficiario: Beneficiario
 }
 
-/** Para quien se registró sin que quedara guardada su autorización. */
 export function AutorizacionPendiente({ beneficiario }: AutorizacionPendienteProps) {
   const guardarConsentimiento = useGuardarConsentimiento()
   const constancia = useConstancia()
@@ -30,24 +27,19 @@ export function AutorizacionPendiente({ beneficiario }: AutorizacionPendientePro
   }
 
   return (
-    <>
-      <span className="inline-flex items-center gap-1 self-start rounded-pill bg-warning-soft px-3 py-1 text-label font-medium text-warning">
-        <TriangleAlert aria-hidden="true" className="size-4 shrink-0" />
-        Autorización pendiente
-      </span>
-      <p className="text-body text-ink-secondary">
-        {esMenor
+    <PedirAutorizacion
+      objeto="de datos"
+      principal
+      titulo="Autorización de datos"
+      instruccion={
+        esMenor
           ? 'Es menor de edad: explíquele la política de datos al adulto que lo acompaña. Si está de acuerdo, registre la autorización.'
-          : 'Explíquele la política de datos. Si está de acuerdo, registre su autorización.'}
-      </p>
-      <PoliticaTratamiento politica={POLITICA_VIGENTE} />
-      <Boton
-        cargando={guardando}
-        onClick={() => void registrarAutorizacion()}
-        className="w-full md:w-auto md:self-end"
-      >
-        {esMenor ? 'Le expliqué al adulto y aceptó' : 'Le expliqué y aceptó'}
-      </Boton>
-    </>
+          : 'Explíquele la política de datos. Si está de acuerdo, registre su autorización.'
+      }
+      politica={POLITICA_VIGENTE}
+      confirmacion={esMenor ? 'Le expliqué al adulto y aceptó' : 'Le expliqué y aceptó'}
+      guardando={guardando}
+      alConfirmar={() => void registrarAutorizacion()}
+    />
   )
 }

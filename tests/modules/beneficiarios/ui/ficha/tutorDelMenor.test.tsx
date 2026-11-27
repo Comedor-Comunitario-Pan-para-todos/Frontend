@@ -33,6 +33,7 @@ function aprobarTutor(tipoDocumento: 'CC' | 'PASAPORTE' = 'CC', numeroDocumento 
 }
 
 const AUTORIZAR_POR_EL_TUTOR = 'Le expliqué al tutor y autorizó las fotos'
+const PEDIR_FOTOS = 'Pedir autorización de fotos'
 
 function autorizarFotosDelMenor() {
   return new ConsentimientoHttpRepository(crearHttp(COORDINADORA)).registrar(
@@ -63,7 +64,7 @@ describe('tutor del menor en la ficha', () => {
   it('la Coordinadora lo aprueba desde la ficha y vuelve a verlo en ella', async () => {
     const enrutador = abrirFicha(ID_CARLOS, COORDINADORA)
     const seccion = await seccionTutor()
-    expect(within(seccion).getByText(/Todavía no tiene un tutor aprobado/)).toBeInTheDocument()
+    expect(within(seccion).getByText('Sin aprobar')).toBeInTheDocument()
 
     await userEvent.click(within(seccion).getByRole('link', { name: 'Aprobar al tutor' }))
     await screen.findByRole('heading', { name: 'Aprobar al tutor' })
@@ -85,7 +86,7 @@ describe('tutor del menor en la ficha', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Aprobar al tutor' }))
 
     const conTutor = await seccionTutor()
-    expect(within(conTutor).getByText('Tutor aprobado')).toBeInTheDocument()
+    expect(within(conTutor).getByText('Aprobado')).toBeInTheDocument()
     expect(dato(conTutor, 'Nombre')).toHaveTextContent('Luz Marina Díaz')
     expect(within(conTutor).queryByRole('link', { name: 'Aprobar al tutor' })).toBeNull()
   })
@@ -99,7 +100,7 @@ describe('tutor del menor en la ficha', () => {
     expect(dato(seccion, 'Qué es del menor')).toHaveTextContent('Madre')
     expect(dato(seccion, 'Documento')).toHaveTextContent('CC 52.123.456')
     expect(dato(seccion, 'Teléfono')).toHaveTextContent('3101234567')
-    expect(dato(seccion, 'Aprobado por')).toHaveTextContent('Coordinación de Prueba')
+    expect(within(seccion).getByText('Coordinación de Prueba')).toBeInTheDocument()
   })
 
   it('el pasaporte se ve con su nombre y sin puntos', async () => {
@@ -143,10 +144,12 @@ describe('tutor del menor en la ficha', () => {
       await aprobarTutor()
       abrirFicha(ID_CARLOS, COORDINADORA)
       const imagen = await seccionImagen()
-      expect(within(imagen).getByText(/Explíquele al tutor la política/)).toBeInTheDocument()
-      expect(within(imagen).getByText('Política de uso de imagen · versión 1')).toBeInTheDocument()
+      await userEvent.click(within(imagen).getByRole('button', { name: PEDIR_FOTOS }))
+      const hoja = screen.getByRole('dialog', { name: 'Autorización de fotos' })
+      expect(within(hoja).getByText(/Explíquele al tutor la política/)).toBeInTheDocument()
+      expect(within(hoja).getByText('Política de uso de imagen · versión 1')).toBeInTheDocument()
 
-      await userEvent.click(within(imagen).getByRole('button', { name: AUTORIZAR_POR_EL_TUTOR }))
+      await userEvent.click(within(hoja).getByRole('button', { name: AUTORIZAR_POR_EL_TUTOR }))
 
       expect(await within(imagen).findByText('Foto autorizada')).toBeInTheDocument()
       expect(within(imagen).getByText('Coordinación de Prueba')).toBeInTheDocument()
@@ -159,7 +162,7 @@ describe('tutor del menor en la ficha', () => {
       const imagen = await seccionImagen()
 
       expect(within(imagen).getByText(/la registra la coordinación/)).toBeInTheDocument()
-      expect(within(imagen).queryByRole('button', { name: /autorizó las fotos/ })).toBeNull()
+      expect(within(imagen).queryByRole('button', { name: PEDIR_FOTOS })).toBeNull()
     })
 
     it('el Voluntario sí puede retirarla', async () => {
@@ -204,10 +207,10 @@ describe('tutor del menor en la ficha', () => {
 
       expect(await screen.findByText('Tutor revocado')).toBeInTheDocument()
       const sinTutor = await seccionTutor()
-      expect(within(sinTutor).getByText(/Todavía no tiene un tutor aprobado/)).toBeInTheDocument()
+      expect(within(sinTutor).getByText('Sin aprobar')).toBeInTheDocument()
       expect(within(sinTutor).getByRole('link', { name: 'Aprobar al tutor' })).toBeInTheDocument()
       const imagen = await seccionImagen()
-      expect(within(imagen).getByText(/Para tomarle fotos se necesita/)).toBeInTheDocument()
+      expect(within(imagen).getByText('Primero hay que aprobar a su tutor.')).toBeInTheDocument()
       expect(within(imagen).queryByRole('button', { name: 'Retirar autorización' })).toBeNull()
     })
 
@@ -316,8 +319,9 @@ describe('tutor del menor en la ficha', () => {
       expect(within(imagen).queryByRole('button', { name: 'Retirar autorización' })).toBeNull()
       expect(screen.queryByRole('region', { name: 'Tutor del menor' })).toBeNull()
 
+      await userEvent.click(within(imagen).getByRole('button', { name: PEDIR_FOTOS }))
       await userEvent.click(
-        within(imagen).getByRole('button', { name: 'Le expliqué y autorizó las fotos' }),
+        screen.getByRole('button', { name: 'Le expliqué y autorizó las fotos' }),
       )
 
       expect(await within(imagen).findByText('Foto autorizada')).toBeInTheDocument()

@@ -70,7 +70,7 @@ describe('registro de beneficiarios', () => {
 
     expect(await screen.findByText('Persona registrada')).toBeInTheDocument()
     expect(
-      await screen.findByRole('heading', { name: 'Persona De Prueba', level: 2 }),
+      await screen.findByRole('heading', { name: 'Persona De Prueba', level: 1 }),
     ).toBeInTheDocument()
     expect(enrutador.state.location.pathname).toMatch(/^\/beneficiarios\/[0-9a-f-]{36}$/)
   })
@@ -122,7 +122,9 @@ describe('registro de beneficiarios', () => {
     expect(
       screen.getByText('Falta guardar la autorización de datos de Persona De Prueba.'),
     ).toBeInTheDocument()
-    expect(await screen.findByRole('heading', { name: 'Ficha del comensal' })).toBeInTheDocument()
+    expect(
+      await screen.findByRole('heading', { name: 'Persona De Prueba', level: 1 }),
+    ).toBeInTheDocument()
     expect(vibrar).not.toHaveBeenCalledWith(PULSO_DE_GUARDADO)
 
     await userEvent.click(screen.getByRole('button', { name: 'Reintentar' }))
@@ -147,9 +149,8 @@ describe('registro de beneficiarios', () => {
     await registrar()
 
     expect(await screen.findByText('Persona registrada')).toBeInTheDocument()
-    expect(await screen.findByRole('heading', { name: 'Ficha del comensal' })).toBeInTheDocument()
     expect(
-      await screen.findByRole('heading', { name: 'Persona De Prueba', level: 2 }),
+      await screen.findByRole('heading', { name: 'Persona De Prueba', level: 1 }),
     ).toBeInTheDocument()
     expect(screen.getByText('CC ••••0111')).toBeInTheDocument()
   })
@@ -165,7 +166,9 @@ describe('registro de beneficiarios', () => {
 
     await registrar()
 
-    expect(await screen.findByRole('heading', { name: 'Ficha del comensal' })).toBeInTheDocument()
+    expect(
+      await screen.findByRole('heading', { name: 'Persona De Prueba', level: 1 }),
+    ).toBeInTheDocument()
     expect(await screen.findByText('Sin documento')).toBeInTheDocument()
   })
 
@@ -368,7 +371,9 @@ describe('registro de beneficiarios', () => {
 
     await registrar()
 
-    expect(await screen.findByRole('heading', { name: 'Ficha del comensal' })).toBeInTheDocument()
+    expect(
+      await screen.findByRole('heading', { name: 'Persona De Prueba', level: 1 }),
+    ).toBeInTheDocument()
   })
 
   it('cancelar vuelve al padrón sin registrar', async () => {

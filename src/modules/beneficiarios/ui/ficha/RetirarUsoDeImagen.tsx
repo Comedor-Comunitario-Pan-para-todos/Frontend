@@ -14,7 +14,7 @@ export function RetirarUsoDeImagen({ beneficiario }: RetirarUsoDeImagenProps) {
       variante="secundario"
       cargando={retirando}
       onClick={() => retirar(beneficiario)}
-      className="w-full md:w-auto md:self-end"
+      className="w-full"
     >
       Retirar autorización
     </Boton>

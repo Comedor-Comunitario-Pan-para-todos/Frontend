@@ -202,7 +202,7 @@ sección 4).
    el permiso `beneficiarios.verDatosSensibles` ve el documento enmascarado y
    «Solo lo ve la coordinación» en teléfono y clasificación.
 3. **Completar** (`/beneficiarios/:id/completar`): desde la ficha básica, el
-   botón «Completar datos extendidos» pide los mismos campos del registro
+   botón «Completar datos» pide los mismos campos del registro
    extendido y la autorización de la Ley 1581, y envía el `PATCH`. Si el
    documento que se escribe ya es de otra persona, lo avisa antes de guardar,
    debajo del número.

@@ -46,7 +46,7 @@ describe('completar datos extendidos', () => {
     iniciarSesionDePrueba(COORDINADORA)
     const enrutador = renderizarApp(`/beneficiarios/${ID_CARLOS}`)
 
-    await userEvent.click(await screen.findByRole('link', { name: 'Completar datos extendidos' }))
+    await userEvent.click(await screen.findByRole('link', { name: 'Completar datos' }))
     await screen.findByRole('heading', { name: 'Completar datos' })
     await userEvent.click(screen.getByRole('radio', { name: 'Tarjeta de identidad' }))
     await escribir('Número de documento', '1086999888')
@@ -81,10 +81,8 @@ describe('completar datos extendidos', () => {
     await screen.findByText('Registro extendido')
     await waitFor(() => expect(cliente.isFetching()).toBe(0))
 
-    const autorizacion = screen.getByRole('region', { name: 'Autorización de datos' })
-    expect(
-      await within(autorizacion).findByText('Autorizó el uso de sus datos'),
-    ).toBeInTheDocument()
+    const autorizacion = screen.getByRole('region', { name: 'Uso de datos' })
+    expect(await within(autorizacion).findByText('Autorizado')).toBeInTheDocument()
   })
 
   it('si no se guarda la autorización, lleva a la ficha y deja reintentar solo eso', async () => {

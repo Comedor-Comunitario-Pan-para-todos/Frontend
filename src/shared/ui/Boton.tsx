@@ -1,7 +1,7 @@
 import { LoaderCircle } from 'lucide-react'
 import type { ComponentProps } from 'react'
 
-type VarianteBoton = 'primario' | 'secundario'
+type VarianteBoton = 'primario' | 'secundario' | 'suave'
 
 interface BotonProps extends ComponentProps<'button'> {
   readonly variante?: VarianteBoton
@@ -9,13 +9,14 @@ interface BotonProps extends ComponentProps<'button'> {
 }
 
 const CLASES_BASE =
-  'inline-flex items-center justify-center gap-2 rounded-md px-6 py-2 text-body-lg font-semibold transition duration-150 ease-press enabled:active:translate-y-px enabled:active:scale-99'
+  'inline-flex items-center justify-center gap-2 rounded-md px-6 py-2 text-body-lg font-semibold transition enabled:cursor-pointer aria-busy:cursor-wait duration-150 ease-press enabled:active:translate-y-px enabled:active:scale-99'
 
 const CLASES_VARIANTE: Record<VarianteBoton, string> = {
   primario:
     'min-h-cta bg-primary text-on-primary shadow-primary enabled:hover:bg-primary-hover enabled:active:bg-primary-active',
   secundario:
     'min-h-touch border border-border-input bg-surface text-ink enabled:hover:bg-surface-hover',
+  suave: 'min-h-touch bg-primary-soft text-primary enabled:hover:text-primary-hover',
 }
 
 export function Boton({
