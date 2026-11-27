@@ -46,7 +46,7 @@ describe('completar datos extendidos', () => {
     iniciarSesionDePrueba(COORDINADORA)
     const enrutador = renderizarApp(`/beneficiarios/${ID_CARLOS}`)
 
-    await userEvent.click(await screen.findByRole('link', { name: 'Completar datos extendidos' }))
+    await userEvent.click(await screen.findByRole('link', { name: 'Completar datos' }))
     await screen.findByRole('heading', { name: 'Completar datos' })
     await userEvent.click(screen.getByRole('radio', { name: 'Tarjeta de identidad' }))
     await escribir('Número de documento', '1086999888')

@@ -61,9 +61,8 @@ describe('ficha del comensal', () => {
   it('muestra los datos de la persona', async () => {
     abrirFicha(ID_MARIA)
 
-    expect(await screen.findByRole('heading', { name: 'María Elena Restrepo' })).toBeInTheDocument()
     expect(
-      screen.getByRole('heading', { name: 'Ficha del comensal', level: 1 }),
+      await screen.findByRole('heading', { name: 'María Elena Restrepo', level: 1 }),
     ).toBeInTheDocument()
     expect(dato('Nacimiento')).toHaveTextContent('15/03/1958')
     expect(dato('Barrio')).toHaveTextContent('El Poblado')
@@ -84,6 +83,22 @@ describe('ficha del comensal', () => {
     const datos = await screen.findByRole('article')
 
     expect(within(datos).queryByText('Menor de edad')).not.toBeInTheDocument()
+  })
+
+  it('avisa junto al nombre que falta la autorización de datos', async () => {
+    abrirFicha(ID_CARLOS)
+
+    const datos = await screen.findByRole('article')
+
+    expect(within(datos).getByText('Falta autorización de datos')).toBeInTheDocument()
+  })
+
+  it('no avisa nada junto al nombre si ya autorizó sus datos', async () => {
+    abrirFicha(ID_MARIA)
+
+    const datos = await screen.findByRole('article')
+
+    expect(within(datos).queryByText('Falta autorización de datos')).not.toBeInTheDocument()
   })
 
   it('el voluntario ve el documento enmascarado y no ve los demás datos sensibles', async () => {
@@ -135,11 +150,10 @@ describe('ficha del comensal', () => {
 
     await userEvent.click(tarjeta)
 
-    expect(await screen.findByRole('heading', { name: 'Ficha del comensal' })).toBeInTheDocument()
-    expect(enrutador.state.location.pathname).toBe(`/beneficiarios/${ID_MARIA}`)
     expect(
-      await screen.findByRole('heading', { name: 'María Elena Restrepo', level: 2 }),
+      await screen.findByRole('heading', { name: 'María Elena Restrepo', level: 1 }),
     ).toBeInTheDocument()
+    expect(enrutador.state.location.pathname).toBe(`/beneficiarios/${ID_MARIA}`)
   })
 
   it('muestra cuándo, quién y sobre qué política se tomó la autorización', async () => {
@@ -163,6 +177,7 @@ describe('ficha del comensal', () => {
         .getAllByRole('heading', { level: 3 })
         .map((titulo) => titulo.textContent),
     ).toEqual(['Uso de datos', 'Tutor del menor', 'Uso de imagen'])
+    expect(within(bloque).getByText('Ley 1581')).toBeInTheDocument()
   })
 
   it('al guardar la autorización, el foco pasa al título de la fila', async () => {
