@@ -99,7 +99,7 @@ export function DatosDelComensal({
         </Dato>
       </dl>
       {children && (
-        <div className="flex flex-col gap-2 border-t border-hairline pt-4 md:flex-row md:justify-end">
+        <div className="flex flex-col gap-2 border-t border-hairline pt-4 md:flex-row-reverse md:justify-start">
           {children}
         </div>
       )}

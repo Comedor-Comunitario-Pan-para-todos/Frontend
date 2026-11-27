@@ -29,6 +29,7 @@ export function AutorizacionPendiente({ beneficiario }: AutorizacionPendientePro
   return (
     <PedirAutorizacion
       objeto="de datos"
+      principal
       titulo="Autorización de datos"
       instruccion={
         esMenor

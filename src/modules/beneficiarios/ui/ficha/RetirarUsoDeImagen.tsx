@@ -11,7 +11,7 @@ export function RetirarUsoDeImagen({ beneficiario }: RetirarUsoDeImagenProps) {
 
   return (
     <Boton
-      variante="suave"
+      variante="secundario"
       cargando={retirando}
       onClick={() => retirar(beneficiario)}
       className="w-full"

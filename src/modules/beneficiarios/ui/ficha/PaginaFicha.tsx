@@ -10,8 +10,12 @@ import { DatosDelComensal } from './DatosDelComensal.tsx'
 
 const CLASES_TARJETA = 'rounded-lg border border-hairline bg-surface p-4 shadow-card'
 
-const CLASES_ACCION =
-  'inline-flex min-h-touch w-full items-center justify-center gap-2 rounded-md bg-primary-soft px-6 py-2 text-body-lg font-semibold text-primary transition duration-150 ease-press hover:text-primary-hover active:translate-y-px active:scale-99 md:w-auto'
+const CLASES_ENLACE =
+  'inline-flex min-h-touch w-full items-center justify-center gap-2 rounded-md px-6 py-2 text-body-lg font-semibold transition duration-150 ease-press active:translate-y-px active:scale-99 md:w-auto'
+
+const CLASES_ACTUALIZAR = `${CLASES_ENLACE} border border-border-input bg-surface text-ink hover:bg-surface-hover`
+
+const CLASES_COMPLETAR = `${CLASES_ENLACE} bg-primary-soft text-primary hover:text-primary-hover`
 
 function EsperaDeLaFicha() {
   return (
@@ -68,16 +72,16 @@ export function PaginaFicha() {
 
       {ficha.data && (
         <DatosDelComensal beneficiario={ficha.data} className={CLASES_TARJETA}>
-          <Link to={`/beneficiarios/${id}/actualizar`} className={CLASES_ACCION}>
-            <UserPen aria-hidden="true" className="size-5 shrink-0" />
-            Actualizar datos
-          </Link>
           {ficha.data.nivel === 'BASICO' && (
-            <Link to={`/beneficiarios/${id}/completar`} className={CLASES_ACCION}>
+            <Link to={`/beneficiarios/${id}/completar`} className={CLASES_COMPLETAR}>
               <PencilLine aria-hidden="true" className="size-5 shrink-0" />
               Completar datos
             </Link>
           )}
+          <Link to={`/beneficiarios/${id}/actualizar`} className={CLASES_ACTUALIZAR}>
+            <UserPen aria-hidden="true" className="size-5 shrink-0" />
+            Actualizar datos
+          </Link>
         </DatosDelComensal>
       )}
 

@@ -7,6 +7,7 @@ import { HojaInferior } from '@/shared/ui/HojaInferior.tsx'
 
 interface PedirAutorizacionProps {
   readonly objeto: string
+  readonly principal?: boolean
   readonly titulo: string
   readonly instruccion: string
   readonly politica: PoliticaVigente
@@ -18,6 +19,7 @@ interface PedirAutorizacionProps {
 /** La política se explica en una hoja aparte, solo cuando se pide la autorización. */
 export function PedirAutorizacion({
   objeto,
+  principal = false,
   titulo,
   instruccion,
   politica,
@@ -35,7 +37,7 @@ export function PedirAutorizacion({
   return (
     <>
       <Boton
-        variante="suave"
+        variante={principal ? 'primario' : 'suave'}
         cargando={guardando}
         onClick={() => setAbierta(true)}
         aria-label={`Pedir autorización ${objeto}`}

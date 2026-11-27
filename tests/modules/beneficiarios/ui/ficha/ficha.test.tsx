@@ -93,6 +93,18 @@ describe('ficha del comensal', () => {
     expect(within(datos).getByText('Falta autorización de datos')).toBeInTheDocument()
   })
 
+  it('a quien está en nivel básico le ofrece primero completar sus datos', async () => {
+    abrirFicha(ID_CARLOS)
+
+    const datos = await screen.findByRole('article')
+
+    expect(
+      within(datos)
+        .getAllByRole('link')
+        .map((enlace) => enlace.textContent),
+    ).toEqual(['Completar datos', 'Actualizar datos'])
+  })
+
   it('no avisa nada junto al nombre si ya autorizó sus datos', async () => {
     abrirFicha(ID_MARIA)
 
